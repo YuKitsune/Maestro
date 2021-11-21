@@ -9,7 +9,7 @@ func main() {
 
 	maestroApi, err := api.NewMaestroApi()
 	if err != nil {
-		panic(err)
+		grace.ExitFromError(err)
 	}
 
 	// Run our server in a goroutine so that it doesn't block.

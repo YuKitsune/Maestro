@@ -17,7 +17,7 @@ type appleMusicStreamingService struct {
 }
 
 func NewAppleMusicStreamingService(token string) streamingService.StreamingService {
-	return &appleMusicStreamingService{c: streamingService.NewClientWithBearer(token)}
+	return &appleMusicStreamingService{c: streamingService.NewClientWithBearerAuth(token)}
 }
 
 func (s *appleMusicStreamingService) Name() string {

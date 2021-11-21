@@ -10,7 +10,7 @@ type spotifyStreamingService struct {
 }
 
 func NewSpotifyStreamingService(token string) streamingService.StreamingService {
-	c := streamingService.NewClientWithBearer(token)
+	c := streamingService.NewClientWithBearerAuth(token)
 	sc := spotify.NewClient(c)
 	return &spotifyStreamingService{client: &sc}
 }

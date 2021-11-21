@@ -1,10 +1,9 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/yukitsune/camogo"
+	"maestro/pkg/api"
 	"maestro/pkg/api/context"
 	"maestro/pkg/streamingService"
 	"net/http"
@@ -26,16 +25,14 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 
 	container, err := context.Container(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err.Error())
+		api.Error(w, err)
 		return
 	}
 
 	vars := mux.Vars(r)
 	name, ok := vars["name"]
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "missing parameter \"name\"")
+		api.BadRequest(w, "missing parameter \"name\"")
 		return
 	}
 
@@ -52,31 +49,25 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err.Error())
+		api.Error(w, err)
 		return
 	}
 
-	jsonRes, err := json.MarshalIndent(res, "", "\t")
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonRes)
+	api.Response(w, res, http.StatusOK)
 }
 
 func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 
 	container, err := context.Container(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err.Error())
+		api.Error(w, err)
 		return
 	}
 
 	vars := mux.Vars(r)
 	name, ok := vars["name"]
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "missing parameter \"name\"")
+		api.BadRequest(w, "missing parameter \"name\"")
 		return
 	}
 
@@ -93,31 +84,25 @@ func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err.Error())
+		api.Error(w, err)
 		return
 	}
 
-	jsonRes, err := json.MarshalIndent(res, "", "\t")
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonRes)
+	api.Response(w, res, http.StatusOK)
 }
 
 func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 
 	container, err := context.Container(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err.Error())
+		api.Error(w, err)
 		return
 	}
 
 	vars := mux.Vars(r)
 	name, ok := vars["name"]
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "missing parameter \"name\"")
+		api.BadRequest(w, "missing parameter \"name\"")
 		return
 	}
 
@@ -134,15 +119,11 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err.Error())
+		api.Error(w, err)
 		return
 	}
 
-	jsonRes, err := json.MarshalIndent(res, "", "\t")
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonRes)
+	api.Response(w, res, http.StatusOK)
 }
 
 func ForEachStreamingService(container camogo.Container, fn func (streamingService.StreamingService) error) error {
