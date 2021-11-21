@@ -20,7 +20,11 @@ func NewAppleMusicStreamingService(token string) streamingService.StreamingServi
 	return &appleMusicStreamingService{c: streamingService.NewClientWithBearer(token)}
 }
 
-func (s *appleMusicStreamingService) SearchArtist(name string) (res []*streamingService.Artist, err error) {
+func (s *appleMusicStreamingService) Name() string {
+	return "Apple Music"
+}
+
+func (s *appleMusicStreamingService) SearchArtist(name string) (res []streamingService.Artist, err error) {
 
 	url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=artists", defaultStorefront, name)
 
@@ -39,7 +43,7 @@ func (s *appleMusicStreamingService) SearchArtist(name string) (res []*streaming
 	}
 
 	for _, resource := range apiRes.Results.Artists.Data {
-		artist := &streamingService.Artist{
+		artist := streamingService.Artist{
 			Name: resource.Attributes.Name,
 			Genres: resource.Attributes.GenreNames,
 			Url: resource.Attributes.Url,
@@ -51,15 +55,14 @@ func (s *appleMusicStreamingService) SearchArtist(name string) (res []*streaming
 	return res, nil
 }
 
-func (s *appleMusicStreamingService) SearchAlbum(name string) (res []*streamingService.Album, err error) {
+func (s *appleMusicStreamingService) SearchAlbum(name string) (res []streamingService.Album, err error) {
 
 	url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=albums", defaultStorefront, name)
 
 	httpRes, err := s.c.Get(url)
 	defer httpRes.Body.Close()
 
-	var resBytes []byte
-	_, err = httpRes.Body.Read(resBytes)
+	resBytes, err := ioutil.ReadAll(httpRes.Body)
 	if err != nil {
 		return res, err
 	}
@@ -71,7 +74,7 @@ func (s *appleMusicStreamingService) SearchAlbum(name string) (res []*streamingS
 	}
 
 	for _, resource := range apiRes.Results.Albums.Data {
-		album := &streamingService.Album{
+		album := streamingService.Album{
 			Name: resource.Attributes.Name,
 			ArtistName: resource.Attributes.ArtistName,
 			ArtworkUrl: resource.Attributes.Artwork.Url,
@@ -84,15 +87,14 @@ func (s *appleMusicStreamingService) SearchAlbum(name string) (res []*streamingS
 	return res, nil
 }
 
-func (s *appleMusicStreamingService) SearchSong(name string) (res []*streamingService.Song, err error) {
+func (s *appleMusicStreamingService) SearchSong(name string) (res []streamingService.Song, err error) {
 
 	url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=songs", defaultStorefront, name)
 
 	httpRes, err := s.c.Get(url)
 	defer httpRes.Body.Close()
 
-	var resBytes []byte
-	_, err = httpRes.Body.Read(resBytes)
+	resBytes, err := ioutil.ReadAll(httpRes.Body)
 	if err != nil {
 		return res, err
 	}
@@ -104,7 +106,7 @@ func (s *appleMusicStreamingService) SearchSong(name string) (res []*streamingSe
 	}
 
 	for _, resource := range apiRes.Results.Songs.Data {
-		song := &streamingService.Song{
+		song := streamingService.Song{
 			Name: resource.Attributes.Name,
 			ArtistName: resource.Attributes.ArtistName,
 			AlbumName: resource.Attributes.AlbumName,

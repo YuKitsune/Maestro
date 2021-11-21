@@ -15,9 +15,11 @@ func NewSpotifyStreamingService(token string) streamingService.StreamingService 
 	return &spotifyStreamingService{client: &sc}
 }
 
-func (s *spotifyStreamingService) SearchArtist(name string) ([]*streamingService.Artist, error) {
+func (s *spotifyStreamingService) Name() string {
+	return "Spotify"
+}
 
-	var res []*streamingService.Artist
+func (s *spotifyStreamingService) SearchArtist(name string) (res []streamingService.Artist, err error) {
 
 	searchRes, err := s.client.Search(name, spotify.SearchTypeArtist)
 	if err != nil {
@@ -26,10 +28,16 @@ func (s *spotifyStreamingService) SearchArtist(name string) ([]*streamingService
 
 	for _, spotifyArtist := range searchRes.Artists.Artists {
 
+		var imageUrl string
+		if len(spotifyArtist.Images) > 0 {
+			imageUrl = spotifyArtist.Images[0].URL
+		}
+
 		url := spotifyArtist.ExternalURLs["spotify"]
-		artist := &streamingService.Artist{
+		artist := streamingService.Artist{
 			Name: spotifyArtist.Name,
 			Genres: spotifyArtist.Genres,
+			ArtworkUrl: imageUrl,
 			Url: url,
 		}
 
@@ -39,11 +47,9 @@ func (s *spotifyStreamingService) SearchArtist(name string) ([]*streamingService
 	return res, nil
 }
 
-func (s *spotifyStreamingService) SearchAlbum(name string) ([]*streamingService.Album, error) {
+func (s *spotifyStreamingService) SearchAlbum(name string) (res []streamingService.Album, err error) {
 
-	var res []*streamingService.Album
-
-	searchRes, err := s.client.Search(name, spotify.SearchTypeArtist)
+	searchRes, err := s.client.Search(name, spotify.SearchTypeAlbum)
 	if err != nil {
 		return res, err
 	}
@@ -57,7 +63,7 @@ func (s *spotifyStreamingService) SearchAlbum(name string) ([]*streamingService.
 			imageUrl = spotifyAlbum.Images[0].URL
 		}
 
-		album := &streamingService.Album{
+		album := streamingService.Album{
 			Name: spotifyAlbum.Name,
 			ArtistName: artistName(spotifyAlbum.Artists),
 			ArtworkUrl: imageUrl,
@@ -70,11 +76,9 @@ func (s *spotifyStreamingService) SearchAlbum(name string) ([]*streamingService.
 	return res, nil
 }
 
-func (s *spotifyStreamingService) SearchSong(name string) ([]*streamingService.Song, error) {
+func (s *spotifyStreamingService) SearchSong(name string) (res []streamingService.Song, err error) {
 
-	var res []*streamingService.Song
-
-	searchRes, err := s.client.Search(name, spotify.SearchTypeArtist)
+	searchRes, err := s.client.Search(name, spotify.SearchTypeTrack)
 	if err != nil {
 		return res, err
 	}
@@ -83,7 +87,7 @@ func (s *spotifyStreamingService) SearchSong(name string) ([]*streamingService.S
 
 		url := spotifySong.ExternalURLs["spotify"]
 
-		song := &streamingService.Song{
+		song := streamingService.Song{
 			Name: spotifySong.Name,
 			ArtistName: artistName(spotifySong.Artists),
 			AlbumName: spotifySong.Album.Name,

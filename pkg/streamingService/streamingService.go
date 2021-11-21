@@ -4,6 +4,7 @@ type Artist struct {
 	Name string
 	Genres []string
 	Url string
+	ArtworkUrl string
 }
 
 type Album struct {
@@ -21,7 +22,8 @@ type Song struct {
 }
 
 type StreamingService interface {
-	SearchArtist(name string) ([]*Artist, error)
-	SearchAlbum(name string) ([]*Album, error)
-	SearchSong(name string) ([]*Song, error)
+	Name() string
+	SearchArtist(name string) ([]Artist, error)
+	SearchAlbum(name string) ([]Album, error)
+	SearchSong(name string) ([]Song, error)
 }
