@@ -1,18 +1,60 @@
 package spotify
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"github.com/zmb3/spotify"
+	"io/ioutil"
 	"maestro/pkg/streamingService"
+	"net/url"
 )
 
 type spotifyStreamingService struct {
 	client *spotify.Client
 }
 
-func NewSpotifyStreamingService(token string) streamingService.StreamingService {
+func GetAccessToken(clientId string, secret string) (token string, error error) {
+	tokenUrl := "https://accounts.spotify.com/api/token"
+
+	reqToken := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientId, secret)))
+	client := streamingService.NewClientWithBasicAuth(reqToken)
+
+	res, err := client.PostForm(tokenUrl, url.Values {
+		"grant_type": {"client_credentials"},
+	})
+	defer res.Body.Close()
+
+	if err != nil {
+		return token, err
+	}
+
+	resBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return token, err
+	}
+
+	var resMap map[string]interface{}
+	err = json.Unmarshal(resBytes, &resMap)
+	if err != nil {
+		return token, err
+	}
+
+	token = resMap["access_token"].(string)
+
+	return token, nil
+}
+
+func NewSpotifyStreamingService(clientId string, clientSecret string) (streamingService.StreamingService, error) {
+
+	token, err := GetAccessToken(clientId, clientSecret)
+	if err != nil {
+		return nil, err
+	}
+
 	c := streamingService.NewClientWithBearerAuth(token)
 	sc := spotify.NewClient(c)
-	return &spotifyStreamingService{client: &sc}
+	return &spotifyStreamingService{client: &sc}, nil
 }
 
 func (s *spotifyStreamingService) Name() string {

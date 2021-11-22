@@ -64,11 +64,18 @@ func setupContainer(cb camogo.ContainerBuilder) error {
 
 	// Todo: Use keys from config
 	// Todo: Camogo needs slice support
+
+	var services []streamingService.StreamingService
+	spService, err := spotify.NewSpotifyStreamingService(spClientId, spClientSecret)
+	if err != nil {
+		return err
+	}
+
 	services = append(services, appleMusic.NewAppleMusicStreamingService(amToken))
-	services = append(services, spotify.NewSpotifyStreamingService(spToken))
+	services = append(services, spService)
 	services = append(services, deezer.NewDeezerStreamingService())
 
-	if err := cb.RegisterInstance(services); err != nil {
+	if err = cb.RegisterInstance(services); err != nil {
 		return err
 	}
 
