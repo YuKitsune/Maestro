@@ -30,3 +30,4 @@
 logs
 bin
 *.log
+configs/maestro.yaml

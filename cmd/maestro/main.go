@@ -1,13 +1,69 @@
 package main
 
 import (
+	"fmt"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"maestro/internal/grace"
 	"maestro/pkg/api"
+	"maestro/pkg/streamingService"
 )
+
+type MaestroConfig struct {
+	Api *api.Config `mapstructure:"api"`
+	Services []streamingService.Config `mapstructure:"services"`
+}
 
 func main() {
 
-	maestroApi, err := api.NewMaestroApi()
+	serveCmd := &cobra.Command{
+		Use:   "serve",
+		Short: "Starts the REST API",
+		RunE:  serve,
+	}
+
+	rootCmd := &cobra.Command{
+		Use:   "maestro <command> [flags]",
+		Short: "The Maestro REST API",
+	}
+
+	rootCmd.AddCommand(serveCmd)
+
+	err := rootCmd.Execute()
+	if err != nil {
+		grace.ExitFromError(err)
+	}
+}
+
+func serve(command *cobra.Command, args []string) error {
+
+	// Config file
+	viper.SetConfigName("maestro")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("/etc/chameleon")
+	viper.AddConfigPath("../configs")
+	viper.AddConfigPath("./configs")
+	viper.AddConfigPath(".")
+
+	// Load in the configuration
+	err := viper.ReadInConfig()
+	if err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found; ignore error
+			fmt.Println("Config file not found")
+		} else {
+			return err
+		}
+	}
+
+	// Unmarshal
+	var cfg *MaestroConfig
+	err = viper.Unmarshal(&cfg)
+	if err != nil {
+		return err
+	}
+
+	maestroApi, err := api.NewMaestroApi(cfg.Api, cfg.Services)
 	if err != nil {
 		grace.ExitFromError(err)
 	}
@@ -23,4 +79,6 @@ func main() {
 	}()
 
 	grace.WaitForShutdownSignalOrError(errorChan, func() { _ = maestroApi.Shutdown() })
+
+	return nil
 }

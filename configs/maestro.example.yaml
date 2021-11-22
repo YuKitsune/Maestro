@@ -1,0 +1,14 @@
+api:
+  port: 8182
+services:
+  - serviceName: AppleMusic
+    enabled: true
+    properties:
+      token:
+  - serviceName: Spotify
+    enabled: true
+    properties:
+      clientId:
+      clientSecret:
+  - serviceName: Deezer
+    enabled: true

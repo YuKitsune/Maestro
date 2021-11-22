@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/yukitsune/camogo"
 	"maestro/pkg/api/handlers"
@@ -15,22 +16,24 @@ import (
 )
 
 type MaestroApi struct {
+	cfg *Config
 	svr *http.Server
 }
 
-func NewMaestroApi() (*MaestroApi, error) {
+func NewMaestroApi(cfg *Config, svcCfg []streamingService.Config) (*MaestroApi, error) {
 
 	cb := camogo.NewBuilder()
-	if err := setupContainer(cb); err != nil {
+	if err := setupContainer(cb, svcCfg); err != nil {
 		return nil, err
 	}
 
 	container := cb.Build()
 
 	r := setupHandlers(container)
+
+	addr := fmt.Sprintf(":%d", cfg.Port)
 	svr := &http.Server{
-		// Todo: Implement once we have configs
-		// Addr: api.config.GetAddress(),
+		Addr: addr,
 
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: time.Second * 15,
@@ -40,7 +43,7 @@ func NewMaestroApi() (*MaestroApi, error) {
 		Handler:      r,
 	}
 
-	return &MaestroApi{svr}, nil
+	return &MaestroApi{cfg, svr}, nil
 }
 
 
@@ -49,33 +52,45 @@ func (api *MaestroApi) Start() error {
 }
 
 func (api *MaestroApi) StartTLS() error {
-
-	// Todo: Implement once we have configs
-	// return api.svr.ListenAndServeTLS(api.config.CertFile, api.config.KeyFile)
-
-	return api.Start()
+	return api.svr.ListenAndServeTLS(api.cfg.CertFile, api.cfg.KeyFile)
 }
 
 func (api *MaestroApi) Shutdown() error {
 	return api.svr.Shutdown(context.TODO())
 }
 
-func setupContainer(cb camogo.ContainerBuilder) error {
+func setupContainer(cb camogo.ContainerBuilder, svcCfg []streamingService.Config) error {
 
 	// Todo: Use keys from config
 	// Todo: Camogo needs slice support
 
 	var services []streamingService.StreamingService
-	spService, err := spotify.NewSpotifyStreamingService(spClientId, spClientSecret)
-	if err != nil {
-		return err
+	for _, config := range svcCfg {
+		if !config.Enabled {
+			continue
+		}
+
+		switch config.ServiceName {
+		case appleMusic.ConfigKey:
+			token := config.Properties[appleMusic.TokenKey]
+			services = append(services, appleMusic.NewAppleMusicStreamingService(token))
+
+		case deezer.ConfigKey:
+			services = append(services, deezer.NewDeezerStreamingService())
+
+		case spotify.ConfigKey:
+			clientId := config.Properties[spotify.ClientIdKey]
+			clientSecret := config.Properties[spotify.ClientSecretKey]
+			spService, err := spotify.NewSpotifyStreamingService(clientId, clientSecret)
+			if err != nil {
+				return err
+			}
+
+			services = append(services, spService)
+		}
 	}
 
-	services = append(services, appleMusic.NewAppleMusicStreamingService(amToken))
-	services = append(services, spService)
-	services = append(services, deezer.NewDeezerStreamingService())
-
-	if err = cb.RegisterInstance(services); err != nil {
+	if err := cb.RegisterInstance(services); err != nil {
 		return err
 	}
 
