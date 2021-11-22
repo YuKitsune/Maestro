@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"maestro/pkg/streamingService"
 	"net/http"
+	"strings"
 )
 
 // https://api.music.apple.com/v1/catalog/us/search
@@ -26,7 +27,8 @@ func (s *appleMusicStreamingService) Name() string {
 
 func (s *appleMusicStreamingService) SearchArtist(name string) (res []streamingService.Artist, err error) {
 
-	url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=artists", defaultStorefront, name)
+	term := strings.ReplaceAll(name, " ", "+")
+	url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=artists", defaultStorefront, term)
 
 	httpRes, err := s.c.Get(url)
 	defer httpRes.Body.Close()
@@ -57,7 +59,8 @@ func (s *appleMusicStreamingService) SearchArtist(name string) (res []streamingS
 
 func (s *appleMusicStreamingService) SearchAlbum(name string) (res []streamingService.Album, err error) {
 
-	url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=albums", defaultStorefront, name)
+	term := strings.ReplaceAll(name, " ", "+")
+	url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=albums", defaultStorefront, term)
 
 	httpRes, err := s.c.Get(url)
 	defer httpRes.Body.Close()
@@ -89,7 +92,8 @@ func (s *appleMusicStreamingService) SearchAlbum(name string) (res []streamingSe
 
 func (s *appleMusicStreamingService) SearchSong(name string) (res []streamingService.Song, err error) {
 
-	url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=songs", defaultStorefront, name)
+	term := strings.ReplaceAll(name, " ", "+")
+	url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=songs", defaultStorefront, term)
 
 	httpRes, err := s.c.Get(url)
 	defer httpRes.Body.Close()

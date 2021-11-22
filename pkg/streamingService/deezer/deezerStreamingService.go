@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"maestro/pkg/streamingService"
 	"net/http"
+	"net/url"
 )
 
 type deezerStreamingService struct {
@@ -22,9 +23,10 @@ func (s *deezerStreamingService) Name() string {
 
 func (s *deezerStreamingService) SearchArtist(name string) (res []streamingService.Artist, err error) {
 
-	url := fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", name)
+	term := url.QueryEscape(name)
+	apiUrl := fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", term)
 
-	httpRes, err := s.client.Get(url)
+	httpRes, err := s.client.Get(apiUrl)
 	defer httpRes.Body.Close()
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
@@ -53,9 +55,10 @@ func (s *deezerStreamingService) SearchArtist(name string) (res []streamingServi
 
 func (s *deezerStreamingService) SearchAlbum(name string) (res []streamingService.Album, err error) {
 
-	url := fmt.Sprintf("https://api.deezer.com/search/album?q=%s", name)
+	term := url.QueryEscape(name)
+	apiUrl := fmt.Sprintf("https://api.deezer.com/search/album?q=%s", term)
 
-	httpRes, err := s.client.Get(url)
+	httpRes, err := s.client.Get(apiUrl)
 	defer httpRes.Body.Close()
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
@@ -85,9 +88,10 @@ func (s *deezerStreamingService) SearchAlbum(name string) (res []streamingServic
 
 func (s *deezerStreamingService) SearchSong(name string) (res []streamingService.Song, err error) {
 
-	url := fmt.Sprintf("https://api.deezer.com/search/track?q=%s", name)
+	term := url.QueryEscape(name)
+	apiUrl := fmt.Sprintf("https://api.deezer.com/search/track?q=%s", term)
 
-	httpRes, err := s.client.Get(url)
+	httpRes, err := s.client.Get(apiUrl)
 	defer httpRes.Body.Close()
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)

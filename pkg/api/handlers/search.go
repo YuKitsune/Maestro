@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/gorilla/mux"
 	"github.com/yukitsune/camogo"
-	"maestro/pkg/api"
 	"maestro/pkg/api/context"
 	"maestro/pkg/streamingService"
 	"net/http"
@@ -25,14 +24,14 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 
 	container, err := context.Container(r.Context())
 	if err != nil {
-		api.Error(w, err)
+		Error(w, err)
 		return
 	}
 
 	vars := mux.Vars(r)
 	name, ok := vars["name"]
 	if !ok {
-		api.BadRequest(w, "missing parameter \"name\"")
+		BadRequest(w, "missing parameter \"name\"")
 		return
 	}
 
@@ -49,25 +48,25 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		api.Error(w, err)
+		Error(w, err)
 		return
 	}
 
-	api.Response(w, res, http.StatusOK)
+	Response(w, res, http.StatusOK)
 }
 
 func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 
 	container, err := context.Container(r.Context())
 	if err != nil {
-		api.Error(w, err)
+		Error(w, err)
 		return
 	}
 
 	vars := mux.Vars(r)
 	name, ok := vars["name"]
 	if !ok {
-		api.BadRequest(w, "missing parameter \"name\"")
+		BadRequest(w, "missing parameter \"name\"")
 		return
 	}
 
@@ -84,25 +83,25 @@ func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		api.Error(w, err)
+		Error(w, err)
 		return
 	}
 
-	api.Response(w, res, http.StatusOK)
+	Response(w, res, http.StatusOK)
 }
 
 func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 
 	container, err := context.Container(r.Context())
 	if err != nil {
-		api.Error(w, err)
+		Error(w, err)
 		return
 	}
 
 	vars := mux.Vars(r)
 	name, ok := vars["name"]
 	if !ok {
-		api.BadRequest(w, "missing parameter \"name\"")
+		BadRequest(w, "missing parameter \"name\"")
 		return
 	}
 
@@ -119,11 +118,11 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		api.Error(w, err)
+		Error(w, err)
 		return
 	}
 
-	api.Response(w, res, http.StatusOK)
+	Response(w, res, http.StatusOK)
 }
 
 func ForEachStreamingService(container camogo.Container, fn func (streamingService.StreamingService) error) error {

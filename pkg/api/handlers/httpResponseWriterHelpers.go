@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 
 func Response(w http.ResponseWriter, res interface{}, status int) {
 
-	resBytes, err := json.Marshal(res)
+	resBytes, err := json.MarshalIndent(res, "", "\t")
 	if err != nil {
 		Error(w, err)
 		return
