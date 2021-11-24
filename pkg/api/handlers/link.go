@@ -27,7 +27,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func (ctx context.Context, cd *db.Config, mc *mongo.Client, ss []streamingService.StreamingService) (interface{}, error) {
+	res, err := container.ResolveWithResult(func(ctx context.Context, cd *db.Config, mc *mongo.Client, ss []streamingService.StreamingService) (interface{}, error) {
 		db := mc.Database(cd.Database)
 		coll := db.Collection("links")
 
@@ -57,7 +57,6 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// Links found,
 			// Todo: get the full data from the relative table
-
 
 			// Check if we're missing any services from our results
 
@@ -95,7 +94,7 @@ func HandleFlagLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = container.Resolve(func (ctx context.Context, cd *db.Config, mc *mongo.Client) error {
+	err = container.Resolve(func(ctx context.Context, cd *db.Config, mc *mongo.Client) error {
 		db := mc.Database(cd.Database)
 		coll := db.Collection("links")
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type bearerAuthTransport struct{
+type bearerAuthTransport struct {
 	token string
 }
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type basicAuthTransport struct{
+type basicAuthTransport struct {
 	token string
 }
 

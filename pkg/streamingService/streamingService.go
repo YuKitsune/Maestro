@@ -1,24 +1,24 @@
 package streamingService
 
 type Artist struct {
-	Name string
-	Genres []string
-	Url string
+	Name       string
+	Genres     []string
+	Url        string
 	ArtworkUrl string
 }
 
 type Album struct {
-	Name string
+	Name       string
 	ArtistName string
 	ArtworkUrl string
-	Url string
+	Url        string
 }
 
 type Song struct {
-	Name string
+	Name       string
 	ArtistName string
-	AlbumName string
-	Url string
+	AlbumName  string
+	Url        string
 }
 
 type StreamingService interface {

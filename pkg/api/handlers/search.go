@@ -38,7 +38,7 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 	res := &SearchArtistResult{}
 	res.Results = make(map[string][]streamingService.Artist)
 
-	err = ForEachStreamingService(container, func (service streamingService.StreamingService) error {
+	err = ForEachStreamingService(container, func(service streamingService.StreamingService) error {
 		results, err := service.SearchArtist(name)
 		if err != nil {
 			return err
@@ -73,7 +73,7 @@ func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 	res := &SearchAlbumResult{}
 	res.Results = make(map[string][]streamingService.Album)
 
-	err = ForEachStreamingService(container, func (service streamingService.StreamingService) error {
+	err = ForEachStreamingService(container, func(service streamingService.StreamingService) error {
 		results, err := service.SearchAlbum(name)
 		if err != nil {
 			return err
@@ -108,7 +108,7 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 	res := &SearchSongResult{}
 	res.Results = make(map[string][]streamingService.Song)
 
-	err = ForEachStreamingService(container, func (service streamingService.StreamingService) error {
+	err = ForEachStreamingService(container, func(service streamingService.StreamingService) error {
 		results, err := service.SearchSong(name)
 		if err != nil {
 			return err
@@ -125,8 +125,8 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 	Response(w, res, http.StatusOK)
 }
 
-func ForEachStreamingService(container camogo.Container, fn func (streamingService.StreamingService) error) error {
-	return container.Resolve(func (services []streamingService.StreamingService) error {
+func ForEachStreamingService(container camogo.Container, fn func(streamingService.StreamingService) error) error {
+	return container.Resolve(func(services []streamingService.StreamingService) error {
 		for _, service := range services {
 			err := fn(service)
 			if err != nil {

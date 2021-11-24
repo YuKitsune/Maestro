@@ -17,27 +17,26 @@ type SongResult struct {
 }
 
 type Artist struct {
-	Id            string
-	Attributes    ArtistAttributes    //The attributes for the artist.
+	Id         string
+	Attributes ArtistAttributes //The attributes for the artist.
 }
 
 type ArtistAttributes struct {
-	GenreNames     []string       //(Required) The names of the genres associated with this artist.
-	Name           string         //(Required) The localized name of the artist.
-	Url            string         //(Required) The URL for sharing an artist in the iTunes Store.
+	GenreNames []string //(Required) The names of the genres associated with this artist.
+	Name       string   //(Required) The localized name of the artist.
+	Url        string   //(Required) The URL for sharing an artist in the iTunes Store.
 }
 
-
 type Song struct {
-	Id            string
-	Attributes    SongAttributes    //The attributes for the song.
+	Id         string
+	Attributes SongAttributes //The attributes for the song.
 }
 
 type SongAttributes struct {
-	AlbumName        string         //(Required) The name of the album the song appears on.
-	ArtistName       string         //(Required) The artist’s name.
-	Name             string         //(Required) The localized name of the song.
-	Url              string         //(Required) The URL for sharing a song in the iTunes Store.
+	AlbumName  string //(Required) The name of the album the song appears on.
+	ArtistName string //(Required) The artist’s name.
+	Name       string //(Required) The localized name of the song.
+	Url        string //(Required) The URL for sharing a song in the iTunes Store.
 }
 
 type Artwork struct {
@@ -51,28 +50,27 @@ type Artwork struct {
 	Url        string
 }
 
-
 type Album struct {
-	Href          string
-	Id            string
-	Attributes    AlbumAttributes    //The attributes for the album.
+	Href       string
+	Id         string
+	Attributes AlbumAttributes //The attributes for the album.
 }
 
 type AlbumAttributes struct {
-	AlbumName           string         //(Required) The name of the album the music video appears on.
-	ArtistName          string         //(Required) The artist’s name.
-	Artwork             Artwork        //The album artwork.
-	Name                string         //(Required) The localized name of the album.
+	AlbumName  string  //(Required) The name of the album the music video appears on.
+	ArtistName string  //(Required) The artist’s name.
+	Artwork    Artwork //The album artwork.
+	Name       string  //(Required) The localized name of the album.
 	Url        string
 }
 
 type QueryParams struct {
-	Term string
+	Term  string
 	Types []string
 }
 
 type SearchResult struct {
 	Artists *ArtistsResult
-	Albums *AlbumResult
-	Songs *SongResult
+	Albums  *AlbumResult
+	Songs   *SongResult
 }

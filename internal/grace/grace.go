@@ -10,6 +10,7 @@ import (
 )
 
 type shutdownHook func()
+
 func WaitForShutdownSignal(shutdownHooks ...shutdownHook) {
 	waitForSignal(getShutdownSignalChan(), make(chan error, 1))
 	for _, hook := range shutdownHooks {

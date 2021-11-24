@@ -42,9 +42,9 @@ func (s *deezerStreamingService) SearchArtist(name string) (res []streamingServi
 
 	for _, deezerArtist := range apiRes.Data {
 		artist := streamingService.Artist{
-			Name: deezerArtist.Name,
+			Name:       deezerArtist.Name,
 			ArtworkUrl: deezerArtist.Picture,
-			Url: deezerArtist.Link,
+			Url:        deezerArtist.Link,
 		}
 
 		res = append(res, artist)
@@ -74,10 +74,10 @@ func (s *deezerStreamingService) SearchAlbum(name string) (res []streamingServic
 
 	for _, deezerAlbum := range apiRes.Data {
 		album := streamingService.Album{
-			Name: deezerAlbum.Title,
+			Name:       deezerAlbum.Title,
 			ArtistName: deezerAlbum.Artist.Name,
 			ArtworkUrl: deezerAlbum.Cover,
-			Url: deezerAlbum.Link,
+			Url:        deezerAlbum.Link,
 		}
 
 		res = append(res, album)
@@ -107,10 +107,10 @@ func (s *deezerStreamingService) SearchSong(name string) (res []streamingService
 
 	for _, deezerTrack := range apiRes.Data {
 		song := streamingService.Song{
-			Name: deezerTrack.Title,
+			Name:       deezerTrack.Title,
 			ArtistName: deezerTrack.Artist.Name,
-			AlbumName: deezerTrack.Album.Title,
-			Url: deezerTrack.Link,
+			AlbumName:  deezerTrack.Album.Title,
+			Url:        deezerTrack.Link,
 		}
 
 		res = append(res, song)

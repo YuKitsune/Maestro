@@ -3,7 +3,7 @@ package model
 import "net/url"
 
 type Album struct {
-	Name string
+	Name     string
 	ArtistId string
 
 	Services []ServiceSpecificArtist

@@ -6,8 +6,8 @@ type StreamingServiceKey string
 
 type StreamingServiceSpecificEntity struct {
 	ServiceKey StreamingServiceKey
-	Country Country
+	Country    Country
 
-	Id string
+	Id  string
 	Url url.URL
 }

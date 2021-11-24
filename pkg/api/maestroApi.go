@@ -41,12 +41,11 @@ func NewMaestroApi(apiCfg *Config, dbCfg *db.Config, svgCfgs []streamingService.
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
 
-		Handler:      r,
+		Handler: r,
 	}
 
 	return &MaestroApi{apiCfg, svr}, nil
 }
-
 
 func (api *MaestroApi) Start() error {
 	return api.svr.ListenAndServe()

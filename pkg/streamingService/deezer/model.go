@@ -5,8 +5,8 @@ type searchArtistResponse struct {
 }
 
 type Artist struct {
-	Name string
-	Link string
+	Name    string
+	Link    string
 	Picture string
 }
 
@@ -15,9 +15,9 @@ type searchAlbumResponse struct {
 }
 
 type Album struct {
-	Title string
-	Link string
-	Cover string
+	Title  string
+	Link   string
+	Cover  string
 	Artist Artist
 }
 
@@ -26,8 +26,8 @@ type searchTrackResponse struct {
 }
 
 type Track struct {
-	Title string
-	Link string
+	Title  string
+	Link   string
 	Artist Artist
-	Album Album
+	Album  Album
 }

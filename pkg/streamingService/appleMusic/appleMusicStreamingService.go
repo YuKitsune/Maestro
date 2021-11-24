@@ -46,9 +46,9 @@ func (s *appleMusicStreamingService) SearchArtist(name string) (res []streamingS
 
 	for _, resource := range apiRes.Results.Artists.Data {
 		artist := streamingService.Artist{
-			Name: resource.Attributes.Name,
+			Name:   resource.Attributes.Name,
 			Genres: resource.Attributes.GenreNames,
-			Url: resource.Attributes.Url,
+			Url:    resource.Attributes.Url,
 		}
 
 		res = append(res, artist)
@@ -78,10 +78,10 @@ func (s *appleMusicStreamingService) SearchAlbum(name string) (res []streamingSe
 
 	for _, resource := range apiRes.Results.Albums.Data {
 		album := streamingService.Album{
-			Name: resource.Attributes.Name,
+			Name:       resource.Attributes.Name,
 			ArtistName: resource.Attributes.ArtistName,
 			ArtworkUrl: resource.Attributes.Artwork.Url,
-			Url: resource.Attributes.Url,
+			Url:        resource.Attributes.Url,
 		}
 
 		res = append(res, album)
@@ -111,10 +111,10 @@ func (s *appleMusicStreamingService) SearchSong(name string) (res []streamingSer
 
 	for _, resource := range apiRes.Results.Songs.Data {
 		song := streamingService.Song{
-			Name: resource.Attributes.Name,
+			Name:       resource.Attributes.Name,
 			ArtistName: resource.Attributes.ArtistName,
-			AlbumName: resource.Attributes.AlbumName,
-			Url: resource.Attributes.Url,
+			AlbumName:  resource.Attributes.AlbumName,
+			Url:        resource.Attributes.Url,
 		}
 
 		res = append(res, song)

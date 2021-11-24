@@ -31,8 +31,8 @@ func (m *ContextInjection) Middleware(next http.Handler) http.Handler {
 		// - No circular reference (ctr -> ctx -> ctr -> ctx -> ...)
 		// - Container access from context limited to HTTP handlers
 
-		cc, err := m.container.NewChildWith(func (cb camogo.ContainerBuilder) error {
-			err := cb.RegisterFactory(func () context.Context {
+		cc, err := m.container.NewChildWith(func(cb camogo.ContainerBuilder) error {
+			err := cb.RegisterFactory(func() context.Context {
 				return r.Context()
 			}, camogo.SingletonLifetime)
 

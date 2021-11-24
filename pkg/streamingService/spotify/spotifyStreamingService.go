@@ -20,7 +20,7 @@ func GetAccessToken(clientId string, secret string) (token string, error error) 
 	reqToken := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientId, secret)))
 	client := streamingService.NewClientWithBasicAuth(reqToken)
 
-	res, err := client.PostForm(tokenUrl, url.Values {
+	res, err := client.PostForm(tokenUrl, url.Values{
 		"grant_type": {"client_credentials"},
 	})
 	defer res.Body.Close()
@@ -77,10 +77,10 @@ func (s *spotifyStreamingService) SearchArtist(name string) (res []streamingServ
 
 		url := spotifyArtist.ExternalURLs["spotify"]
 		artist := streamingService.Artist{
-			Name: spotifyArtist.Name,
-			Genres: spotifyArtist.Genres,
+			Name:       spotifyArtist.Name,
+			Genres:     spotifyArtist.Genres,
 			ArtworkUrl: imageUrl,
-			Url: url,
+			Url:        url,
 		}
 
 		res = append(res, artist)
@@ -106,10 +106,10 @@ func (s *spotifyStreamingService) SearchAlbum(name string) (res []streamingServi
 		}
 
 		album := streamingService.Album{
-			Name: spotifyAlbum.Name,
+			Name:       spotifyAlbum.Name,
 			ArtistName: artistName(spotifyAlbum.Artists),
 			ArtworkUrl: imageUrl,
-			Url: url,
+			Url:        url,
 		}
 
 		res = append(res, album)
@@ -130,10 +130,10 @@ func (s *spotifyStreamingService) SearchSong(name string) (res []streamingServic
 		url := spotifySong.ExternalURLs["spotify"]
 
 		song := streamingService.Song{
-			Name: spotifySong.Name,
+			Name:       spotifySong.Name,
 			ArtistName: artistName(spotifySong.Artists),
-			AlbumName: spotifySong.Album.Name,
-			Url: url,
+			AlbumName:  spotifySong.Album.Name,
+			Url:        url,
 		}
 
 		res = append(res, song)
@@ -147,7 +147,7 @@ func artistName(artists []spotify.SimpleArtist) string {
 	var name string
 	if len(artists) > 0 {
 		for i, artist := range artists {
-			if i > 0 && i == len(artists) - 1 {
+			if i > 0 && i == len(artists)-1 {
 				name += ", "
 			}
 

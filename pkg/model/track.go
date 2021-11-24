@@ -1,9 +1,9 @@
 package model
 
 type Track struct {
-	Name string
+	Name     string
 	ArtistId string
-	AlbumId string
+	AlbumId  string
 
 	Number int
 
