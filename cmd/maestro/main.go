@@ -4,17 +4,29 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"maestro"
 	"maestro/internal/grace"
 	"maestro/pkg/api"
+	"maestro/pkg/api/db"
 	"maestro/pkg/streamingService"
 )
 
-type MaestroConfig struct {
+type Config struct {
 	Api *api.Config `mapstructure:"api"`
+	Db *db.Config `mapstructure:"db"`
 	Services []streamingService.Config `mapstructure:"services"`
 }
 
 func main() {
+
+	var versionCmd = &cobra.Command{
+		Use:   "version",
+		Short: "Prints the version information",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(maestro.Version)
+			return nil
+		},
+	}
 
 	serveCmd := &cobra.Command{
 		Use:   "serve",
@@ -28,6 +40,7 @@ func main() {
 	}
 
 	rootCmd.AddCommand(serveCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	err := rootCmd.Execute()
 	if err != nil {
@@ -57,13 +70,13 @@ func serve(command *cobra.Command, args []string) error {
 	}
 
 	// Unmarshal
-	var cfg *MaestroConfig
+	var cfg *Config
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
 		return err
 	}
 
-	maestroApi, err := api.NewMaestroApi(cfg.Api, cfg.Services)
+	maestroApi, err := api.NewMaestroApi(cfg.Api, cfg.Db, cfg.Services)
 	if err != nil {
 		grace.ExitFromError(err)
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/yukitsune/camogo"
+	"maestro/pkg/api/db"
 	"maestro/pkg/api/handlers"
 	"maestro/pkg/api/middleware"
 	"maestro/pkg/streamingService"
@@ -20,10 +21,10 @@ type MaestroApi struct {
 	svr *http.Server
 }
 
-func NewMaestroApi(cfg *Config, svcCfg []streamingService.Config) (*MaestroApi, error) {
+func NewMaestroApi(apiCfg *Config, dbCfg *db.Config, svgCfgs []streamingService.Config) (*MaestroApi, error) {
 
 	cb := camogo.NewBuilder()
-	if err := setupContainer(cb, svcCfg); err != nil {
+	if err := setupContainer(cb, dbCfg, svgCfgs); err != nil {
 		return nil, err
 	}
 
@@ -31,7 +32,7 @@ func NewMaestroApi(cfg *Config, svcCfg []streamingService.Config) (*MaestroApi, 
 
 	r := setupHandlers(container)
 
-	addr := fmt.Sprintf(":%d", cfg.Port)
+	addr := fmt.Sprintf(":%d", apiCfg.Port)
 	svr := &http.Server{
 		Addr: addr,
 
@@ -43,7 +44,7 @@ func NewMaestroApi(cfg *Config, svcCfg []streamingService.Config) (*MaestroApi, 
 		Handler:      r,
 	}
 
-	return &MaestroApi{cfg, svr}, nil
+	return &MaestroApi{apiCfg, svr}, nil
 }
 
 
@@ -59,11 +60,24 @@ func (api *MaestroApi) Shutdown() error {
 	return api.svr.Shutdown(context.TODO())
 }
 
-func setupContainer(cb camogo.ContainerBuilder, svcCfg []streamingService.Config) error {
+func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, svcCfgs []streamingService.Config) error {
+
+	dbMod := &db.DatabaseModule{Config: dbCfg}
+	if err := cb.RegisterModule(dbMod); err != nil {
+		return err
+	}
+
+	if err := registerStreamingServices(cb, svcCfgs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func registerStreamingServices(cb camogo.ContainerBuilder, svcCfg []streamingService.Config) error {
 
 	// Todo: Use keys from config
 	// Todo: Camogo needs slice support
-
 	var services []streamingService.StreamingService
 	for _, config := range svcCfg {
 		if !config.Enabled {

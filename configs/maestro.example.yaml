@@ -1,5 +1,11 @@
 api:
   port: 8182
+database:
+  host: localhost
+  port: 27017
+  user: maestro
+  password: maestro
+  database: maestro
 services:
   - serviceName: AppleMusic
     enabled: true

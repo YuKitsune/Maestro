@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  database:
+    restart: always
+    image: 'mongo:latest'
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: maestro
+      MONGO_INITDB_ROOT_PASSWORD: maestro
+
+  maestro:
+    build:
+      context: ../
+      dockerfile: build/package/maestro/Dockerfile
+    ports:
+      - '8000:8000'
+    environment:
+      MAESTRO_API_PORT: 8000
+      MAESTRO_DB_HOST: database
+      MAESTRO_DB_PORT: 27017
+      MAESTRO_DB_USER: maestro
+      MAESTRO_DB_PASSWORD: maestro
+      MAESTRO_DB_DATABASE: maestro
+    depends_on:
+      - database

@@ -1,32 +1,117 @@
 package handlers
 
-import "net/http"
+import (
+	"context"
+	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	mcontext "maestro/pkg/api/context"
+	"maestro/pkg/api/db"
+	"maestro/pkg/model"
+	"maestro/pkg/streamingService"
+	"net/http"
+)
 
 func HandleLink(w http.ResponseWriter, r *http.Request) {
 
-	requestedUrl := "https://music.apple.com/au/album/i-gotta/1453467630?i=1453467634"
+	vars := mux.Vars(r)
+	reqLink, ok := vars["link"]
+	if !ok {
+		BadRequest(w, "missing parameter \"link\"")
+		return
+	}
 
-	// 1. Check links table for a matching record
+	container, err := mcontext.Container(r.Context())
+	if err != nil {
+		Error(w, err)
+		return
+	}
 
-	// If a record exists:
-	//	Compile records
-	// 	If we're aware of a streaming service, but there are no results for that service (E.g: A new service added after the result was stored)
-	//		1. Get details from any remaining streaming service APIs
-	//  	2. Store the new details in the database
-	//		2. Add the new details to our result set
+	res, err := container.ResolveWithResult(func (ctx context.Context, cd *db.Config, mc *mongo.Client, ss []streamingService.StreamingService) (interface{}, error) {
+		db := mc.Database(cd.Database)
+		coll := db.Collection("links")
 
-	// If no records exist:
-	// 	1. Get details from the streaming service API
-	// 	2. Search other streaming services for similar details
-	// 	3. Store the best matches in the database
+		// Todo: Strong type would be sick
+		var results []interface{}
 
-	//  Return the results for each streaming service
+		var foundLinks []model.Link
+		cur, err := coll.Find(ctx, bson.D{{"link", reqLink}})
+		if err != nil {
+			return nil, err
+		}
+
+		err = cur.All(ctx, &foundLinks)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(foundLinks) == 0 {
+			// No links found, query the streaming service and find the same entry on other services
+
+			// Todo: Query the streaming service
+			// Todo: Search other services for the same thing
+
+			// Todo: Store the results in the database
+			// Todo: Add the results to the results slice
+
+		} else {
+			// Links found,
+			// Todo: get the full data from the relative table
+
+
+			// Check if we're missing any services from our results
+
+			// Todo: check if we have a streaming service registered that doesn't have a result in our results slice
+			if len(foundLinks) < len(ss) {
+				// Todo: Query the remaining streaming service
+				// Todo: Store the results in the database
+				// Todo: Add the results to the results slice
+			}
+
+		}
+
+		return results, nil
+	})
+	if err != nil {
+		Error(w, err)
+		return
+	}
+
+	Response(w, res, http.StatusOK)
 }
 
 func HandleFlagLink(w http.ResponseWriter, r *http.Request) {
 
-	// Todo: Pick one???
-	// Option 1: Delete the records
-	// Option 2: Delete the records after N number of flags
+	vars := mux.Vars(r)
+	linkId, ok := vars["linkId"]
+	if !ok {
+		BadRequest(w, "missing parameter \"linkId\"")
+		return
+	}
 
+	container, err := mcontext.Container(r.Context())
+	if err != nil {
+		Error(w, err)
+		return
+	}
+
+	err = container.Resolve(func (ctx context.Context, cd *db.Config, mc *mongo.Client) error {
+		db := mc.Database(cd.Database)
+		coll := db.Collection("links")
+
+		// Todo: Consider deleting related things too
+
+		_, err := coll.DeleteOne(ctx, bson.D{{"_id", linkId}})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		Error(w, err)
+		return
+	}
+
+	EmptyResponse(w, http.StatusOK)
 }
