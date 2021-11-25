@@ -51,7 +51,6 @@ type Artwork struct {
 }
 
 type Album struct {
-	Href       string
 	Id         string
 	Attributes AlbumAttributes //The attributes for the album.
 }

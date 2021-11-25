@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"maestro/pkg/streamingService"
 	"net/url"
+	"regexp"
 )
 
 type spotifyStreamingService struct {
@@ -61,9 +62,14 @@ func (s *spotifyStreamingService) Name() string {
 	return "Spotify"
 }
 
-func (s *spotifyStreamingService) SearchArtist(name string) (res []streamingService.Artist, err error) {
+func (s *spotifyStreamingService) SearchArtist(name string, region streamingService.Region) (res []streamingService.Artist, err error) {
 
-	searchRes, err := s.client.Search(name, spotify.SearchTypeArtist)
+	country := streamingService.RegionToString(region)
+	so := &spotify.Options{
+		Country:   &country,
+	}
+
+	searchRes, err := s.client.SearchOpt(name, spotify.SearchTypeArtist, so)
 	if err != nil {
 		return res, err
 	}
@@ -78,7 +84,6 @@ func (s *spotifyStreamingService) SearchArtist(name string) (res []streamingServ
 		url := spotifyArtist.ExternalURLs["spotify"]
 		artist := streamingService.Artist{
 			Name:       spotifyArtist.Name,
-			Genres:     spotifyArtist.Genres,
 			ArtworkUrl: imageUrl,
 			Url:        url,
 		}
@@ -89,9 +94,14 @@ func (s *spotifyStreamingService) SearchArtist(name string) (res []streamingServ
 	return res, nil
 }
 
-func (s *spotifyStreamingService) SearchAlbum(name string) (res []streamingService.Album, err error) {
+func (s *spotifyStreamingService) SearchAlbum(name string, region streamingService.Region) (res []streamingService.Album, err error) {
 
-	searchRes, err := s.client.Search(name, spotify.SearchTypeAlbum)
+	country := streamingService.RegionToString(region)
+	so := &spotify.Options{
+		Country:   &country,
+	}
+
+	searchRes, err := s.client.SearchOpt(name, spotify.SearchTypeArtist, so)
 	if err != nil {
 		return res, err
 	}
@@ -118,9 +128,14 @@ func (s *spotifyStreamingService) SearchAlbum(name string) (res []streamingServi
 	return res, nil
 }
 
-func (s *spotifyStreamingService) SearchSong(name string) (res []streamingService.Song, err error) {
+func (s *spotifyStreamingService) SearchSong(name string, region streamingService.Region) (res []streamingService.Song, err error) {
 
-	searchRes, err := s.client.Search(name, spotify.SearchTypeTrack)
+	country := streamingService.RegionToString(region)
+	so := &spotify.Options{
+		Country:   &country,
+	}
+
+	searchRes, err := s.client.SearchOpt(name, spotify.SearchTypeArtist, so)
 	if err != nil {
 		return res, err
 	}
@@ -142,6 +157,71 @@ func (s *spotifyStreamingService) SearchSong(name string) (res []streamingServic
 	return res, nil
 }
 
+func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.Thing, error) {
+
+	// example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=10587ef152a8493f
+	// format: 	https://open.spotify.com/<artist|album|track>/<id>?si=<user specific token that i don't care about>
+	// Todo: How we gonna get the region?
+
+	// Todo: Move pattern to config
+	pattern := "(?:https:\\/\\/open\\.spotify\\.com\\/)(?P<type>[A-Za-z]+)\\/(?P<id>[A-Za-z0-9]+).*"
+	linkRegexp := regexp.MustCompile(pattern)
+
+	matches := findStringSubmatchMap(linkRegexp, link)
+
+	// region := matches["region"]
+	typ := matches["type"]
+	id := spotify.ID(matches["id"])
+
+	switch typ {
+	case "artist":
+		foundArtist, err := s.client.GetArtist(id)
+		if err != nil {
+			return nil, err
+		}
+
+		artist := &streamingService.Artist{
+			Name:       foundArtist.Name,
+			ArtworkUrl: imageUrl(foundArtist.Images),
+			Url:        foundArtist.ExternalURLs["spotify"],
+		}
+
+		return artist, nil
+
+	case "album":
+		foundAlbum, err := s.client.GetAlbum(id)
+		if err != nil {
+			return nil, err
+		}
+
+		album := &streamingService.Artist{
+			Name:       foundAlbum.Name,
+			ArtworkUrl: imageUrl(foundAlbum.Images),
+			Url:        foundAlbum.ExternalURLs["spotify"],
+		}
+
+		return album, nil
+
+	case "track":
+		foundTrack, err := s.client.GetTrack(id)
+		if err != nil {
+			return nil, err
+		}
+
+		track := &streamingService.Song{
+			Name:       foundTrack.Name,
+			ArtistName: artistName(foundTrack.Artists),
+			AlbumName:  foundTrack.Album.Name,
+			Url:        foundTrack.ExternalURLs["spotify"],
+		}
+
+		return track, nil
+
+	default:
+		return nil, fmt.Errorf("unknown type %s", typ)
+	}
+}
+
 func artistName(artists []spotify.SimpleArtist) string {
 
 	var name string
@@ -156,4 +236,28 @@ func artistName(artists []spotify.SimpleArtist) string {
 	}
 
 	return name
+}
+
+func imageUrl(imgs []spotify.Image) string {
+	var url string
+	if len(imgs) > 0 {
+		url = imgs[0].URL
+	}
+
+	return url
+}
+
+func findStringSubmatchMap(r *regexp.Regexp, s string) map[string]string {
+
+	matches := r.FindStringSubmatch(s)
+	names := r.SubexpNames()
+
+	result := make(map[string]string)
+	for i, name := range names {
+		if i != 0 && name != "" {
+			result[name] = matches[i]
+		}
+	}
+
+	return result
 }

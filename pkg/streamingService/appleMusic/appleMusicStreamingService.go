@@ -48,7 +48,6 @@ func (s *appleMusicStreamingService) SearchArtist(name string, region streamingS
 	for _, resource := range apiRes.Results.Artists.Data {
 		artist := streamingService.Artist{
 			Name:   resource.Attributes.Name,
-			Genres: resource.Attributes.GenreNames,
 			Url:    resource.Attributes.Url,
 		}
 
@@ -140,25 +139,96 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 	typ := matches["type"]
 	id := matches["id"]
 
-	var res streamingService.Thing
+	var url string
+	var unmarshalFunc func(rb []byte) (streamingService.Thing, error)
+
 	switch typ {
 	case "artist":
-		url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/artists/%s", store, id)
+		url = fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/artists/%s", store, id)
+		unmarshalFunc = func (rb []byte) (streamingService.Thing, error) {
+			var apiRes *ArtistsResult
+			err := json.Unmarshal(rb, &apiRes)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(apiRes.Data) == 0 {
+				return nil, fmt.Errorf("no %s found in region %s with id %s", typ, store, id)
+			}
+
+			foundArtist := apiRes.Data[0]
+			artist := &streamingService.Artist{
+				Name:       foundArtist.Attributes.Name,
+				Url:        foundArtist.Attributes.Url,
+				ArtworkUrl: "",
+			}
+
+			return artist, nil
+		}
+
 		break
 
 	case "album":
-		url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/albums/%s", store, id)
+		url = fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/albums/%s", store, id)
+		unmarshalFunc = func (rb []byte) (streamingService.Thing, error) {
+			var apiRes *AlbumResult
+			err := json.Unmarshal(rb, &apiRes)
+			if err != nil {
+				return nil, err
+			}
+
+			foundAlbum := apiRes.Data[0]
+			album := &streamingService.Album{
+				Name:       foundAlbum.Attributes.Name,
+				ArtistName: foundAlbum.Attributes.ArtistName,
+				ArtworkUrl: foundAlbum.Attributes.Artwork.Url,
+				Url:        foundAlbum.Attributes.Url,
+			}
+
+			return album, nil
+		}
 		break
 
 	case "song":
-		url := fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/songs/%s", store, id)
+		url = fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/songs/%s", store, id)
+		unmarshalFunc = func (rb []byte) (streamingService.Thing, error) {
+			var apiRes *SongResult
+			err := json.Unmarshal(rb, &apiRes)
+			if err != nil {
+				return nil, err
+			}
+
+			foundSong := apiRes.Data[0]
+			song := &streamingService.Song{
+				Name:        foundSong.Attributes.Name,
+				ArtistName:  foundSong.Attributes.ArtistName,
+				AlbumName:   foundSong.Attributes.AlbumName,
+				Url:         foundSong.Attributes.Url,
+			}
+
+			return song, nil
+		}
 		break
 
 	default:
 		return nil, fmt.Errorf("unknown type %s", typ)
 	}
 
+	httpRes, err := s.c.Get(url)
+	defer httpRes.Body.Close()
 
+	if httpRes.StatusCode == http.StatusNotFound {
+		return nil, fmt.Errorf("no %s found in region %s with id %s", typ, store, id)
+	}
+
+	resBytes, err := ioutil.ReadAll(httpRes.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := unmarshalFunc(resBytes)
+
+	return res, err
 }
 
 func findStringSubmatchMap(r *regexp.Regexp, s string) map[string]string {

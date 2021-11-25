@@ -124,5 +124,8 @@ func setupHandlers(container camogo.Container) *mux.Router {
 	r.HandleFunc("/search/album", handlers.HandleSearchAlbum).Methods("GET").Queries("name", "{name}")
 	r.HandleFunc("/search/song", handlers.HandleSearchSong).Methods("GET").Queries("name", "{name}")
 
+	// Links
+	r.HandleFunc("/link", handlers.HandleLink).Methods("GET").Queries("link", "{link}")
+
 	return r
 }

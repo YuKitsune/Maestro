@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+const defaultRegion streamingService.Region = "AU"
+
 type SearchArtistResult struct {
 	Results map[string][]streamingService.Artist
 }
@@ -39,7 +41,7 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 	res.Results = make(map[string][]streamingService.Artist)
 
 	err = ForEachStreamingService(container, func(service streamingService.StreamingService) error {
-		results, err := service.SearchArtist(name)
+		results, err := service.SearchArtist(name, defaultRegion)
 		if err != nil {
 			return err
 		}
@@ -74,7 +76,7 @@ func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 	res.Results = make(map[string][]streamingService.Album)
 
 	err = ForEachStreamingService(container, func(service streamingService.StreamingService) error {
-		results, err := service.SearchAlbum(name)
+		results, err := service.SearchAlbum(name, defaultRegion)
 		if err != nil {
 			return err
 		}
@@ -109,7 +111,7 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 	res.Results = make(map[string][]streamingService.Song)
 
 	err = ForEachStreamingService(container, func(service streamingService.StreamingService) error {
-		results, err := service.SearchSong(name)
+		results, err := service.SearchSong(name, defaultRegion)
 		if err != nil {
 			return err
 		}

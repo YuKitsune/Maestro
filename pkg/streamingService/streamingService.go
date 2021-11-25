@@ -2,6 +2,13 @@ package streamingService
 
 type Region string
 
+func RegionToString(r Region) string {
+	var rv interface{}
+	rv = r
+	rs := rv.(string)
+	return rs
+}
+
 type Thing interface {
 	GetName() string
 	GetUrl() string
@@ -9,9 +16,8 @@ type Thing interface {
 
 type Artist struct {
 	Name       string
-	Genres     []string
-	Url        string
 	ArtworkUrl string
+	Url        string
 }
 
 func (a *Artist) GetName() string {
