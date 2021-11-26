@@ -129,6 +129,7 @@ func setupHandlers(container camogo.Container) *mux.Router {
 
 	// Links
 	r.HandleFunc("/link", handlers.HandleLink).Methods("GET").Queries("link", "{link}")
+	r.HandleFunc("/link/flag", handlers.HandleFlagLink).Methods("GET").Queries("linkId", "{linkId}")
 
 	return r
 }

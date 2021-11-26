@@ -3,9 +3,10 @@ package streamingService
 import "fmt"
 
 type Region string
+const DefaultRegion Region = "AU"
 
-func RegionToString(r Region) string {
-	return fmt.Sprintf("%s", r)
+func (r *Region) String() string {
+	return string(*r)
 }
 
 type Thing interface {

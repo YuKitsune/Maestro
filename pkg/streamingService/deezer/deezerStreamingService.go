@@ -74,6 +74,7 @@ func (s *deezerStreamingService) SearchArtist(artist *streamingService.Artist) (
 	return &streamingService.Artist{
 		Name:       deezerArtist.Name,
 		ArtworkUrl: deezerArtist.Picture,
+		Region: 	streamingService.DefaultRegion,
 		Url:        deezerArtist.Link,
 	}, nil
 }
@@ -106,6 +107,7 @@ func (s *deezerStreamingService) SearchAlbum(album *streamingService.Album) (*st
 		Name:       deezerAlbum.Title,
 		ArtistName: deezerAlbum.Artist.Name,
 		ArtworkUrl: deezerAlbum.Cover,
+		Region: 	streamingService.DefaultRegion,
 		Url:        deezerAlbum.Link,
 	}, nil
 }
@@ -138,6 +140,7 @@ func (s *deezerStreamingService) SearchSong(song *streamingService.Song) (*strea
 		Name:       deezerTrack.Title,
 		ArtistName: deezerTrack.Artist.Name,
 		AlbumName:  deezerTrack.Album.Title,
+		Region: 	streamingService.DefaultRegion,
 		Url:        deezerTrack.Link,
 	}, nil
 }

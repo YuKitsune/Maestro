@@ -32,7 +32,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		coll := db.Collection("links")
 
 		// Todo: Strong type would be sick
-		var results []interface{}
+		var results []streamingService.Thing
 
 		var foundLinks []model.Link
 		cur, err := coll.Find(ctx, bson.D{{"link", reqLink}})
@@ -48,53 +48,47 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		if len(foundLinks) == 0 {
 			// No links found, query the streaming service and find the same entry on other services
 
-			err = container.Resolve(func (services []streamingService.StreamingService) error {
+			var targetService streamingService.StreamingService
+			var otherServices []streamingService.StreamingService
 
-				var targetService streamingService.StreamingService
-				var otherServices []streamingService.StreamingService
-
-				err := streamingService.ForEachStreamingService(services, func (service streamingService.StreamingService) error {
-					if service.LinkBelongsToService(reqLink) {
-						targetService = service
-					} else {
-						otherServices = append(otherServices, service)
-					}
-					return nil
-				})
-
-				if err != nil {
-					return err
+			err := streamingService.ForEachStreamingService(ss, func (service streamingService.StreamingService) error {
+				if service.LinkBelongsToService(reqLink) {
+					targetService = service
+				} else {
+					otherServices = append(otherServices, service)
 				}
-
-				var foundThings []streamingService.Thing
-				thing, err := targetService.SearchFromLink(reqLink)
-				if err != nil {
-					return err
-				}
-
-				foundThings = append(foundThings, thing)
-
-				err = streamingService.ForEachStreamingService(otherServices, func (service streamingService.StreamingService) error {
-					foundThing, err := streamingService.SearchThing(service, thing)
-					if err != nil {
-						return err
-					}
-
-					foundThings = append(foundThings, foundThing)
-					return nil
-				})
-				if err != nil {
-					return err
-				}
-
 				return nil
 			})
 
-			// Todo: Query the streaming service
-			// Todo: Search other services for the same thing
+			if err != nil {
+				return results, err
+			}
+
+			var foundThings []streamingService.Thing
+			thing, err := targetService.SearchFromLink(reqLink)
+			if err != nil {
+				return results, err
+			}
+
+			foundThings = append(foundThings, thing)
+
+			err = streamingService.ForEachStreamingService(otherServices, func (service streamingService.StreamingService) error {
+				foundThing, err := streamingService.SearchThing(service, thing)
+				if err != nil {
+					return err
+				}
+
+				foundThings = append(foundThings, foundThing)
+				return nil
+			})
+			if err != nil {
+				return results, err
+			}
 
 			// Todo: Store the results in the database
-			// Todo: Add the results to the results slice
+
+			results = foundThings
+			return results, nil
 
 		} else {
 			// Links found,
@@ -108,7 +102,6 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 				// Todo: Store the results in the database
 				// Todo: Add the results to the results slice
 			}
-
 		}
 
 		return results, nil

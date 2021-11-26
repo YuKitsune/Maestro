@@ -60,6 +60,7 @@ func (s *appleMusicStreamingService) SearchArtist(artist *streamingService.Artis
 	appleMusicArtist := apiRes.Results.Artists.Data[0]
 	return &streamingService.Artist{
 		Name:   appleMusicArtist.Attributes.Name,
+		Region: 	streamingService.DefaultRegion,
 		Url:    appleMusicArtist.Attributes.Url,
 	}, nil
 }
@@ -93,6 +94,7 @@ func (s *appleMusicStreamingService) SearchAlbum(album *streamingService.Album) 
 		Name:       appleMusicAlbum.Attributes.Name,
 		ArtistName: appleMusicAlbum.Attributes.ArtistName,
 		ArtworkUrl: appleMusicAlbum.Attributes.Artwork.Url,
+		Region: 	streamingService.DefaultRegion,
 		Url:        appleMusicAlbum.Attributes.Url,
 	}, nil
 }
@@ -126,6 +128,7 @@ func (s *appleMusicStreamingService) SearchSong(song *streamingService.Song) (*s
 		Name:       appleMusicSong.Attributes.Name,
 		ArtistName: appleMusicSong.Attributes.ArtistName,
 		AlbumName:  appleMusicSong.Attributes.AlbumName,
+		Region: 	streamingService.DefaultRegion,
 		Url:        appleMusicSong.Attributes.Url,
 	}, nil
 }
@@ -138,7 +141,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 
 	matches := findStringSubmatchMap(s.shareLinkPattern, link)
 
-	store := matches["storefront"]
+	store := streamingService.Region(matches["storefront"])
 	typ := matches["type"]
 	id := matches["id"]
 
@@ -163,6 +166,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 			artist := &streamingService.Artist{
 				Name:       foundArtist.Attributes.Name,
 				Url:        foundArtist.Attributes.Url,
+				Region: 	store,
 				ArtworkUrl: "",
 			}
 
@@ -185,6 +189,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 				Name:       foundAlbum.Attributes.Name,
 				ArtistName: foundAlbum.Attributes.ArtistName,
 				ArtworkUrl: foundAlbum.Attributes.Artwork.Url,
+				Region: 	store,
 				Url:        foundAlbum.Attributes.Url,
 			}
 
@@ -206,6 +211,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 				Name:        foundSong.Attributes.Name,
 				ArtistName:  foundSong.Attributes.ArtistName,
 				AlbumName:   foundSong.Attributes.AlbumName,
+				Region: 	 store,
 				Url:         foundSong.Attributes.Url,
 			}
 

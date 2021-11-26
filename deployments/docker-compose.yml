@@ -14,7 +14,7 @@ services:
       context: ../
       dockerfile: build/package/maestro/Dockerfile
     ports:
-      - '8000:8000'
+      - '8182:8182'
     environment:
       MAESTRO_API_PORT: 8000
       MAESTRO_DB_HOST: database
