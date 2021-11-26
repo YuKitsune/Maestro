@@ -86,15 +86,18 @@ func registerStreamingServices(cb camogo.ContainerBuilder, svcCfg []streamingSer
 		switch config.ServiceName {
 		case appleMusic.ConfigKey:
 			token := config.Properties[appleMusic.TokenKey]
-			services = append(services, appleMusic.NewAppleMusicStreamingService(token))
+			shareUrlPattern := config.Properties[streamingService.ShareLinkPatternKey]
+			services = append(services, appleMusic.NewAppleMusicStreamingService(token, shareUrlPattern))
 
 		case deezer.ConfigKey:
-			services = append(services, deezer.NewDeezerStreamingService())
+			shareUrlPattern := config.Properties[streamingService.ShareLinkPatternKey]
+			services = append(services, deezer.NewDeezerStreamingService(shareUrlPattern))
 
 		case spotify.ConfigKey:
 			clientId := config.Properties[spotify.ClientIdKey]
 			clientSecret := config.Properties[spotify.ClientSecretKey]
-			spService, err := spotify.NewSpotifyStreamingService(clientId, clientSecret)
+			shareUrlPattern := config.Properties[streamingService.ShareLinkPatternKey]
+			spService, err := spotify.NewSpotifyStreamingService(clientId, clientSecret, shareUrlPattern)
 			if err != nil {
 				return err
 			}

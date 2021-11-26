@@ -12,6 +12,7 @@ import (
 
 type deezerStreamingService struct {
 	client *http.Client
+	shareLinkPattern *regexp.Regexp
 }
 
 func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
@@ -33,110 +34,112 @@ func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
 	return actualLink, err
 }
 
-func NewDeezerStreamingService() streamingService.StreamingService {
-	return &deezerStreamingService{&http.Client{}}
+func NewDeezerStreamingService(shareLinkPattern string) streamingService.StreamingService {
+	shareLinkPatternRegex := regexp.MustCompile(shareLinkPattern)
+	return &deezerStreamingService{&http.Client{}, shareLinkPatternRegex}
+}
+
+func (s *deezerStreamingService) LinkBelongsToService(link string) bool {
+	return s.shareLinkPattern.MatchString(link)
 }
 
 func (s *deezerStreamingService) Name() string {
 	return "Deezer"
 }
 
-func (s *deezerStreamingService) SearchArtist(name string, region streamingService.Region) (res []streamingService.Artist, err error) {
+func (s *deezerStreamingService) SearchArtist(artist *streamingService.Artist) (*streamingService.Artist, error) {
 
-	term := url.QueryEscape(name)
-	apiUrl := fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", term)
+	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\"", artist.Name))
+	apiUrl := fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", q)
 
 	httpRes, err := s.client.Get(apiUrl)
 	defer httpRes.Body.Close()
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
 	var apiRes *searchArtistResponse
 	err = json.Unmarshal(resBytes, &apiRes)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
-	for _, deezerArtist := range apiRes.Data {
-		artist := streamingService.Artist{
-			Name:       deezerArtist.Name,
-			ArtworkUrl: deezerArtist.Picture,
-			Url:        deezerArtist.Link,
-		}
-
-		res = append(res, artist)
+	if len(apiRes.Data) == 0 {
+		return nil, nil
 	}
 
-	return res, nil
+	deezerArtist := apiRes.Data[0]
+	return &streamingService.Artist{
+		Name:       deezerArtist.Name,
+		ArtworkUrl: deezerArtist.Picture,
+		Url:        deezerArtist.Link,
+	}, nil
 }
 
-func (s *deezerStreamingService) SearchAlbum(name string, region streamingService.Region) (res []streamingService.Album, err error) {
+func (s *deezerStreamingService) SearchAlbum(album *streamingService.Album) (*streamingService.Album, error) {
 
-	term := url.QueryEscape(name)
-	apiUrl := fmt.Sprintf("https://api.deezer.com/search/album?q=%s", term)
+	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistName, album.Name))
+	apiUrl := fmt.Sprintf("https://api.deezer.com/search/album?q=%s", q)
 
 	httpRes, err := s.client.Get(apiUrl)
 	defer httpRes.Body.Close()
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
 	var apiRes *searchAlbumResponse
 	err = json.Unmarshal(resBytes, &apiRes)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
-	for _, deezerAlbum := range apiRes.Data {
-		album := streamingService.Album{
-			Name:       deezerAlbum.Title,
-			ArtistName: deezerAlbum.Artist.Name,
-			ArtworkUrl: deezerAlbum.Cover,
-			Url:        deezerAlbum.Link,
-		}
-
-		res = append(res, album)
+	if len(apiRes.Data) == 0 {
+		return nil, nil
 	}
 
-	return res, nil
+	deezerAlbum :=  apiRes.Data[0]
+	return &streamingService.Album{
+		Name:       deezerAlbum.Title,
+		ArtistName: deezerAlbum.Artist.Name,
+		ArtworkUrl: deezerAlbum.Cover,
+		Url:        deezerAlbum.Link,
+	}, nil
 }
 
-func (s *deezerStreamingService) SearchSong(name string, region streamingService.Region) (res []streamingService.Song, err error) {
+func (s *deezerStreamingService) SearchSong(song *streamingService.Song) (*streamingService.Song, error) {
 
-	term := url.QueryEscape(name)
-	apiUrl := fmt.Sprintf("https://api.deezer.com/search/track?q=%s", term)
+	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", song.ArtistName, song.AlbumName, song.Name))
+	apiUrl := fmt.Sprintf("https://api.deezer.com/search/track?q=%s", q)
 
 	httpRes, err := s.client.Get(apiUrl)
 	defer httpRes.Body.Close()
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
 	var apiRes *searchTrackResponse
 	err = json.Unmarshal(resBytes, &apiRes)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
-	for _, deezerTrack := range apiRes.Data {
-		song := streamingService.Song{
-			Name:       deezerTrack.Title,
-			ArtistName: deezerTrack.Artist.Name,
-			AlbumName:  deezerTrack.Album.Title,
-			Url:        deezerTrack.Link,
-		}
-
-		res = append(res, song)
+	if len(apiRes.Data) == 0 {
+		return nil, nil
 	}
 
-	return res, nil
+	deezerTrack :=  apiRes.Data[0]
+	return &streamingService.Song{
+		Name:       deezerTrack.Title,
+		ArtistName: deezerTrack.Artist.Name,
+		AlbumName:  deezerTrack.Album.Title,
+		Url:        deezerTrack.Link,
+	}, nil
 }
 
 func (s *deezerStreamingService) SearchFromLink(link string) (streamingService.Thing, error) {
@@ -147,16 +150,12 @@ func (s *deezerStreamingService) SearchFromLink(link string) (streamingService.T
 	// format: 	https://www.deezer.com/<lang>/<artist|album|track>/<id>
 	// Todo: How we gonna get the region?
 
-	// Todo: Move pattern to config
-	pattern := "(?:https:\\/\\/www\\.deezer\\.com\\/)(?P<lang>[A-Za-z]+)\\/(?P<type>[A-Za-z]+)\\/(?P<id>[0-9]+).*"
-	linkRegexp := regexp.MustCompile(pattern)
-
-	actualLink, err := getActualLink(link, linkRegexp)
+	actualLink, err := getActualLink(link, s.shareLinkPattern)
 	if err != nil {
 		return nil, err
 	}
 
-	matches := findStringSubmatchMap(linkRegexp, actualLink)
+	matches := findStringSubmatchMap(s.shareLinkPattern, actualLink)
 
 	// store := matches["storefront"]
 	typ := matches["type"]

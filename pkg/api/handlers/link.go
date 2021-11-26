@@ -48,6 +48,48 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		if len(foundLinks) == 0 {
 			// No links found, query the streaming service and find the same entry on other services
 
+			err = container.Resolve(func (services []streamingService.StreamingService) error {
+
+				var targetService streamingService.StreamingService
+				var otherServices []streamingService.StreamingService
+
+				err := streamingService.ForEachStreamingService(services, func (service streamingService.StreamingService) error {
+					if service.LinkBelongsToService(reqLink) {
+						targetService = service
+					} else {
+						otherServices = append(otherServices, service)
+					}
+					return nil
+				})
+
+				if err != nil {
+					return err
+				}
+
+				var foundThings []streamingService.Thing
+				thing, err := targetService.SearchFromLink(reqLink)
+				if err != nil {
+					return err
+				}
+
+				foundThings = append(foundThings, thing)
+
+				err = streamingService.ForEachStreamingService(otherServices, func (service streamingService.StreamingService) error {
+					foundThing, err := streamingService.SearchThing(service, thing)
+					if err != nil {
+						return err
+					}
+
+					foundThings = append(foundThings, foundThing)
+					return nil
+				})
+				if err != nil {
+					return err
+				}
+
+				return nil
+			})
+
 			// Todo: Query the streaming service
 			// Todo: Search other services for the same thing
 

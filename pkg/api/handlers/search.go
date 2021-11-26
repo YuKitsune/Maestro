@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/yukitsune/camogo"
 	"maestro/pkg/api/context"
 	"maestro/pkg/streamingService"
 	"net/http"
@@ -11,15 +10,15 @@ import (
 const defaultRegion streamingService.Region = "AU"
 
 type SearchArtistResult struct {
-	Results map[string][]streamingService.Artist
+	Results map[string]*streamingService.Artist
 }
 
 type SearchAlbumResult struct {
-	Results map[string][]streamingService.Album
+	Results map[string]*streamingService.Album
 }
 
 type SearchSongResult struct {
-	Results map[string][]streamingService.Song
+	Results map[string]*streamingService.Song
 }
 
 func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
@@ -38,17 +37,23 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := &SearchArtistResult{}
-	res.Results = make(map[string][]streamingService.Artist)
+	res.Results = make(map[string]*streamingService.Artist)
 
-	err = ForEachStreamingService(container, func(service streamingService.StreamingService) error {
-		results, err := service.SearchArtist(name, defaultRegion)
-		if err != nil {
-			return err
-		}
+	err = container.Resolve(func (services []streamingService.StreamingService) error {
+		return streamingService.ForEachStreamingService(services, func(service streamingService.StreamingService) error {
+			results, err := service.SearchArtist(&streamingService.Artist{
+				Name: name,
+				Region: defaultRegion,
+			})
+			if err != nil {
+				return err
+			}
 
-		res.Results[service.Name()] = results
-		return nil
+			res.Results[service.Name()] = results
+			return nil
+		})
 	})
+
 	if err != nil {
 		Error(w, err)
 		return
@@ -73,16 +78,21 @@ func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := &SearchAlbumResult{}
-	res.Results = make(map[string][]streamingService.Album)
+	res.Results = make(map[string]*streamingService.Album)
 
-	err = ForEachStreamingService(container, func(service streamingService.StreamingService) error {
-		results, err := service.SearchAlbum(name, defaultRegion)
-		if err != nil {
-			return err
-		}
+	err = container.Resolve(func (services []streamingService.StreamingService) error {
+		return streamingService.ForEachStreamingService(services, func(service streamingService.StreamingService) error {
+			results, err := service.SearchAlbum(&streamingService.Album{
+				Name: name,
+				Region: defaultRegion,
+			})
+			if err != nil {
+				return err
+			}
 
-		res.Results[service.Name()] = results
-		return nil
+			res.Results[service.Name()] = results
+			return nil
+		})
 	})
 	if err != nil {
 		Error(w, err)
@@ -108,16 +118,21 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := &SearchSongResult{}
-	res.Results = make(map[string][]streamingService.Song)
+	res.Results = make(map[string]*streamingService.Song)
 
-	err = ForEachStreamingService(container, func(service streamingService.StreamingService) error {
-		results, err := service.SearchSong(name, defaultRegion)
-		if err != nil {
-			return err
-		}
+	err = container.Resolve(func (services []streamingService.StreamingService) error {
+		return streamingService.ForEachStreamingService(services, func(service streamingService.StreamingService) error {
+			results, err := service.SearchSong(&streamingService.Song{
+				Name: name,
+				Region: defaultRegion,
+			})
+			if err != nil {
+				return err
+			}
 
-		res.Results[service.Name()] = results
-		return nil
+			res.Results[service.Name()] = results
+			return nil
+		})
 	})
 	if err != nil {
 		Error(w, err)
@@ -125,17 +140,4 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Response(w, res, http.StatusOK)
-}
-
-func ForEachStreamingService(container camogo.Container, fn func(streamingService.StreamingService) error) error {
-	return container.Resolve(func(services []streamingService.StreamingService) error {
-		for _, service := range services {
-			err := fn(service)
-			if err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
 }

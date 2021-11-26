@@ -11,10 +11,14 @@ services:
     enabled: true
     properties:
       token:
+      shareLinkPattern: "(?:https:\/\/music\.apple\.com\/)(?P<storefront>[A-Za-z0-9]+)\/(?P<type>[A-Za-z]+)\/(?:.+\/)(?P<id>[0-9]+).*"
   - serviceName: Spotify
     enabled: true
     properties:
       clientId:
       clientSecret:
+      shareLinkPattern: "(?:https:\\/\\/open\\.spotify\\.com\\/)(?P<type>[A-Za-z]+)\\/(?P<id>[A-Za-z0-9]+).*"
   - serviceName: Deezer
     enabled: true
+    properties:
+      shareLinkPattern: "(?:https:\\/\\/www\\.deezer\\.com\\/)(?P<lang>[A-Za-z]+)\\/(?P<type>[A-Za-z]+)\\/(?P<id>[0-9]+).*"
