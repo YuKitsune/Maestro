@@ -12,7 +12,7 @@ import (
 )
 
 type spotifyStreamingService struct {
-	client *spotify.Client
+	client           *spotify.Client
 	shareLinkPattern *regexp.Regexp
 }
 
@@ -74,7 +74,7 @@ func (s *spotifyStreamingService) SearchArtist(artist *streamingService.Artist) 
 
 	q := fmt.Sprintf("artist:\"%s\"", artist.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeArtist, &spotify.Options{
-		Country:   &country,
+		Country: &country,
 	})
 	if err != nil {
 		return res, err
@@ -88,7 +88,7 @@ func (s *spotifyStreamingService) SearchArtist(artist *streamingService.Artist) 
 	return &streamingService.Artist{
 		Name:       spotifyArtist.Name,
 		ArtworkUrl: imageUrl(spotifyArtist.Images),
-		Region: 	streamingService.DefaultRegion,
+		Region:     streamingService.DefaultRegion,
 		Url:        spotifyArtist.ExternalURLs["spotify"],
 	}, nil
 }
@@ -99,7 +99,7 @@ func (s *spotifyStreamingService) SearchAlbum(album *streamingService.Album) (re
 
 	q := fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistName, album.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeAlbum, &spotify.Options{
-		Country:   &country,
+		Country: &country,
 	})
 	if err != nil {
 		return res, err
@@ -109,12 +109,12 @@ func (s *spotifyStreamingService) SearchAlbum(album *streamingService.Album) (re
 		return nil, nil
 	}
 
-	spotifyAlbum :=  searchRes.Albums.Albums[0]
+	spotifyAlbum := searchRes.Albums.Albums[0]
 	return &streamingService.Album{
 		Name:       spotifyAlbum.Name,
 		ArtistName: artistName(spotifyAlbum.Artists),
 		ArtworkUrl: imageUrl(spotifyAlbum.Images),
-		Region: 	streamingService.DefaultRegion,
+		Region:     streamingService.DefaultRegion,
 		Url:        spotifyAlbum.ExternalURLs["spotify"],
 	}, nil
 }
@@ -125,7 +125,7 @@ func (s *spotifyStreamingService) SearchSong(song *streamingService.Song) (res *
 
 	q := fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", song.ArtistName, song.AlbumName, song.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeTrack, &spotify.Options{
-		Country:   &country,
+		Country: &country,
 	})
 	if err != nil {
 		return res, err
@@ -140,7 +140,7 @@ func (s *spotifyStreamingService) SearchSong(song *streamingService.Song) (res *
 		Name:       spotifySong.Name,
 		ArtistName: artistName(spotifySong.Artists),
 		AlbumName:  spotifySong.Album.Name,
-		Region: 	streamingService.DefaultRegion,
+		Region:     streamingService.DefaultRegion,
 		Url:        spotifySong.ExternalURLs["spotify"],
 	}, nil
 }
@@ -167,7 +167,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 		artist := &streamingService.Artist{
 			Name:       foundArtist.Name,
 			ArtworkUrl: imageUrl(foundArtist.Images),
-			Region: 	streamingService.DefaultRegion,
+			Region:     streamingService.DefaultRegion,
 			Url:        foundArtist.ExternalURLs["spotify"],
 		}
 
@@ -182,7 +182,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 		album := &streamingService.Artist{
 			Name:       foundAlbum.Name,
 			ArtworkUrl: imageUrl(foundAlbum.Images),
-			Region: 	streamingService.DefaultRegion,
+			Region:     streamingService.DefaultRegion,
 			Url:        foundAlbum.ExternalURLs["spotify"],
 		}
 
@@ -198,7 +198,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 			Name:       foundTrack.Name,
 			ArtistName: artistName(foundTrack.Artists),
 			AlbumName:  foundTrack.Album.Name,
-			Region: 	streamingService.DefaultRegion,
+			Region:     streamingService.DefaultRegion,
 			Url:        foundTrack.ExternalURLs["spotify"],
 		}
 
@@ -208,7 +208,6 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 		return nil, fmt.Errorf("unknown type %s", typ)
 	}
 }
-
 
 func artistName(artists []spotify.SimpleArtist) string {
 

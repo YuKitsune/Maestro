@@ -11,7 +11,7 @@ import (
 )
 
 type deezerStreamingService struct {
-	client *http.Client
+	client           *http.Client
 	shareLinkPattern *regexp.Regexp
 }
 
@@ -74,7 +74,7 @@ func (s *deezerStreamingService) SearchArtist(artist *streamingService.Artist) (
 	return &streamingService.Artist{
 		Name:       deezerArtist.Name,
 		ArtworkUrl: deezerArtist.Picture,
-		Region: 	streamingService.DefaultRegion,
+		Region:     streamingService.DefaultRegion,
 		Url:        deezerArtist.Link,
 	}, nil
 }
@@ -102,12 +102,12 @@ func (s *deezerStreamingService) SearchAlbum(album *streamingService.Album) (*st
 		return nil, nil
 	}
 
-	deezerAlbum :=  apiRes.Data[0]
+	deezerAlbum := apiRes.Data[0]
 	return &streamingService.Album{
 		Name:       deezerAlbum.Title,
 		ArtistName: deezerAlbum.Artist.Name,
 		ArtworkUrl: deezerAlbum.Cover,
-		Region: 	streamingService.DefaultRegion,
+		Region:     streamingService.DefaultRegion,
 		Url:        deezerAlbum.Link,
 	}, nil
 }
@@ -135,12 +135,12 @@ func (s *deezerStreamingService) SearchSong(song *streamingService.Song) (*strea
 		return nil, nil
 	}
 
-	deezerTrack :=  apiRes.Data[0]
+	deezerTrack := apiRes.Data[0]
 	return &streamingService.Song{
 		Name:       deezerTrack.Title,
 		ArtistName: deezerTrack.Artist.Name,
 		AlbumName:  deezerTrack.Album.Title,
-		Region: 	streamingService.DefaultRegion,
+		Region:     streamingService.DefaultRegion,
 		Url:        deezerTrack.Link,
 	}, nil
 }
@@ -170,7 +170,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (streamingService.T
 	switch typ {
 	case "artist":
 		url = fmt.Sprintf("https://api.deezer.com/artist/%s", id)
-		unmarshalFunc = func (rb []byte) (streamingService.Thing, error) {
+		unmarshalFunc = func(rb []byte) (streamingService.Thing, error) {
 			var apiRes *Artist
 			err := json.Unmarshal(rb, &apiRes)
 			if err != nil {
@@ -190,7 +190,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (streamingService.T
 
 	case "album":
 		url = fmt.Sprintf("https://api.deezer.com/album/%s", id)
-		unmarshalFunc = func (rb []byte) (streamingService.Thing, error) {
+		unmarshalFunc = func(rb []byte) (streamingService.Thing, error) {
 			var apiRes *Album
 			err := json.Unmarshal(rb, &apiRes)
 			if err != nil {
@@ -210,7 +210,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (streamingService.T
 
 	case "track":
 		url = fmt.Sprintf("https://api.deezer.com/track/%s", id)
-		unmarshalFunc = func (rb []byte) (streamingService.Thing, error) {
+		unmarshalFunc = func(rb []byte) (streamingService.Thing, error) {
 			var apiRes *Track
 			err := json.Unmarshal(rb, &apiRes)
 			if err != nil {
@@ -218,10 +218,10 @@ func (s *deezerStreamingService) SearchFromLink(link string) (streamingService.T
 			}
 
 			song := &streamingService.Song{
-				Name:        apiRes.Title,
-				ArtistName:  apiRes.Artist.Name,
-				AlbumName:   apiRes.Album.Title,
-				Url:         apiRes.Link,
+				Name:       apiRes.Title,
+				ArtistName: apiRes.Artist.Name,
+				AlbumName:  apiRes.Album.Title,
+				Url:        apiRes.Link,
 			}
 
 			return song, nil

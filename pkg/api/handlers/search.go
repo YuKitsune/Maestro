@@ -39,10 +39,10 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 	res := &SearchArtistResult{}
 	res.Results = make(map[string]*streamingService.Artist)
 
-	err = container.Resolve(func (services []streamingService.StreamingService) error {
+	err = container.Resolve(func(services []streamingService.StreamingService) error {
 		return streamingService.ForEachStreamingService(services, func(service streamingService.StreamingService) error {
 			results, err := service.SearchArtist(&streamingService.Artist{
-				Name: name,
+				Name:   name,
 				Region: defaultRegion,
 			})
 			if err != nil {
@@ -80,10 +80,10 @@ func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 	res := &SearchAlbumResult{}
 	res.Results = make(map[string]*streamingService.Album)
 
-	err = container.Resolve(func (services []streamingService.StreamingService) error {
+	err = container.Resolve(func(services []streamingService.StreamingService) error {
 		return streamingService.ForEachStreamingService(services, func(service streamingService.StreamingService) error {
 			results, err := service.SearchAlbum(&streamingService.Album{
-				Name: name,
+				Name:   name,
 				Region: defaultRegion,
 			})
 			if err != nil {
@@ -120,10 +120,10 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 	res := &SearchSongResult{}
 	res.Results = make(map[string]*streamingService.Song)
 
-	err = container.Resolve(func (services []streamingService.StreamingService) error {
+	err = container.Resolve(func(services []streamingService.StreamingService) error {
 		return streamingService.ForEachStreamingService(services, func(service streamingService.StreamingService) error {
 			results, err := service.SearchSong(&streamingService.Song{
-				Name: name,
+				Name:   name,
 				Region: defaultRegion,
 			})
 			if err != nil {

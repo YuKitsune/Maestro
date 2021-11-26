@@ -3,6 +3,7 @@ package streamingService
 import "fmt"
 
 type Region string
+
 const DefaultRegion Region = "AU"
 
 func (r *Region) String() string {
@@ -18,7 +19,7 @@ type Thing interface {
 type Artist struct {
 	Name       string
 	ArtworkUrl string
-	Region Region
+	Region     Region
 	Url        string
 }
 
@@ -38,7 +39,7 @@ type Album struct {
 	Name       string
 	ArtistName string
 	ArtworkUrl string
-	Region Region
+	Region     Region
 	Url        string
 }
 
@@ -58,7 +59,7 @@ type Song struct {
 	Name       string
 	ArtistName string
 	AlbumName  string
-	Region Region
+	Region     Region
 	Url        string
 }
 

@@ -13,7 +13,7 @@ import (
 // https://api.music.apple.com/v1/catalog/us/search
 
 type appleMusicStreamingService struct {
-	c *http.Client
+	c                *http.Client
 	shareLinkPattern *regexp.Regexp
 }
 
@@ -60,7 +60,7 @@ func (s *appleMusicStreamingService) SearchArtist(artist *streamingService.Artis
 	appleMusicArtist := apiRes.Results.Artists.Data[0]
 	return &streamingService.Artist{
 		Name:   appleMusicArtist.Attributes.Name,
-		Region: 	streamingService.DefaultRegion,
+		Region: streamingService.DefaultRegion,
 		Url:    appleMusicArtist.Attributes.Url,
 	}, nil
 }
@@ -94,7 +94,7 @@ func (s *appleMusicStreamingService) SearchAlbum(album *streamingService.Album) 
 		Name:       appleMusicAlbum.Attributes.Name,
 		ArtistName: appleMusicAlbum.Attributes.ArtistName,
 		ArtworkUrl: appleMusicAlbum.Attributes.Artwork.Url,
-		Region: 	streamingService.DefaultRegion,
+		Region:     streamingService.DefaultRegion,
 		Url:        appleMusicAlbum.Attributes.Url,
 	}, nil
 }
@@ -128,7 +128,7 @@ func (s *appleMusicStreamingService) SearchSong(song *streamingService.Song) (*s
 		Name:       appleMusicSong.Attributes.Name,
 		ArtistName: appleMusicSong.Attributes.ArtistName,
 		AlbumName:  appleMusicSong.Attributes.AlbumName,
-		Region: 	streamingService.DefaultRegion,
+		Region:     streamingService.DefaultRegion,
 		Url:        appleMusicSong.Attributes.Url,
 	}, nil
 }
@@ -151,7 +151,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 	switch typ {
 	case "artist":
 		url = fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/artists/%s", store, id)
-		unmarshalFunc = func (rb []byte) (streamingService.Thing, error) {
+		unmarshalFunc = func(rb []byte) (streamingService.Thing, error) {
 			var apiRes *ArtistsResult
 			err := json.Unmarshal(rb, &apiRes)
 			if err != nil {
@@ -166,7 +166,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 			artist := &streamingService.Artist{
 				Name:       foundArtist.Attributes.Name,
 				Url:        foundArtist.Attributes.Url,
-				Region: 	store,
+				Region:     store,
 				ArtworkUrl: "",
 			}
 
@@ -177,7 +177,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 
 	case "album":
 		url = fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/albums/%s", store, id)
-		unmarshalFunc = func (rb []byte) (streamingService.Thing, error) {
+		unmarshalFunc = func(rb []byte) (streamingService.Thing, error) {
 			var apiRes *AlbumResult
 			err := json.Unmarshal(rb, &apiRes)
 			if err != nil {
@@ -189,7 +189,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 				Name:       foundAlbum.Attributes.Name,
 				ArtistName: foundAlbum.Attributes.ArtistName,
 				ArtworkUrl: foundAlbum.Attributes.Artwork.Url,
-				Region: 	store,
+				Region:     store,
 				Url:        foundAlbum.Attributes.Url,
 			}
 
@@ -199,7 +199,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 
 	case "song":
 		url = fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/songs/%s", store, id)
-		unmarshalFunc = func (rb []byte) (streamingService.Thing, error) {
+		unmarshalFunc = func(rb []byte) (streamingService.Thing, error) {
 			var apiRes *SongResult
 			err := json.Unmarshal(rb, &apiRes)
 			if err != nil {
@@ -208,11 +208,11 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (streamingServi
 
 			foundSong := apiRes.Data[0]
 			song := &streamingService.Song{
-				Name:        foundSong.Attributes.Name,
-				ArtistName:  foundSong.Attributes.ArtistName,
-				AlbumName:   foundSong.Attributes.AlbumName,
-				Region: 	 store,
-				Url:         foundSong.Attributes.Url,
+				Name:       foundSong.Attributes.Name,
+				ArtistName: foundSong.Attributes.ArtistName,
+				AlbumName:  foundSong.Attributes.AlbumName,
+				Region:     store,
+				Url:        foundSong.Attributes.Url,
 			}
 
 			return song, nil

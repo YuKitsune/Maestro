@@ -51,7 +51,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 			var targetService streamingService.StreamingService
 			var otherServices []streamingService.StreamingService
 
-			err := streamingService.ForEachStreamingService(ss, func (service streamingService.StreamingService) error {
+			err := streamingService.ForEachStreamingService(ss, func(service streamingService.StreamingService) error {
 				if service.LinkBelongsToService(reqLink) {
 					targetService = service
 				} else {
@@ -72,7 +72,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 			foundThings = append(foundThings, thing)
 
-			err = streamingService.ForEachStreamingService(otherServices, func (service streamingService.StreamingService) error {
+			err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
 				foundThing, err := streamingService.SearchThing(service, thing)
 				if err != nil {
 					return err
