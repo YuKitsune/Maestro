@@ -2,6 +2,8 @@ package model
 
 import "net/url"
 
+const ArtistCollectionKey = "artist"
+
 type Artist struct {
 	Name string
 

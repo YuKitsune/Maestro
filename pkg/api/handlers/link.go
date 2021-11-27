@@ -29,123 +29,97 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 	res, err := container.ResolveWithResult(func(ctx context.Context, cd *db.Config, mc *mongo.Client, ss []streamingService.StreamingService) (interface{}, error) {
 		db := mc.Database(cd.Database)
-		coll := db.Collection("links")
 
-		// Todo: Strong type would be sick
-		var results []streamingService.Thing
-
-		var foundLinks []model.Link
-		cur, err := coll.Find(ctx, bson.D{{"link", reqLink}})
-		if err != nil {
-			return nil, err
+		var collNames = []string {
+			model.TrackCollectionKey,
+			model.AlbumCollectionKey,
+			model.ArtistCollectionKey,
 		}
 
-		err = cur.All(ctx, &foundLinks)
-		if err != nil {
-			return nil, err
-		}
+		// Search the database for an existing thing with the given link
+		for _, collName := range collNames {
+			coll := db.Collection(collName)
 
-		if len(foundLinks) == 0 {
-			// No links found, query the streaming service and find the same entry on other services
-
-			var targetService streamingService.StreamingService
-			var otherServices []streamingService.StreamingService
-
-			err := streamingService.ForEachStreamingService(ss, func(service streamingService.StreamingService) error {
-				if service.LinkBelongsToService(reqLink) {
-					targetService = service
-				} else {
-					otherServices = append(otherServices, service)
-				}
-				return nil
-			})
-
-			if err != nil {
-				return results, err
+			res := coll.FindOne(ctx, bson.D{{"services.link", reqLink}})
+			if res.Err() != nil {
+				return nil, res.Err()
 			}
 
-			var foundThings []streamingService.Thing
-			thing, err := targetService.SearchFromLink(reqLink)
+			var foundThing model.Thing
+			err = res.Decode(&foundThing)
 			if err != nil {
-				return results, err
+				return nil, err
 			}
 
-			foundThings = append(foundThings, thing)
-
-			err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
-				foundThing, err := streamingService.SearchThing(service, thing)
-				if err != nil {
-					return err
-				}
-
-				foundThings = append(foundThings, foundThing)
-				return nil
-			})
-			if err != nil {
-				return results, err
+			if foundThing == nil {
+				continue
 			}
 
-			// Todo: Store the results in the database
-
-			results = foundThings
-			return results, nil
-
-		} else {
-			// Links found,
-			// Todo: get the full data from the relative table
+			// Links found
 
 			// Check if we're missing any services from our results
 
 			// Todo: check if we have a streaming service registered that doesn't have a result in our results slice
-			if len(foundLinks) < len(ss) {
+			if len(foundThing.StreamingServiceThings()) < len(ss) {
 				// Todo: Query the remaining streaming service
-				// Todo: Store the results in the database
-				// Todo: Add the results to the results slice
+				// Todo: Update the database record for the original thing
 			}
+
+			return foundThing, nil
 		}
 
-		return results, nil
+		// No links found, query the streaming service and find the same entry on other services
+		var targetService streamingService.StreamingService
+		var otherServices []streamingService.StreamingService
+
+		// Figure out which streaming service the link belongs to
+		err := streamingService.ForEachStreamingService(ss, func(service streamingService.StreamingService) error {
+			if service.LinkBelongsToService(reqLink) {
+				targetService = service
+			} else {
+				otherServices = append(otherServices, service)
+			}
+			return nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Query the target streaming service
+		var foundThings []streamingService.Thing
+		thing, err := targetService.SearchFromLink(reqLink)
+		if err != nil {
+			return nil, err
+		}
+
+		foundThings = append(foundThings, thing)
+
+		// Query the other streaming services using what we found from the target streaming service
+		err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
+			foundThing, err := streamingService.SearchThing(service, thing)
+			if err != nil {
+				return err
+			}
+
+			foundThings = append(foundThings, foundThing)
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// Todo: Make a new `model.Thing` from the found streaming service things
+
+		// Todo: Store the new thing in the database
+
+		return nil, nil
 	})
+
 	if err != nil {
 		Error(w, err)
 		return
 	}
 
 	Response(w, res, http.StatusOK)
-}
-
-func HandleFlagLink(w http.ResponseWriter, r *http.Request) {
-
-	vars := mux.Vars(r)
-	linkId, ok := vars["linkId"]
-	if !ok {
-		BadRequest(w, "missing parameter \"linkId\"")
-		return
-	}
-
-	container, err := mcontext.Container(r.Context())
-	if err != nil {
-		Error(w, err)
-		return
-	}
-
-	err = container.Resolve(func(ctx context.Context, cd *db.Config, mc *mongo.Client) error {
-		db := mc.Database(cd.Database)
-		coll := db.Collection("links")
-
-		// Todo: Consider deleting related things too
-
-		_, err := coll.DeleteOne(ctx, bson.D{{"_id", linkId}})
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		Error(w, err)
-		return
-	}
-
-	EmptyResponse(w, http.StatusOK)
 }

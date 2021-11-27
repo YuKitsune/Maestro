@@ -2,6 +2,8 @@ package model
 
 import "net/url"
 
+const AlbumCollectionKey = "album"
+
 type Album struct {
 	Name     string
 	ArtistId string
