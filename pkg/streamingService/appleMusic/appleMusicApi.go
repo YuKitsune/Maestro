@@ -35,6 +35,7 @@ type Song struct {
 type SongAttributes struct {
 	AlbumName  string //(Required) The name of the album the song appears on.
 	ArtistName string //(Required) The artist’s name.
+	TrackNumber int //(Required) The track number.
 	Name       string //(Required) The localized name of the song.
 	Url        string //(Required) The URL for sharing a song in the iTunes Store.
 }

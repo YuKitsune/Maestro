@@ -28,6 +28,7 @@ type searchTrackResponse struct {
 type Track struct {
 	Title  string
 	Link   string
+	Position int `json:"track_position"`
 	Artist Artist
 	Album  Album
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/zmb3/spotify"
 	"io/ioutil"
+	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/url"
 	"regexp"
@@ -60,7 +61,7 @@ func NewSpotifyStreamingService(clientId string, clientSecret string, shareLinkP
 	return &spotifyStreamingService{&sc, shareLinkPatternRegex}, nil
 }
 
-func (s *spotifyStreamingService) Name() string {
+func (s *spotifyStreamingService) Name() model.StreamingServiceKey {
 	return "Spotify"
 }
 
@@ -70,7 +71,7 @@ func (s *spotifyStreamingService) LinkBelongsToService(link string) bool {
 
 func (s *spotifyStreamingService) SearchArtist(artist *streamingService.Artist) (res *streamingService.Artist, err error) {
 
-	country := artist.Region.String()
+	country := artist.Market.String()
 
 	q := fmt.Sprintf("artist:\"%s\"", artist.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeArtist, &spotify.Options{
@@ -88,14 +89,14 @@ func (s *spotifyStreamingService) SearchArtist(artist *streamingService.Artist) 
 	return &streamingService.Artist{
 		Name:       spotifyArtist.Name,
 		ArtworkUrl: imageUrl(spotifyArtist.Images),
-		Region:     streamingService.DefaultRegion,
+		Market:		artist.Market,
 		Url:        spotifyArtist.ExternalURLs["spotify"],
 	}, nil
 }
 
 func (s *spotifyStreamingService) SearchAlbum(album *streamingService.Album) (res *streamingService.Album, err error) {
 
-	country := album.Region.String()
+	country := album.Market.String()
 
 	q := fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistName, album.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeAlbum, &spotify.Options{
@@ -114,14 +115,14 @@ func (s *spotifyStreamingService) SearchAlbum(album *streamingService.Album) (re
 		Name:       spotifyAlbum.Name,
 		ArtistName: artistName(spotifyAlbum.Artists),
 		ArtworkUrl: imageUrl(spotifyAlbum.Images),
-		Region:     streamingService.DefaultRegion,
+		Market:		album.Market,
 		Url:        spotifyAlbum.ExternalURLs["spotify"],
 	}, nil
 }
 
 func (s *spotifyStreamingService) SearchSong(song *streamingService.Song) (res *streamingService.Song, err error) {
 
-	country := song.Region.String()
+	country := song.Market.String()
 
 	q := fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", song.ArtistName, song.AlbumName, song.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeTrack, &spotify.Options{
@@ -140,7 +141,8 @@ func (s *spotifyStreamingService) SearchSong(song *streamingService.Song) (res *
 		Name:       spotifySong.Name,
 		ArtistName: artistName(spotifySong.Artists),
 		AlbumName:  spotifySong.Album.Name,
-		Region:     streamingService.DefaultRegion,
+		Number: 	spotifySong.TrackNumber,
+		Market:		song.Market,
 		Url:        spotifySong.ExternalURLs["spotify"],
 	}, nil
 }
@@ -167,7 +169,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 		artist := &streamingService.Artist{
 			Name:       foundArtist.Name,
 			ArtworkUrl: imageUrl(foundArtist.Images),
-			Region:     streamingService.DefaultRegion,
+			Market:     model.DefaultMarket,
 			Url:        foundArtist.ExternalURLs["spotify"],
 		}
 
@@ -182,7 +184,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 		album := &streamingService.Artist{
 			Name:       foundAlbum.Name,
 			ArtworkUrl: imageUrl(foundAlbum.Images),
-			Region:     streamingService.DefaultRegion,
+			Market:     model.DefaultMarket,
 			Url:        foundAlbum.ExternalURLs["spotify"],
 		}
 
@@ -198,7 +200,8 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 			Name:       foundTrack.Name,
 			ArtistName: artistName(foundTrack.Artists),
 			AlbumName:  foundTrack.Album.Name,
-			Region:     streamingService.DefaultRegion,
+			Number: 	foundTrack.TrackNumber,
+			Market:     model.DefaultMarket,
 			Url:        foundTrack.ExternalURLs["spotify"],
 		}
 

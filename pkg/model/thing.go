@@ -1,5 +1,7 @@
 package model
 
 type Thing interface {
-	StreamingServiceThings() []StreamingServiceSpecificEntity
+	CollName() string
+	GetLinks() Links
+	SetLink(key StreamingServiceKey, link Link)
 }

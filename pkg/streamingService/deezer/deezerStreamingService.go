@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
 	"net/url"
@@ -43,7 +44,7 @@ func (s *deezerStreamingService) LinkBelongsToService(link string) bool {
 	return s.shareLinkPattern.MatchString(link)
 }
 
-func (s *deezerStreamingService) Name() string {
+func (s *deezerStreamingService) Name() model.StreamingServiceKey {
 	return "Deezer"
 }
 
@@ -74,7 +75,7 @@ func (s *deezerStreamingService) SearchArtist(artist *streamingService.Artist) (
 	return &streamingService.Artist{
 		Name:       deezerArtist.Name,
 		ArtworkUrl: deezerArtist.Picture,
-		Region:     streamingService.DefaultRegion,
+		Market:     model.DefaultMarket,
 		Url:        deezerArtist.Link,
 	}, nil
 }
@@ -107,7 +108,7 @@ func (s *deezerStreamingService) SearchAlbum(album *streamingService.Album) (*st
 		Name:       deezerAlbum.Title,
 		ArtistName: deezerAlbum.Artist.Name,
 		ArtworkUrl: deezerAlbum.Cover,
-		Region:     streamingService.DefaultRegion,
+		Market:     model.DefaultMarket,
 		Url:        deezerAlbum.Link,
 	}, nil
 }
@@ -140,7 +141,8 @@ func (s *deezerStreamingService) SearchSong(song *streamingService.Song) (*strea
 		Name:       deezerTrack.Title,
 		ArtistName: deezerTrack.Artist.Name,
 		AlbumName:  deezerTrack.Album.Title,
-		Region:     streamingService.DefaultRegion,
+		Number: 	deezerTrack.Position,
+		Market:     model.DefaultMarket,
 		Url:        deezerTrack.Link,
 	}, nil
 }
@@ -221,6 +223,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (streamingService.T
 				Name:       apiRes.Title,
 				ArtistName: apiRes.Artist.Name,
 				AlbumName:  apiRes.Album.Title,
+				Number: 	apiRes.Position,
 				Url:        apiRes.Link,
 			}
 

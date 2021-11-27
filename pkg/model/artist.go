@@ -1,16 +1,21 @@
 package model
 
-import "net/url"
-
 const ArtistCollectionKey = "artist"
 
 type Artist struct {
 	Name string
 
-	Services []ServiceSpecificArtist
+	Links map[StreamingServiceKey]Link
 }
 
-type ServiceSpecificArtist struct {
-	StreamingServiceSpecificEntity
-	ArtworkUrl url.URL
+func (a *Artist) CollName() string {
+	return ArtistCollectionKey
+}
+
+func (a *Artist) GetLinks() Links {
+	return a.Links
+}
+
+func (a *Artist) SetLink(key StreamingServiceKey, link Link) {
+	a.Links[key] = link
 }

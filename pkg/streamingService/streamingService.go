@@ -1,25 +1,27 @@
 package streamingService
 
-import "fmt"
+import (
+	"fmt"
+	"maestro/pkg/model"
+	"net/url"
+)
 
-type Region string
-
-const DefaultRegion Region = "AU"
-
-func (r *Region) String() string {
-	return string(*r)
-}
+// Todo: Not a fan of these models being separate from the ones in the models package
+// 	but the shape is inherently different...
+// 	The ones in the models package are more of a metadata with many links thing, where as these ones are the links, but
+// 	also need said metadata.
+// 	Might be better off flattening the model and using some kind of correlation ID / hash instead to relate entities
 
 type Thing interface {
 	GetName() string
 	GetUrl() string
-	GetRegion() Region
+	GetMarket() model.Market
 }
 
 type Artist struct {
 	Name       string
 	ArtworkUrl string
-	Region     Region
+	Market     model.Market
 	Url        string
 }
 
@@ -31,15 +33,15 @@ func (a *Artist) GetUrl() string {
 	return a.Url
 }
 
-func (a *Artist) GetRegion() Region {
-	return a.Region
+func (a *Artist) GetMarket() model.Market {
+	return a.Market
 }
 
 type Album struct {
 	Name       string
 	ArtistName string
 	ArtworkUrl string
-	Region     Region
+	Market     model.Market
 	Url        string
 }
 
@@ -51,15 +53,16 @@ func (a *Album) GetUrl() string {
 	return a.Url
 }
 
-func (a *Album) GetRegion() Region {
-	return a.Region
+func (a *Album) GetMarket() model.Market {
+	return a.Market
 }
 
 type Song struct {
 	Name       string
 	ArtistName string
 	AlbumName  string
-	Region     Region
+	Number 	   int
+	Market     model.Market
 	Url        string
 }
 
@@ -71,12 +74,12 @@ func (a *Song) GetUrl() string {
 	return a.Url
 }
 
-func (a *Song) GetRegion() Region {
-	return a.Region
+func (a *Song) GetMarket() model.Market {
+	return a.Market
 }
 
 type StreamingService interface {
-	Name() string
+	Name() model.StreamingServiceKey
 	LinkBelongsToService(link string) bool
 	SearchArtist(artist *Artist) (*Artist, error)
 	SearchAlbum(album *Album) (*Album, error)
@@ -109,4 +112,45 @@ func ForEachStreamingService(services []StreamingService, fn func(StreamingServi
 	}
 
 	return nil
+}
+
+func ConvertToModel(service StreamingService, thing Thing) (model.Thing, error) {
+
+	links := make(model.Links)
+	url, err := url.Parse(thing.GetUrl())
+	if err != nil {
+		return nil, err
+	}
+
+	links[service.Name()] = model.Link {
+		Market: thing.GetMarket(),
+		Url:    url,
+	}
+
+	switch t := thing.(type) {
+	case *Artist:
+		return &model.Artist{
+			Name:  t.Name,
+			Links: links,
+		}, nil
+
+	case *Album:
+		return &model.Album{
+			Name:     t.Name,
+			ArtistId: "", // Todo
+			Links:    links,
+		}, nil
+
+	case *Song:
+		return &model.Track{
+			Name:     t.Name,
+			ArtistId: "", // Todo
+			AlbumId:  "", // Todo
+			Number:   t.Number,
+			Links:    links,
+		}, nil
+
+	default:
+		return nil, fmt.Errorf("unknown type %T", thing)
+	}
 }

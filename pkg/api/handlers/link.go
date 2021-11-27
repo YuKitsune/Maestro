@@ -40,7 +40,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		for _, collName := range collNames {
 			coll := db.Collection(collName)
 
-			res := coll.FindOne(ctx, bson.D{{"services.link", reqLink}})
+			res := coll.FindOne(ctx, bson.D{{"links.url", reqLink}})
 			if res.Err() != nil {
 				return nil, res.Err()
 			}
@@ -60,7 +60,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 			// Check if we're missing any services from our results
 
 			// Todo: check if we have a streaming service registered that doesn't have a result in our results slice
-			if len(foundThing.StreamingServiceThings()) < len(ss) {
+			if len(foundThing.GetLinks()) < len(ss) {
 				// Todo: Query the remaining streaming service
 				// Todo: Update the database record for the original thing
 			}
@@ -87,13 +87,15 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Query the target streaming service
-		var foundThings []streamingService.Thing
 		thing, err := targetService.SearchFromLink(reqLink)
 		if err != nil {
 			return nil, err
 		}
 
-		foundThings = append(foundThings, thing)
+		thingModel, err := streamingService.ConvertToModel(targetService, thing)
+		if err != nil {
+			return nil, err
+		}
 
 		// Query the other streaming services using what we found from the target streaming service
 		err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
@@ -102,18 +104,33 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 
-			foundThings = append(foundThings, foundThing)
+			foundThingModel, err := streamingService.ConvertToModel(service, foundThing)
+			if err != nil {
+				return err
+			}
+
+			// Copy the links
+			thingLinks := foundThingModel.GetLinks()
+			for key, link := range thingLinks {
+				thingModel.SetLink(key, link)
+			}
+
 			return nil
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		// Todo: Make a new `model.Thing` from the found streaming service things
+		// Store the new thing in the database
+		coll := db.Collection(thingModel.CollName())
+		_, err = coll.InsertOne(ctx, thingModel)
+		if err != nil {
+			return nil, err
+		}
 
-		// Todo: Store the new thing in the database
+		// Todo: Update thing with res.InsertedId? Or does `InsertOne` do that for us?
 
-		return nil, nil
+		return thingModel, nil
 	})
 
 	if err != nil {

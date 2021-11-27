@@ -9,9 +9,17 @@ type Track struct {
 
 	Number int
 
-	Services []ServiceSpecificArtist
+	Links map[StreamingServiceKey]Link
 }
 
-type ServiceSpecificTrack struct {
-	StreamingServiceSpecificEntity
+func (t *Track) CollName() string {
+	return TrackCollectionKey
+}
+
+func (t *Track) GetLinks() Links {
+	return t.Links
+}
+
+func (t *Track) SetLink(key StreamingServiceKey, link Link) {
+	t.Links[key] = link
 }
