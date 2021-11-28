@@ -3,22 +3,21 @@ package handlers
 import (
 	"github.com/gorilla/mux"
 	"maestro/pkg/api/context"
+	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
 )
 
-const defaultRegion streamingService.Region = "AU"
-
 type SearchArtistResult struct {
-	Results map[string]*streamingService.Artist
+	Results map[model.StreamingServiceKey]*model.Artist
 }
 
 type SearchAlbumResult struct {
-	Results map[string]*streamingService.Album
+	Results map[model.StreamingServiceKey]*model.Album
 }
 
 type SearchSongResult struct {
-	Results map[string]*streamingService.Song
+	Results map[model.StreamingServiceKey]*model.Track
 }
 
 func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
@@ -37,13 +36,13 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := &SearchArtistResult{}
-	res.Results = make(map[string]*streamingService.Artist)
+	res.Results = make(map[model.StreamingServiceKey]*model.Artist)
 
 	err = container.Resolve(func(services []streamingService.StreamingService) error {
 		return streamingService.ForEachStreamingService(services, func(service streamingService.StreamingService) error {
-			results, err := service.SearchArtist(&streamingService.Artist{
+			results, err := service.SearchArtist(&model.Artist{
 				Name:   name,
-				Region: defaultRegion,
+				Market: model.DefaultMarket,
 			})
 			if err != nil {
 				return err
@@ -78,13 +77,13 @@ func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := &SearchAlbumResult{}
-	res.Results = make(map[string]*streamingService.Album)
+	res.Results = make(map[model.StreamingServiceKey]*model.Album)
 
 	err = container.Resolve(func(services []streamingService.StreamingService) error {
 		return streamingService.ForEachStreamingService(services, func(service streamingService.StreamingService) error {
-			results, err := service.SearchAlbum(&streamingService.Album{
+			results, err := service.SearchAlbum(&model.Album{
 				Name:   name,
-				Region: defaultRegion,
+				Market: model.DefaultMarket,
 			})
 			if err != nil {
 				return err
@@ -118,13 +117,13 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := &SearchSongResult{}
-	res.Results = make(map[string]*streamingService.Song)
+	res.Results = make(map[model.StreamingServiceKey]*model.Track)
 
 	err = container.Resolve(func(services []streamingService.StreamingService) error {
 		return streamingService.ForEachStreamingService(services, func(service streamingService.StreamingService) error {
-			results, err := service.SearchSong(&streamingService.Song{
+			results, err := service.SearchSong(&model.Track{
 				Name:   name,
-				Region: defaultRegion,
+				Market: model.DefaultMarket,
 			})
 			if err != nil {
 				return err

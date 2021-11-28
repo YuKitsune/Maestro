@@ -1,25 +1,55 @@
 package model
 
-const TrackCollectionKey = "track"
+import (
+	"crypto/sha1"
+	"fmt"
+	"net/url"
+	"strings"
+)
 
 type Track struct {
 	Name     string
-	ArtistId string
-	AlbumId  string
+	ArtistName string
+	AlbumName  string
 
-	Number int
-
-	Links map[StreamingServiceKey]Link
+	Hash ThingHash
+	Source StreamingServiceKey
+	Market Market
+	Link *url.URL
 }
 
-func (t *Track) CollName() string {
-	return TrackCollectionKey
+func NewTrack(name string, artistName string, albumName string, source StreamingServiceKey, market Market, link *url.URL) *Track {
+
+	str := fmt.Sprintf("%s_%s_%s", strings.ToLower(artistName), strings.ToLower(albumName), strings.ToLower(name))
+	hash := ThingHash(sha1.New().Sum([]byte(str)))
+
+	return &Track{
+		name,
+		artistName,
+		albumName,
+		hash,
+		source,
+		market,
+		link,
+	}
 }
 
-func (t *Track) GetLinks() Links {
-	return t.Links
+func (t *Track) Type() ThingType {
+	return TrackThing
 }
 
-func (t *Track) SetLink(key StreamingServiceKey, link Link) {
-	t.Links[key] = link
+func (t *Track) GetHash() ThingHash {
+	return t.Hash
+}
+
+func (t *Track) GetSource() StreamingServiceKey {
+	return t.Source
+}
+
+func (t *Track) GetMarket()Market {
+	return t.Market
+}
+
+func (t *Track) GetLink() *url.URL {
+	return t.Link
 }

@@ -30,37 +30,29 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 	res, err := container.ResolveWithResult(func(ctx context.Context, cd *db.Config, mc *mongo.Client, ss []streamingService.StreamingService) (interface{}, error) {
 		db := mc.Database(cd.Database)
 
-		var collNames = []string {
-			model.TrackCollectionKey,
-			model.AlbumCollectionKey,
-			model.ArtistCollectionKey,
+		// Search the database for an existing thing with the given link
+
+		coll := db.Collection(model.ThingsCollectionName)
+
+		res := coll.FindOne(ctx, bson.D{{"link", reqLink}})
+		if res.Err() != nil {
+			return nil, res.Err()
 		}
 
-		// Search the database for an existing thing with the given link
-		for _, collName := range collNames {
-			coll := db.Collection(collName)
+		var foundThing model.Thing
+		err = res.Decode(&foundThing)
+		if err != nil {
+			return nil, err
+		}
 
-			res := coll.FindOne(ctx, bson.D{{"links.url", reqLink}})
-			if res.Err() != nil {
-				return nil, res.Err()
-			}
+		if foundThing != nil {
+			// Link found
 
-			var foundThing model.Thing
-			err = res.Decode(&foundThing)
-			if err != nil {
-				return nil, err
-			}
+			// Todo: Find other things with the same hash
+			var relatedThings []model.Thing
 
-			if foundThing == nil {
-				continue
-			}
-
-			// Links found
-
-			// Check if we're missing any services from our results
-
-			// Todo: check if we have a streaming service registered that doesn't have a result in our results slice
-			if len(foundThing.GetLinks()) < len(ss) {
+			// Todo Check if we're missing any services from our results
+			if len(relatedThings) < len(ss) {
 				// Todo: Query the remaining streaming service
 				// Todo: Update the database record for the original thing
 			}
@@ -92,10 +84,9 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 			return nil, err
 		}
 
-		thingModel, err := streamingService.ConvertToModel(targetService, thing)
-		if err != nil {
-			return nil, err
-		}
+		// Todo: Strong type would be nice here, but mongo doesn't like it
+		var things []interface{}
+		things = append(things, thing)
 
 		// Query the other streaming services using what we found from the target streaming service
 		err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
@@ -104,17 +95,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 
-			foundThingModel, err := streamingService.ConvertToModel(service, foundThing)
-			if err != nil {
-				return err
-			}
-
-			// Copy the links
-			thingLinks := foundThingModel.GetLinks()
-			for key, link := range thingLinks {
-				thingModel.SetLink(key, link)
-			}
-
+			things = append(things, foundThing)
 			return nil
 		})
 		if err != nil {
@@ -122,15 +103,12 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Store the new thing in the database
-		coll := db.Collection(thingModel.CollName())
-		_, err = coll.InsertOne(ctx, thingModel)
+		_, err = coll.InsertMany(ctx, things)
 		if err != nil {
 			return nil, err
 		}
 
-		// Todo: Update thing with res.InsertedId? Or does `InsertOne` do that for us?
-
-		return thingModel, nil
+		return things, nil
 	})
 
 	if err != nil {

@@ -69,7 +69,7 @@ func (s *spotifyStreamingService) LinkBelongsToService(link string) bool {
 	return s.shareLinkPattern.MatchString(link)
 }
 
-func (s *spotifyStreamingService) SearchArtist(artist *streamingService.Artist) (res *streamingService.Artist, err error) {
+func (s *spotifyStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, error) {
 
 	country := artist.Market.String()
 
@@ -78,7 +78,7 @@ func (s *spotifyStreamingService) SearchArtist(artist *streamingService.Artist) 
 		Country: &country,
 	})
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
 	if searchRes.Artists == nil || len(searchRes.Artists.Artists) == 0 {
@@ -86,15 +86,27 @@ func (s *spotifyStreamingService) SearchArtist(artist *streamingService.Artist) 
 	}
 
 	spotifyArtist := searchRes.Artists.Artists[0]
-	return &streamingService.Artist{
-		Name:       spotifyArtist.Name,
-		ArtworkUrl: imageUrl(spotifyArtist.Images),
-		Market:		artist.Market,
-		Url:        spotifyArtist.ExternalURLs["spotify"],
-	}, nil
+	url, err := url.Parse(spotifyArtist.ExternalURLs["spotify"])
+	if err != nil {
+		return nil, err
+	}
+
+	artUrl, err := url.Parse(imageUrl(spotifyArtist.Images))
+	if err != nil {
+		return nil, err
+	}
+
+	res := model.NewArtist(
+		spotifyArtist.Name,
+		artUrl,
+		s.Name(),
+		model.DefaultMarket,
+		url)
+
+	return res, nil
 }
 
-func (s *spotifyStreamingService) SearchAlbum(album *streamingService.Album) (res *streamingService.Album, err error) {
+func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album, error) {
 
 	country := album.Market.String()
 
@@ -103,7 +115,7 @@ func (s *spotifyStreamingService) SearchAlbum(album *streamingService.Album) (re
 		Country: &country,
 	})
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
 	if searchRes.Albums == nil || len(searchRes.Albums.Albums) == 0 {
@@ -111,43 +123,61 @@ func (s *spotifyStreamingService) SearchAlbum(album *streamingService.Album) (re
 	}
 
 	spotifyAlbum := searchRes.Albums.Albums[0]
-	return &streamingService.Album{
-		Name:       spotifyAlbum.Name,
-		ArtistName: artistName(spotifyAlbum.Artists),
-		ArtworkUrl: imageUrl(spotifyAlbum.Images),
-		Market:		album.Market,
-		Url:        spotifyAlbum.ExternalURLs["spotify"],
-	}, nil
+	url, err := url.Parse(spotifyAlbum.ExternalURLs["spotify"])
+	if err != nil {
+		return nil, err
+	}
+
+	artUrl, err := url.Parse(imageUrl(spotifyAlbum.Images))
+	if err != nil {
+		return nil, err
+	}
+
+	res := model.NewAlbum(
+		spotifyAlbum.Name,
+		artistName(spotifyAlbum.Artists),
+		artUrl,
+		s.Name(),
+		model.DefaultMarket,
+		url)
+
+	return res, nil
 }
 
-func (s *spotifyStreamingService) SearchSong(song *streamingService.Song) (res *streamingService.Song, err error) {
+func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, error) {
 
-	country := song.Market.String()
+	country := track.Market.String()
 
-	q := fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", song.ArtistName, song.AlbumName, song.Name)
+	q := fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", track.ArtistName, track.AlbumName, track.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeTrack, &spotify.Options{
 		Country: &country,
 	})
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
 	if searchRes.Tracks == nil || len(searchRes.Tracks.Tracks) == 0 {
 		return nil, nil
 	}
 
-	spotifySong := searchRes.Tracks.Tracks[0]
-	return &streamingService.Song{
-		Name:       spotifySong.Name,
-		ArtistName: artistName(spotifySong.Artists),
-		AlbumName:  spotifySong.Album.Name,
-		Number: 	spotifySong.TrackNumber,
-		Market:		song.Market,
-		Url:        spotifySong.ExternalURLs["spotify"],
-	}, nil
+	spotifyTrack := searchRes.Tracks.Tracks[0]
+	url, err := url.Parse(spotifyTrack.ExternalURLs["spotify"])
+	if err != nil {
+		return nil, err
+	}
+
+	res := model.NewTrack(
+		spotifyTrack.Name,
+		artistName(spotifyTrack.Artists),
+		spotifyTrack.Album.Name,
+		s.Name(),
+		model.DefaultMarket,
+		url)
+
+	return res, nil
 }
 
-func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.Thing, error) {
+func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, error) {
 
 	// example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=10587ef152a8493f
 	// format: 	https://open.spotify.com/<artist|album|track>/<id>?si=<user specific token that i don't care about>
@@ -166,12 +196,22 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 			return nil, err
 		}
 
-		artist := &streamingService.Artist{
-			Name:       foundArtist.Name,
-			ArtworkUrl: imageUrl(foundArtist.Images),
-			Market:     model.DefaultMarket,
-			Url:        foundArtist.ExternalURLs["spotify"],
+		url, err := url.Parse(foundArtist.ExternalURLs["spotify"])
+		if err != nil {
+			return nil, err
 		}
+
+		artUrl, err := url.Parse(imageUrl(foundArtist.Images))
+		if err != nil {
+			return nil, err
+		}
+
+		artist := model.NewArtist(
+			foundArtist.Name,
+			artUrl,
+			s.Name(),
+			model.DefaultMarket,
+			url)
 
 		return artist, nil
 
@@ -181,12 +221,23 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 			return nil, err
 		}
 
-		album := &streamingService.Artist{
-			Name:       foundAlbum.Name,
-			ArtworkUrl: imageUrl(foundAlbum.Images),
-			Market:     model.DefaultMarket,
-			Url:        foundAlbum.ExternalURLs["spotify"],
+		url, err := url.Parse(foundAlbum.ExternalURLs["spotify"])
+		if err != nil {
+			return nil, err
 		}
+
+		artUrl, err := url.Parse(imageUrl(foundAlbum.Images))
+		if err != nil {
+			return nil, err
+		}
+
+		album := model.NewAlbum(
+			foundAlbum.Name,
+			artistName(foundAlbum.Artists),
+			artUrl,
+			s.Name(),
+			model.DefaultMarket,
+			url)
 
 		return album, nil
 
@@ -196,14 +247,18 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (streamingService.
 			return nil, err
 		}
 
-		track := &streamingService.Song{
-			Name:       foundTrack.Name,
-			ArtistName: artistName(foundTrack.Artists),
-			AlbumName:  foundTrack.Album.Name,
-			Number: 	foundTrack.TrackNumber,
-			Market:     model.DefaultMarket,
-			Url:        foundTrack.ExternalURLs["spotify"],
+		url, err := url.Parse(foundTrack.ExternalURLs["spotify"])
+		if err != nil {
+			return nil, err
 		}
+
+		track := model.NewTrack(
+			foundTrack.Name,
+			artistName(foundTrack.Artists),
+			foundTrack.Album.Name,
+			s.Name(),
+			model.DefaultMarket,
+			url)
 
 		return track, nil
 

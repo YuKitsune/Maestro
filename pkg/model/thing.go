@@ -1,7 +1,22 @@
 package model
 
+import "net/url"
+
+type ThingType string
+type ThingHash string
+
+const ThingsCollectionName = "things"
+
+const (
+	ArtistThing ThingType = "artist"
+	AlbumThing ThingType = "album"
+	TrackThing ThingType = "track"
+)
+
 type Thing interface {
-	CollName() string
-	GetLinks() Links
-	SetLink(key StreamingServiceKey, link Link)
+	Type() ThingType
+	GetHash() ThingHash
+	GetSource() StreamingServiceKey
+	GetMarket()Market
+ 	GetLink() *url.URL
 }
