@@ -13,7 +13,7 @@ import (
 
 type Config struct {
 	Api      *api.Config               `mapstructure:"api"`
-	Db       *db.Config                `mapstructure:"db"`
+	Db       *db.Config                `mapstructure:"database"`
 	Services []streamingService.Config `mapstructure:"services"`
 }
 

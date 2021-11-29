@@ -39,6 +39,11 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 			return nil, err
 		}
 
+		err = client.Connect(ctx)
+		if err != nil {
+			return nil, err
+		}
+
 		return client, nil
 	},
 		camogo.TransientLifetime)
