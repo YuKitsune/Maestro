@@ -21,20 +21,14 @@ type StreamingService interface {
 }
 
 func SearchThing(ss StreamingService, thing model.Thing) (model.Thing, error) {
-
-	norm := model.NewNameNormalizer()
-
 	switch t := thing.(type) {
 	case *model.Artist:
 		return ss.SearchArtist(t)
 
 	case *model.Album:
-		t.Name = norm.NormalizeAlbumName(t.Name)
 		return ss.SearchAlbum(t)
 
 	case *model.Track:
-		t.Name = norm.NormalizeTrackName(t.Name)
-		t.AlbumName = norm.NormalizeAlbumName(t.AlbumName)
 		return ss.SearchSong(t)
 
 	default:
