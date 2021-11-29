@@ -105,10 +105,10 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Store the new thing in the database
-		_, err = coll.InsertMany(ctx, things)
-		if err != nil {
-			return nil, err
-		}
+		//_, err = coll.InsertMany(ctx, things)
+		//if err != nil {
+		//	return nil, err
+		//}
 
 		return things, nil
 	})

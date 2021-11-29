@@ -100,7 +100,9 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 
 	country := album.Market.String()
 
-	q := fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistNames[0], album.Name)
+	normalizedName := streamingService.NormalizeAlbumName(album.Name)
+
+	q := fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistNames[0], normalizedName)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeAlbum, &spotify.Options{
 		Country: &country,
 	})

@@ -84,7 +84,8 @@ func (s *deezerStreamingService) SearchArtist(artist *model.Artist) (*model.Arti
 
 func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, error) {
 
-	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistNames[0], album.Name))
+	normalizedName := streamingService.NormalizeAlbumName(album.Name)
+	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistNames[0], normalizedName))
 	apiUrl := fmt.Sprintf("https://api.deezer.com/search/album?q=%s", q)
 
 	httpRes, err := s.client.Get(apiUrl)
