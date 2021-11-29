@@ -1,27 +1,22 @@
 package appleMusic
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/noppefoxwolf/amg/applemusic"
-	"io/ioutil"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"regexp"
-	"sort"
 	"strings"
 )
 
 type appleMusicStreamingService struct {
-	client *applemusic.Client
+	client *AppleMusicClient
 	shareLinkPattern *regexp.Regexp
 }
 
 func NewAppleMusicStreamingService(token string, shareLinkPattern string) streamingService.StreamingService {
 	shareLinkPatternRegex := regexp.MustCompile(shareLinkPattern)
 
-	c := streamingService.NewClientWithBearerAuth(token)
-	amc := applemusic.NewClient(c)
+	amc := NewAppleMusicClient(token)
 
 	return &appleMusicStreamingService{
 		amc,
@@ -39,154 +34,95 @@ func (s *appleMusicStreamingService) LinkBelongsToService(link string) bool {
 
 func (s *appleMusicStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, error) {
 
-	p := &applemusic.SearchForCatalogResourcesParams{
-		Storefront: artist.Market.String(),
-		Term:       artist.Name,
-		Types: []string{"artists"},
-	}
-
-	amRes, _, err := s.client.Search.SearchForCatalogResources(p)
+	searchRes, err := s.client.SearchArtist(artist.Name, artist.GetMarket())
 	if err != nil {
 		return nil, err
 	}
 
-	var foundArtists []*applemusic.Artist
-	for _, data := range amRes.Data {
-		foundArtists = append(foundArtists, data.Artist)
-	}
-
 	// Todo: Narrow down results
-	foundArtist := foundArtists[0]
+	foundArtist := searchRes[0]
 
-	return s.newArtist(foundArtist, artist.Market)
+	return s.newArtist(&foundArtist, artist.Market)
 }
 
 func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Album, error) {
 
-	p := &applemusic.SearchForCatalogResourcesParams{
-		Storefront: album.Market.String(),
-		Term:       fmt.Sprintf("%s %s", strings.Join(album.ArtistNames, ", "), album.Name),
-		Types: []string{"albums"},
-	}
-
-	amRes, _, err := s.client.Search.SearchForCatalogResources(p)
+	term := fmt.Sprintf("%s %s", strings.Join(album.ArtistNames, " "), album.Name)
+	searchRes, err := s.client.SearchAlbum(term, album.GetMarket())
 	if err != nil {
 		return nil, err
 	}
 
-	var foundAlbums []*applemusic.Album
-	for _, data := range amRes.Data {
-		foundAlbums = append(foundAlbums, data.Album)
-	}
-
 	// Todo: Narrow down results
-	foundAlbum := foundAlbums[0]
+	foundAlbum := searchRes[0]
 
-	return s.newAlbum(foundAlbum, album.Market)
+	return s.newAlbum(&foundAlbum, album.Market)
 }
 
 func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track, error) {
 
-	p := &applemusic.SearchForCatalogResourcesParams{
-		Storefront: song.Market.String(),
-		Term:       fmt.Sprintf("%s - %s", strings.Join(song.ArtistNames, ", "), song.Name),
-		Types: []string{"songs"},
-	}
-
-	amRes, _, err := s.client.Search.SearchForCatalogResources(p)
+	term := fmt.Sprintf("%s %s", strings.Join(song.ArtistNames, " "), song.Name)
+	searchRes, err := s.client.SearchSong(term, song.GetMarket())
 	if err != nil {
 		return nil, err
 	}
 
-	var foundSongs []*applemusic.Song
-	for _, data := range amRes.Data {
-		foundSongs = append(foundSongs, data.Song)
-	}
-
 	// Todo: Narrow down results
-	foundSong := foundSongs[0]
+	foundSong := searchRes[0]
 
-	return s.newTrack(foundSong, song.Market)
+	return s.newTrack(&foundSong, song.Market)
 }
 
 func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, error) {
 
-	// example: https://music.apple.com/au/album/surrender/1585865534
-	// format: 	https://music.apple.com/<storefront>/<artist|album|song>/<name>/<id>
-	// name is irrelevant here, we only need the storefront and id
+	// example: https://music.apple.com/au/album/surrender/1585865534?i=123123123
+	// format: 	https://music.apple.com/<storefront>/<artist|album>/<name>/<album-id/artist-id>?i=<song-id>
+	// name is irrelevant here, we only need the storefront, type, and ids
 
 	matches := streamingService.FindStringSubmatchMap(s.shareLinkPattern, link)
 
 	storefront := model.Market(matches["storefront"])
 	typ := matches["type"]
 	id := matches["id"]
+	songId := matches["song_id"]
+
+	// Hack but it works
+	if typ == "album" && len(songId) > 0 {
+		typ = "song"
+		id = songId
+	}
 
 	switch typ {
 	case "artist":
-		amRes, _, err := s.client.Artists.GetACatalogArtist(&applemusic.GetACatalogArtistParams{
-			Id:         id,
-			Storefront: storefront.String(),
-		})
+		res, err := s.client.GetArtist(id, storefront)
 		if err != nil {
 			return nil, err
 		}
 
-		var foundArtists []*applemusic.Artist
-		for _, data := range amRes.Data {
-			foundArtists = append(foundArtists, data.Artist)
-		}
-
-		// Todo: Narrow down results
-		foundArtist := foundArtists[0]
-
-		return s.newArtist(foundArtist, storefront)
+		return s.newArtist(res, storefront)
 
 	case "album":
-		amRes, _, err := s.client.Albums.GetACatalogAlbum(&applemusic.GetACatalogAlbumParams{
-			Id:         id,
-			Storefront: storefront.String(),
-			Include: []string{"artists"},
-		})
+		res, err := s.client.GetAlbum(id, storefront)
 		if err != nil {
 			return nil, err
 		}
 
-		var foundAlbums []*applemusic.Album
-		for _, data := range amRes.Data {
-			foundAlbums = append(foundAlbums, data.Album)
-		}
+		return s.newAlbum(res, storefront)
 
-		// Todo: Narrow down results
-		foundAlbum := foundAlbums[0]
-
-		return s.newAlbum(foundAlbum, storefront)
-
-	case "track":
-		amRes, _, err := s.client.Songs.GetACatalogSong(&applemusic.GetACatalogSongParams{
-			Id:         id,
-			Storefront: storefront.String(),
-			Include: []string{"artists", "albums"},
-		})
+	case "song":
+		res, err := s.client.GetSong(id, storefront)
 		if err != nil {
 			return nil, err
 		}
 
-		var foundSongs []*applemusic.Song
-		for _, data := range amRes.Data {
-			foundSongs = append(foundSongs, data.Song)
-		}
-
-		// Todo: Narrow down results
-		foundSong := foundSongs[0]
-
-		return s.newTrack(foundSong, storefront)
+		return s.newTrack(res, storefront)
 
 	default:
 		return nil, fmt.Errorf("unknown type %s", typ)
 	}
 }
 
-func (s *appleMusicStreamingService) newArtist(artist *applemusic.Artist, market model.Market) (*model.Artist, error) {
+func (s *appleMusicStreamingService) newArtist(artist *Artist, market model.Market) (*model.Artist, error) {
 
 	newArtist := model.NewArtist(
 		artist.Attributes.Name,
@@ -198,10 +134,10 @@ func (s *appleMusicStreamingService) newArtist(artist *applemusic.Artist, market
 	return newArtist, nil
 }
 
-func (s *appleMusicStreamingService) newAlbum(album *applemusic.Album, market model.Market) (*model.Album, error) {
+func (s *appleMusicStreamingService) newAlbum(album *Album, market model.Market) (*model.Album, error) {
 
 	// Query relationships for artist names
-	artistNames, err := s.getAlbumArtistNames(album)
+	artistNames, err := s.getAlbumArtistNames(album, market)
 	if err != nil {
 		return nil, err
 	}
@@ -217,10 +153,10 @@ func (s *appleMusicStreamingService) newAlbum(album *applemusic.Album, market mo
 	return newAlbum, nil
 }
 
-func (s *appleMusicStreamingService) newTrack(song *applemusic.Song, market model.Market) (*model.Track, error) {
+func (s *appleMusicStreamingService) newTrack(song *Song, market model.Market) (*model.Track, error) {
 
 	// Query relationships for artist names
-	artistNames, err := s.getSongArtistNames(song)
+	artistNames, err := s.getSongArtistNames(song, market)
 	if err != nil {
 		return nil, err
 	}
@@ -241,6 +177,44 @@ func (s *appleMusicStreamingService) newTrack(song *applemusic.Song, market mode
 		song.Attributes.Url)
 
 	return track, nil
+}
+
+func (s *appleMusicStreamingService) getAlbumArtistNames(album *Album, market model.Market) ([]string, error) {
+	var names []string
+
+	for _, data := range album.Relationships.Artists.Data {
+		artist, err := s.client.GetArtist(data.Id, market)
+		if err != nil {
+			return names, nil
+		}
+
+		names = append(names, artist.Attributes.Name)
+	}
+
+	return names, nil
+}
+
+func (s *appleMusicStreamingService) getSongArtistNames(song *Song, market model.Market) ([]string, error) {
+	var names []string
+
+	for _, data := range song.Relationships.Artists.Data {
+		artist, err := s.client.GetArtist(data.Id, market)
+		if err != nil {
+			return names, nil
+		}
+
+		names = append(names, artist.Attributes.Name)
+	}
+
+	return names, nil
+}
+
+// TODO: Figure out what we should do here
+// 	is song.Attributes.AlbumName sufficent?
+// 	do we need to check through the attributes?
+
+func (s *appleMusicStreamingService) getSongAlbumName(song *Song) (string, error) {
+	return song.Attributes.AlbumName, nil
 }
 
 //func normalizeAlbumName(album *Album) string {

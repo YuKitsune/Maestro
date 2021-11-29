@@ -20,7 +20,8 @@ type Track struct {
 
 func NewTrack(name string, artistNames []string, albumName string, source StreamingServiceKey, market Market, link string) *Track {
 
-	str := fmt.Sprintf("%s_%s_%s", strings.ToLower(strings.Join(artistNames, "&")), strings.ToLower(albumName), strings.ToLower(name))
+	normalizer := NewNameNormalizer()
+	str := fmt.Sprintf("%s_%s_%s", strings.ToLower(strings.Join(artistNames, "&")), strings.ToLower(normalizer.NormalizeAlbumName(albumName)), strings.ToLower(normalizer.NormalizeTrackName(name)))
 	hash := ThingHash(hasher.NewSha1Hasher().ComputeHash(str))
 
 	return &Track{

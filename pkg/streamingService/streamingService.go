@@ -3,7 +3,6 @@ package streamingService
 import (
 	"fmt"
 	"maestro/pkg/model"
-	"regexp"
 )
 
 // Todo: Not a fan of these models being separate from the ones in the models package
@@ -22,14 +21,20 @@ type StreamingService interface {
 }
 
 func SearchThing(ss StreamingService, thing model.Thing) (model.Thing, error) {
+
+	norm := model.NewNameNormalizer()
+
 	switch t := thing.(type) {
 	case *model.Artist:
 		return ss.SearchArtist(t)
 
 	case *model.Album:
+		t.Name = norm.NormalizeAlbumName(t.Name)
 		return ss.SearchAlbum(t)
 
 	case *model.Track:
+		t.Name = norm.NormalizeTrackName(t.Name)
+		t.AlbumName = norm.NormalizeAlbumName(t.AlbumName)
 		return ss.SearchSong(t)
 
 	default:
@@ -46,27 +51,4 @@ func ForEachStreamingService(services []StreamingService, fn func(StreamingServi
 	}
 
 	return nil
-}
-
-func NormalizeAlbumName(name string) string {
-
-	patterns := []*regexp.Regexp {
-		// Featuring section
-		regexp.MustCompile("(\\(feat(\\.|uring).+\\))"),
-
-		// Single, EP, and LP suffix
-		regexp.MustCompile("(\\s*(-*\\s*)?((Single)|(E\\.?P\\.?)|(L\\.?P\\.?)))"),
-	}
-
-	for _, pattern := range patterns {
-		index := pattern.FindStringIndex(name)
-		if len(index) > 0 {
-			start := index[0]
-			end := index[1]
-
-			name = name[0:start] + name[end:len(name)]
-		}
-	}
-
-	return name
 }

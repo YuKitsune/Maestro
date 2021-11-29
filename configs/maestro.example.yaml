@@ -11,7 +11,7 @@ services:
     enabled: true
     properties:
       token:
-      shareLinkPattern: "(?:https:\/\/music\.apple\.com\/)(?P<storefront>[A-Za-z0-9]+)\/(?P<type>[A-Za-z]+)\/(?:.+\/)(?P<id>[0-9]+).*"
+      shareLinkPattern: "(?:https:\/\/music\.apple\.com\/)(?P<storefront>[A-Za-z0-9]+)\/(?P<type>[A-Za-z]+)\/(?:.+\/)(?P<id>[0-9]+)(?:\?i=(?P<song_id>[0-9]+))?"
   - serviceName: Spotify
     enabled: true
     properties:
