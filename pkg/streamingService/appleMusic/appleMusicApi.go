@@ -5,20 +5,20 @@ type SearchResponse struct {
 }
 
 type ArtistsResult struct {
-	Data []Artist
+	Data []*Artist
 }
 
 type AlbumResult struct {
-	Data []Album
+	Data []*Album
 }
 
 type SongResult struct {
-	Data []Song
+	Data []*Song
 }
 
 type Artist struct {
 	Id         string
-	Attributes ArtistAttributes //The attributes for the artist.
+	Attributes *ArtistAttributes //The attributes for the artist.
 }
 
 type ArtistAttributes struct {
@@ -29,7 +29,8 @@ type ArtistAttributes struct {
 
 type Song struct {
 	Id         string
-	Attributes SongAttributes //The attributes for the song.
+	Attributes *SongAttributes //The attributes for the song.
+	Relationships *Relationships
 }
 
 type SongAttributes struct {
@@ -53,7 +54,8 @@ type Artwork struct {
 
 type Album struct {
 	Id         string
-	Attributes AlbumAttributes //The attributes for the album.
+	Attributes *AlbumAttributes //The attributes for the album.
+	Relationships *Relationships
 }
 
 type AlbumAttributes struct {
@@ -62,6 +64,7 @@ type AlbumAttributes struct {
 	Artwork    Artwork //The album artwork.
 	Name       string  //(Required) The localized name of the album.
 	Url        string
+	IsSingle bool
 }
 
 type QueryParams struct {
@@ -73,4 +76,18 @@ type SearchResult struct {
 	Artists *ArtistsResult
 	Albums  *AlbumResult
 	Songs   *SongResult
+}
+
+type Relationships struct {
+	Artists struct {
+		Data []Relationship
+	}
+	Albums struct {
+		Data []Relationship
+	}
+}
+
+type Relationship struct {
+	Href string
+	Type string
 }

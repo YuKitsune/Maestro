@@ -72,29 +72,19 @@ func (s *deezerStreamingService) SearchArtist(artist *model.Artist) (*model.Arti
 	}
 
 	deezerArtist := apiRes.Data[0]
-	url, err := url.Parse(deezerArtist.Link)
-	if err != nil {
-		return nil, err
-	}
-
-	artUrl, err := url.Parse(deezerArtist.Picture)
-	if err != nil {
-		return nil, err
-	}
-
 	res := model.NewArtist(
 		deezerArtist.Name,
-		artUrl,
+		deezerArtist.Picture,
 		s.Name(),
 		model.DefaultMarket,
-		url)
+		deezerArtist.Link)
 
 	return res, nil
 }
 
 func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, error) {
 
-	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistName, album.Name))
+	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistNames[0], album.Name))
 	apiUrl := fmt.Sprintf("https://api.deezer.com/search/album?q=%s", q)
 
 	httpRes, err := s.client.Get(apiUrl)
@@ -116,30 +106,20 @@ func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, 
 	}
 
 	deezerAlbum := apiRes.Data[0]
-	url, err := url.Parse(deezerAlbum.Link)
-	if err != nil {
-		return nil, err
-	}
-
-	artUrl, err := url.Parse(deezerAlbum.Cover)
-	if err != nil {
-		return nil, err
-	}
-
 	res := model.NewAlbum(
 		deezerAlbum.Title,
-		deezerAlbum.Artist.Name,
-		artUrl,
+		[]string {deezerAlbum.Artist.Name}, // Todo:
+		deezerAlbum.Cover,
 		s.Name(),
 		model.DefaultMarket,
-		url)
+		deezerAlbum.Link)
 
 	return res, nil
 }
 
 func (s *deezerStreamingService) SearchSong(song *model.Track) (*model.Track, error) {
 
-	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", song.ArtistName, song.AlbumName, song.Name))
+	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", song.ArtistNames[0], song.AlbumName, song.Name))
 	apiUrl := fmt.Sprintf("https://api.deezer.com/search/track?q=%s", q)
 
 	httpRes, err := s.client.Get(apiUrl)
@@ -161,18 +141,13 @@ func (s *deezerStreamingService) SearchSong(song *model.Track) (*model.Track, er
 	}
 
 	deezerTrack := apiRes.Data[0]
-	url, err := url.Parse(deezerTrack.Link)
-	if err != nil {
-		return nil, err
-	}
-
 	res := model.NewTrack(
 		deezerTrack.Title,
-		deezerTrack.Artist.Name,
+		[]string {deezerTrack.Artist.Name}, // Todo:
 		deezerTrack.Album.Title,
 		s.Name(),
 		model.DefaultMarket,
-		url)
+		deezerTrack.Link)
 
 	return res, nil
 }
@@ -209,22 +184,12 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 				return nil, err
 			}
 
-			url, err := url.Parse(apiRes.Link)
-			if err != nil {
-				return nil, err
-			}
-
-			artUrl, err := url.Parse(apiRes.Picture)
-			if err != nil {
-				return nil, err
-			}
-
 			artist := model.NewArtist(
 				apiRes.Name,
-				artUrl,
+				apiRes.Picture,
 				s.Name(),
 				model.DefaultMarket,
-				url)
+				apiRes.Link)
 			return artist, nil
 		}
 
@@ -239,23 +204,13 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 				return nil, err
 			}
 
-			url, err := url.Parse(apiRes.Link)
-			if err != nil {
-				return nil, err
-			}
-
-			artUrl, err := url.Parse(apiRes.Cover)
-			if err != nil {
-				return nil, err
-			}
-
 			album := model.NewAlbum(
 				apiRes.Title,
-				apiRes.Artist.Name,
-				artUrl,
+				[]string {apiRes.Artist.Name}, // Todo:
+				apiRes.Cover,
 				s.Name(),
 				model.DefaultMarket,
-				url)
+				apiRes.Link)
 
 			return album, nil
 		}
@@ -270,18 +225,13 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 				return nil, err
 			}
 
-			url, err := url.Parse(apiRes.Link)
-			if err != nil {
-				return nil, err
-			}
-
 			track := model.NewTrack(
 				apiRes.Title,
-				apiRes.Artist.Name,
+				[]string {apiRes.Artist.Name}, // Todo:
 				apiRes.Album.Title,
 				s.Name(),
 				model.DefaultMarket,
-				url)
+				apiRes.Link)
 
 			return track, nil
 		}

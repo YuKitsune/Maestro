@@ -86,22 +86,12 @@ func (s *spotifyStreamingService) SearchArtist(artist *model.Artist) (*model.Art
 	}
 
 	spotifyArtist := searchRes.Artists.Artists[0]
-	url, err := url.Parse(spotifyArtist.ExternalURLs["spotify"])
-	if err != nil {
-		return nil, err
-	}
-
-	artUrl, err := url.Parse(imageUrl(spotifyArtist.Images))
-	if err != nil {
-		return nil, err
-	}
-
 	res := model.NewArtist(
 		spotifyArtist.Name,
-		artUrl,
+		imageUrl(spotifyArtist.Images),
 		s.Name(),
 		model.DefaultMarket,
-		url)
+		spotifyArtist.ExternalURLs["spotify"])
 
 	return res, nil
 }
@@ -110,7 +100,7 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 
 	country := album.Market.String()
 
-	q := fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistName, album.Name)
+	q := fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistNames[0], album.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeAlbum, &spotify.Options{
 		Country: &country,
 	})
@@ -123,23 +113,13 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 	}
 
 	spotifyAlbum := searchRes.Albums.Albums[0]
-	url, err := url.Parse(spotifyAlbum.ExternalURLs["spotify"])
-	if err != nil {
-		return nil, err
-	}
-
-	artUrl, err := url.Parse(imageUrl(spotifyAlbum.Images))
-	if err != nil {
-		return nil, err
-	}
-
 	res := model.NewAlbum(
 		spotifyAlbum.Name,
 		artistName(spotifyAlbum.Artists),
-		artUrl,
+		imageUrl(spotifyAlbum.Images),
 		s.Name(),
 		model.DefaultMarket,
-		url)
+		spotifyAlbum.ExternalURLs["spotify"])
 
 	return res, nil
 }
@@ -148,7 +128,7 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 
 	country := track.Market.String()
 
-	q := fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", track.ArtistName, track.AlbumName, track.Name)
+	q := fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", track.ArtistNames[0], track.AlbumName, track.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeTrack, &spotify.Options{
 		Country: &country,
 	})
@@ -161,18 +141,13 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 	}
 
 	spotifyTrack := searchRes.Tracks.Tracks[0]
-	url, err := url.Parse(spotifyTrack.ExternalURLs["spotify"])
-	if err != nil {
-		return nil, err
-	}
-
 	res := model.NewTrack(
 		spotifyTrack.Name,
 		artistName(spotifyTrack.Artists),
 		spotifyTrack.Album.Name,
 		s.Name(),
 		model.DefaultMarket,
-		url)
+		spotifyTrack.ExternalURLs["spotify"])
 
 	return res, nil
 }
@@ -196,22 +171,12 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			return nil, err
 		}
 
-		url, err := url.Parse(foundArtist.ExternalURLs["spotify"])
-		if err != nil {
-			return nil, err
-		}
-
-		artUrl, err := url.Parse(imageUrl(foundArtist.Images))
-		if err != nil {
-			return nil, err
-		}
-
 		artist := model.NewArtist(
 			foundArtist.Name,
-			artUrl,
+			imageUrl(foundArtist.Images),
 			s.Name(),
 			model.DefaultMarket,
-			url)
+			foundArtist.ExternalURLs["spotify"])
 
 		return artist, nil
 
@@ -221,33 +186,18 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			return nil, err
 		}
 
-		url, err := url.Parse(foundAlbum.ExternalURLs["spotify"])
-		if err != nil {
-			return nil, err
-		}
-
-		artUrl, err := url.Parse(imageUrl(foundAlbum.Images))
-		if err != nil {
-			return nil, err
-		}
-
 		album := model.NewAlbum(
 			foundAlbum.Name,
 			artistName(foundAlbum.Artists),
-			artUrl,
+			imageUrl(foundAlbum.Images),
 			s.Name(),
 			model.DefaultMarket,
-			url)
+			foundAlbum.ExternalURLs["spotify"])
 
 		return album, nil
 
 	case "track":
 		foundTrack, err := s.client.GetTrack(id)
-		if err != nil {
-			return nil, err
-		}
-
-		url, err := url.Parse(foundTrack.ExternalURLs["spotify"])
 		if err != nil {
 			return nil, err
 		}
@@ -258,7 +208,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			foundTrack.Album.Name,
 			s.Name(),
 			model.DefaultMarket,
-			url)
+			foundTrack.ExternalURLs["spotify"])
 
 		return track, nil
 
@@ -267,20 +217,16 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 	}
 }
 
-func artistName(artists []spotify.SimpleArtist) string {
+func artistName(artists []spotify.SimpleArtist) []string {
 
-	var name string
+	var names []string
 	if len(artists) > 0 {
-		for i, artist := range artists {
-			if i > 0 && i == len(artists)-1 {
-				name += ", "
-			}
-
-			name += artist.Name
+		for _, artist := range artists {
+			names = append(names, artist.Name)
 		}
 	}
 
-	return name
+	return names
 }
 
 func imageUrl(imgs []spotify.Image) string {

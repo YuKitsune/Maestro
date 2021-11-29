@@ -8,6 +8,7 @@ import (
 	"maestro/pkg/api/db"
 	"maestro/pkg/api/handlers"
 	"maestro/pkg/api/middleware"
+	"maestro/pkg/hasher"
 	"maestro/pkg/streamingService"
 	"maestro/pkg/streamingService/appleMusic"
 	"maestro/pkg/streamingService/deezer"
@@ -67,8 +68,13 @@ func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, svcCfgs []stre
 	}, camogo.SingletonLifetime); err != nil {
 		return nil
 	}
+
 	dbMod := &db.DatabaseModule{Config: dbCfg}
 	if err := cb.RegisterModule(dbMod); err != nil {
+		return err
+	}
+
+	if err := cb.RegisterFactory(hasher.NewSha1Hasher, camogo.SingletonLifetime); err != nil {
 		return err
 	}
 

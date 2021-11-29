@@ -1,7 +1,5 @@
 package model
 
-import "net/url"
-
 type ThingType string
 type ThingHash string
 
@@ -18,5 +16,5 @@ type Thing interface {
 	GetHash() ThingHash
 	GetSource() StreamingServiceKey
 	GetMarket()Market
- 	GetLink() *url.URL
+ 	GetLink() string
 }

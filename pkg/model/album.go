@@ -1,41 +1,42 @@
 package model
 
 import (
-	"crypto/sha1"
 	"fmt"
-	"net/url"
+	"maestro/pkg/hasher"
 	"strings"
 )
 
 type Album struct {
 	Name     string
-	ArtistName string
-	ArtworkLink *url.URL
+	ArtistNames []string
+	ArtworkLink string
 
 	Hash ThingHash
 	Source StreamingServiceKey
+	ThingType ThingType
 	Market Market
-	Link *url.URL
+	Link string
 }
 
-func NewAlbum(name string, artistName string, artworkLink *url.URL, source StreamingServiceKey, market Market, link *url.URL) *Album {
+func NewAlbum(name string, artistNames []string, artworkLink string, source StreamingServiceKey, market Market, link string) *Album {
 
-	str := fmt.Sprintf("%s_%s", strings.ToLower(artistName), strings.ToLower(name))
-	hash := ThingHash(sha1.New().Sum([]byte(str)))
+	str := fmt.Sprintf("%s_%s", strings.ToLower(strings.Join(artistNames, "&")), strings.ToLower(name))
+	hash := ThingHash(hasher.NewSha1Hasher().ComputeHash(str))
 
 	return &Album{
-		Name:       name,
-		ArtistName: artistName,
-		ArtworkLink: artworkLink,
-		Hash: 		hash,
-		Source:     source,
-		Market:     market,
-		Link:       link,
+		name,
+		artistNames,
+		artworkLink,
+		hash,
+		source,
+		AlbumThing,
+		market,
+		link,
 	}
 }
 
 func (a *Album) Type() ThingType {
-	return AlbumThing
+	return a.ThingType
 }
 
 func (a *Album) GetHash() ThingHash {
@@ -50,6 +51,6 @@ func (a *Album) GetMarket()Market {
 	return a.Market
 }
 
-func (a *Album) GetLink() *url.URL {
+func (a *Album) GetLink() string {
 	return a.Link
 }
