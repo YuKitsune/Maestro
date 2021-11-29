@@ -30,19 +30,21 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 	res, err := container.ResolveWithResult(func(ctx context.Context, cd *db.Config, mc *mongo.Client, ss []streamingService.StreamingService) (interface{}, error) {
 		db := mc.Database(cd.Database)
 
-		// Search the database for an existing thing with the given link
-
-		coll := db.Collection(model.ThingsCollectionName)
-
-		res := coll.FindOne(ctx, bson.D{{"link", reqLink}})
-		if res.Err() != nil {
-			return nil, res.Err()
-		}
-
 		var foundThing model.Thing
-		err = res.Decode(&foundThing)
+
+		// Search the database for an existing thing with the given link
+		coll := db.Collection(model.ThingsCollectionName)
+		res := coll.FindOne(ctx, bson.D{{"link", reqLink}})
+		err = res.Err()
 		if err != nil {
-			return nil, err
+			if err != mongo.ErrNoDocuments {
+				return nil, res.Err()
+			}
+		} else {
+			err = res.Decode(&foundThing)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		if foundThing != nil {
