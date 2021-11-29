@@ -55,12 +55,18 @@ func (api *MaestroApi) StartTLS() error {
 	return api.svr.ListenAndServeTLS(api.cfg.CertFile, api.cfg.KeyFile)
 }
 
-func (api *MaestroApi) Shutdown() error {
-	return api.svr.Shutdown(context.TODO())
+func (api *MaestroApi) Shutdown(ctx context.Context) error {
+	return api.svr.Shutdown(ctx)
 }
 
 func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, svcCfgs []streamingService.Config) error {
 
+	// Todo: Context timeout here
+	if err := cb.RegisterFactory(func () context.Context {
+		return context.TODO()
+	}, camogo.SingletonLifetime); err != nil {
+		return nil
+	}
 	dbMod := &db.DatabaseModule{Config: dbCfg}
 	if err := cb.RegisterModule(dbMod); err != nil {
 		return err

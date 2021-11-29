@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -9,6 +10,7 @@ import (
 	"maestro/pkg/api"
 	"maestro/pkg/api/db"
 	"maestro/pkg/streamingService"
+	"time"
 )
 
 type Config struct {
@@ -48,7 +50,7 @@ func main() {
 	}
 }
 
-func serve(command *cobra.Command, args []string) error {
+func serve(_ *cobra.Command, _ []string) error {
 
 	// Config file
 	viper.SetConfigName("maestro")
@@ -91,7 +93,11 @@ func serve(command *cobra.Command, args []string) error {
 		}
 	}()
 
-	grace.WaitForShutdownSignalOrError(errorChan, func() { _ = maestroApi.Shutdown() })
+	grace.WaitForShutdownSignalOrError(errorChan, func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+		defer cancel()
+		_ = maestroApi.Shutdown(ctx)
+	})
 
 	return nil
 }

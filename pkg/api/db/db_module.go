@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"github.com/yukitsune/camogo"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,7 +21,7 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 	}
 
 	// Database
-	err := cb.RegisterFactory(func(cfg *Config) (*mongo.Client, error) {
+	err := cb.RegisterFactory(func(ctx context.Context, cfg *Config) (*mongo.Client, error) {
 
 		uri := fmt.Sprintf(
 			"mongodb://%s:%d/%s",
