@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,6 +11,7 @@ import (
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
+	"sort"
 )
 
 func HandleLink(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +28,8 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		Error(w, err)
 		return
 	}
+
+
 
 	res, err := container.ResolveWithResult(func(ctx context.Context, cd *db.Config, mc *mongo.Client, ss []streamingService.StreamingService) (interface{}, error) {
 
@@ -47,7 +51,12 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 				return nil, res.Err()
 			}
 		} else {
-			err = res.Decode(&foundThing)
+			thingBytes, err := res.DecodeBytes()
+			if err != nil {
+				return nil, err
+			}
+
+			foundThing, err = model.UnmarshalThing(thingBytes)
 			if err != nil {
 				return nil, err
 			}
@@ -56,16 +65,59 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		if foundThing != nil {
 			// Link found
 
-			// Todo: Find other things with the same hash
-			var relatedThings []model.Thing
-
-			// Todo Check if we're missing any services from our results
-			if len(relatedThings) < len(ss) {
-				// Todo: Query the remaining streaming service
-				// Todo: Update the database record for the original thing
+			// Find other things with the same hash
+			cur, err := coll.Find(ctx, bson.D{
+				{"groupid", foundThing.GetGroupId()},
+				{"source", bson.D{{"$ne", foundThing.GetSource()}}},
+			})
+			if err != nil {
+				return nil, err
 			}
 
-			return foundThing, nil
+			var relatedThings []model.Thing
+			relatedThings, err = model.UnmarshalThingsFromCursor(ctx, cur)
+			if err != nil {
+				return nil, err
+			}
+
+			allThings := append(relatedThings, foundThing)
+
+			// Check if we're missing any services from our results
+			if len(allThings) < len(ss) {
+				var foundServices []string
+				for _, thing := range allThings {
+					foundServices = append(foundServices, thing.GetSource().String())
+				}
+
+				// Query the remaining streaming service
+				sort.Strings(foundServices)
+				var newThings []model.Thing
+				for _, service := range ss {
+					if sort.SearchStrings(foundServices, service.Name().String()) != len(foundServices) {
+						continue
+					}
+
+					thing, err := streamingService.SearchThing(service, foundThing)
+					if err != nil {
+						return nil, err
+					}
+
+					thing.SetGroupId(foundThing.GetGroupId())
+					newThings = append(newThings, thing)
+				}
+
+				// Add the new things to the database
+				for _, newThing := range newThings {
+					_, err := coll.InsertOne(ctx, newThing)
+					if err != nil {
+						return nil, err
+					}
+
+					allThings = append(allThings, newThing)
+				}
+			}
+
+			return allThings, nil
 		}
 
 		// No links found, query the streaming service and find the same entry on other services
@@ -87,10 +139,13 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Query the target streaming service
+		groupId := model.ThingGroupId(uuid.New().String())
 		thing, err := targetService.SearchFromLink(reqLink)
 		if err != nil {
 			return nil, err
 		}
+
+		thing.SetGroupId(groupId)
 
 		// Todo: Strong type would be nice here, but mongo doesn't like it
 		var things []interface{}
@@ -103,6 +158,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 
+			foundThing.SetGroupId(groupId)
 			things = append(things, foundThing)
 			return nil
 		})
@@ -111,10 +167,10 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Store the new thing in the database
-		//_, err = coll.InsertMany(ctx, things)
-		//if err != nil {
-		//	return nil, err
-		//}
+		_, err = coll.InsertMany(ctx, things)
+		if err != nil {
+			return nil, err
+		}
 
 		return things, nil
 	})

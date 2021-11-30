@@ -3,7 +3,9 @@ module maestro
 go 1.16
 
 require (
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/mux v1.8.0
+	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/noppefoxwolf/amg v0.0.0-20190414160934-688609ac1965
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
