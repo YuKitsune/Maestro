@@ -148,7 +148,7 @@ func (s *appleMusicStreamingService) newArtist(artist *Artist, market model.Mark
 
 	newArtist := model.NewArtist(
 		artist.Attributes.Name,
-		"", // Todo: artwork link
+		"",
 		s.Name(),
 		market,
 		artist.Attributes.Url)
@@ -178,7 +178,7 @@ func (s *appleMusicStreamingService) newAlbum(album *Album, market model.Market)
 	newAlbum := model.NewAlbum(
 		albumName,
 		artistNames,
-		album.Attributes.Artwork.Url,
+		getArtworkUrl(&album.Attributes.Artwork),
 		s.Name(),
 		market,
 		album.Attributes.Url)
@@ -194,22 +194,23 @@ func (s *appleMusicStreamingService) newTrack(song *Song, market model.Market) (
 		return nil, err
 	}
 
-	// Query relationships for album
-	// Todo: What if there are many?
-	albumName, err := s.getSongAlbumName(song)
-	if err != nil {
-		return nil, err
-	}
-
 	track := model.NewTrack(
 		song.Attributes.Name,
 		artistNames,
-		albumName,
+		song.Attributes.AlbumName,
 		s.Name(),
 		market,
 		song.Attributes.Url)
 
 	return track, nil
+}
+
+func getArtworkUrl(art *Artwork) string {
+	url := art.Url
+	url = strings.ReplaceAll(url, "{w}", fmt.Sprintf("%d", art.Width))
+	url = strings.ReplaceAll(url, "{h}", fmt.Sprintf("%d", art.Height))
+
+	return url
 }
 
 func (s *appleMusicStreamingService) getAlbumArtistNames(album *Album, market model.Market) ([]string, error) {
@@ -240,12 +241,4 @@ func (s *appleMusicStreamingService) getSongArtistNames(song *Song, market model
 	}
 
 	return names, nil
-}
-
-// TODO: Figure out what we should do here
-// 	is song.Attributes.AlbumName sufficent?
-// 	do we need to check through the attributes?
-
-func (s *appleMusicStreamingService) getSongAlbumName(song *Song) (string, error) {
-	return song.Attributes.AlbumName, nil
 }
