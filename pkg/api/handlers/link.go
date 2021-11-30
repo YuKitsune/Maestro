@@ -28,6 +28,12 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := container.ResolveWithResult(func(ctx context.Context, cd *db.Config, mc *mongo.Client, ss []streamingService.StreamingService) (interface{}, error) {
+
+		// Trim service-specific stuff from the link
+		for _, service := range ss {
+			reqLink  = service.CleanLink(reqLink)
+		}
+
 		db := mc.Database(cd.Database)
 
 		var foundThing model.Thing

@@ -193,3 +193,13 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 		return nil, fmt.Errorf("unknown type %s", typ)
 	}
 }
+
+func (s *deezerStreamingService) CleanLink(link string) string {
+
+	match := s.shareLinkPattern.FindStringIndex(link)
+	if len(match) > 0 {
+		return link[match[0]:match[1]]
+	}
+
+	return link
+}

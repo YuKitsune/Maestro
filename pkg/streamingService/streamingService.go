@@ -18,6 +18,7 @@ type StreamingService interface {
 	SearchAlbum(album *model.Album) (*model.Album, error)
 	SearchSong(song *model.Track) (*model.Track, error)
 	SearchFromLink(link string) (model.Thing, error)
+	CleanLink(link string) string
 }
 
 func SearchThing(ss StreamingService, thing model.Thing) (model.Thing, error) {

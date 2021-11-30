@@ -237,6 +237,16 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 	}
 }
 
+func (s *spotifyStreamingService) CleanLink(link string) string {
+
+	match := s.shareLinkPattern.FindStringIndex(link)
+	if len(match) > 0 {
+		return link[match[0]:match[1]]
+	}
+
+	return link
+}
+
 func artistName(artists []spotify.SimpleArtist) []string {
 
 	var names []string

@@ -134,6 +134,16 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, e
 	}
 }
 
+func (s *appleMusicStreamingService) CleanLink(link string) string {
+
+	match := s.shareLinkPattern.FindStringIndex(link)
+	if len(match) > 0 {
+		return link[match[0]:match[1]]
+	}
+
+	return link
+}
+
 func (s *appleMusicStreamingService) newArtist(artist *Artist, market model.Market) (*model.Artist, error) {
 
 	newArtist := model.NewArtist(
