@@ -1,26 +1,26 @@
 package model
 
 type Album struct {
-	Name     string
+	Name        string
 	ArtistNames []string
 	ArtworkLink string
 
-	GroupId ThingGroupId
-	Source StreamingServiceKey
+	GroupId   ThingGroupId
+	Source    StreamingServiceKey
 	ThingType ThingType
-	Market Market
-	Link string
+	Market    Market
+	Link      string
 }
 
 func NewAlbum(name string, artistNames []string, artworkLink string, source StreamingServiceKey, market Market, link string) *Album {
 	return &Album{
-		Name: name,
+		Name:        name,
 		ArtistNames: artistNames,
 		ArtworkLink: artworkLink,
-		Source: source,
-		ThingType: AlbumThing,
-		Market: market,
-		Link: link,
+		Source:      source,
+		ThingType:   AlbumThing,
+		Market:      market,
+		Link:        link,
 	}
 }
 
@@ -32,7 +32,7 @@ func (a *Album) GetGroupId() ThingGroupId {
 	return a.GroupId
 }
 
-func (a *Album) SetGroupId(groupId ThingGroupId)  {
+func (a *Album) SetGroupId(groupId ThingGroupId) {
 	a.GroupId = groupId
 }
 
@@ -40,7 +40,7 @@ func (a *Album) GetSource() StreamingServiceKey {
 	return a.Source
 }
 
-func (a *Album) GetMarket()Market {
+func (a *Album) GetMarket() Market {
 	return a.Market
 }
 

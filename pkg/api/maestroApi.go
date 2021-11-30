@@ -62,7 +62,7 @@ func (api *MaestroApi) Shutdown(ctx context.Context) error {
 func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, svcCfgs []streamingService.Config) error {
 
 	// Todo: Context timeout here
-	if err := cb.RegisterFactory(func () context.Context {
+	if err := cb.RegisterFactory(func() context.Context {
 		return context.TODO()
 	}, camogo.SingletonLifetime); err != nil {
 		return nil

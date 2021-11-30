@@ -1,27 +1,26 @@
 package model
 
 type Track struct {
-	Name     string
+	Name        string
 	ArtistNames []string
-	AlbumName  string
+	AlbumName   string
 
-
-	GroupId ThingGroupId
-	Source StreamingServiceKey
+	GroupId   ThingGroupId
+	Source    StreamingServiceKey
 	ThingType ThingType
-	Market Market
-	Link string
+	Market    Market
+	Link      string
 }
 
 func NewTrack(name string, artistNames []string, albumName string, source StreamingServiceKey, market Market, link string) *Track {
 	return &Track{
-		Name: name,
+		Name:        name,
 		ArtistNames: artistNames,
-		AlbumName: albumName,
-		Source: source,
-		ThingType: TrackThing,
-		Market: market,
-		Link: link,
+		AlbumName:   albumName,
+		Source:      source,
+		ThingType:   TrackThing,
+		Market:      market,
+		Link:        link,
 	}
 }
 
@@ -33,7 +32,7 @@ func (t *Track) GetGroupId() ThingGroupId {
 	return t.GroupId
 }
 
-func (t *Track) SetGroupId(groupId ThingGroupId)  {
+func (t *Track) SetGroupId(groupId ThingGroupId) {
 	t.GroupId = groupId
 }
 
@@ -41,7 +40,7 @@ func (t *Track) GetSource() StreamingServiceKey {
 	return t.Source
 }
 
-func (t *Track) GetMarket()Market {
+func (t *Track) GetMarket() Market {
 	return t.Market
 }
 

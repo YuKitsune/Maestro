@@ -34,17 +34,17 @@ type ArtistAttributes struct {
 }
 
 type Song struct {
-	Id         string
-	Attributes *SongAttributes //The attributes for the song.
+	Id            string
+	Attributes    *SongAttributes //The attributes for the song.
 	Relationships *Relationships
 }
 
 type SongAttributes struct {
-	AlbumName  string //(Required) The name of the album the song appears on.
-	ArtistName string //(Required) The artist’s name.
-	TrackNumber int //(Required) The track number.
-	Name       string //(Required) The localized name of the song.
-	Url        string //(Required) The URL for sharing a song in the iTunes Store.
+	AlbumName   string //(Required) The name of the album the song appears on.
+	ArtistName  string //(Required) The artist’s name.
+	TrackNumber int    //(Required) The track number.
+	Name        string //(Required) The localized name of the song.
+	Url         string //(Required) The URL for sharing a song in the iTunes Store.
 }
 
 type Artwork struct {
@@ -59,8 +59,8 @@ type Artwork struct {
 }
 
 type Album struct {
-	Id         string
-	Attributes *AlbumAttributes //The attributes for the album.
+	Id            string
+	Attributes    *AlbumAttributes //The attributes for the album.
 	Relationships *Relationships
 }
 
@@ -70,7 +70,7 @@ type AlbumAttributes struct {
 	Artwork    Artwork //The album artwork.
 	Name       string  //(Required) The localized name of the album.
 	Url        string
-	IsSingle bool
+	IsSingle   bool
 }
 
 type QueryParams struct {
@@ -99,7 +99,7 @@ type Relationships struct {
 
 type Relationship struct {
 	Href string
-	Id string
+	Id   string
 	Type string
 }
 

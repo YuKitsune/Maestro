@@ -85,7 +85,7 @@ func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, 
 		deezerAlbum := searchRes[0]
 		res = model.NewAlbum(
 			deezerAlbum.Title,
-			[]string {deezerAlbum.Artist.Name},
+			[]string{deezerAlbum.Artist.Name},
 			deezerAlbum.Cover,
 			s.Name(),
 			model.DefaultMarket,
@@ -112,7 +112,7 @@ func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, e
 		deezerTrack := searchRes[0]
 		res = model.NewTrack(
 			deezerTrack.Title,
-			[]string {deezerTrack.Artist.Name},
+			[]string{deezerTrack.Artist.Name},
 			deezerTrack.Album.Title,
 			s.Name(),
 			model.DefaultMarket,
@@ -165,7 +165,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 
 		album := model.NewAlbum(
 			foundAlbum.Title,
-			[]string {foundAlbum.Artist.Name}, // Todo:
+			[]string{foundAlbum.Artist.Name}, // Todo:
 			foundAlbum.Cover,
 			s.Name(),
 			model.DefaultMarket,
@@ -181,7 +181,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 
 		track := model.NewTrack(
 			foundTrack.Title,
-			[]string {foundTrack.Artist.Name}, // Todo:
+			[]string{foundTrack.Artist.Name}, // Todo:
 			foundTrack.Album.Title,
 			s.Name(),
 			model.DefaultMarket,

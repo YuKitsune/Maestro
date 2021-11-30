@@ -14,8 +14,8 @@ const ThingsCollectionName = "things"
 
 const (
 	ArtistThing ThingType = "artist"
-	AlbumThing ThingType = "album"
-	TrackThing ThingType = "track"
+	AlbumThing  ThingType = "album"
+	TrackThing  ThingType = "track"
 )
 
 type Thing interface {
@@ -23,8 +23,8 @@ type Thing interface {
 	GetGroupId() ThingGroupId
 	SetGroupId(ThingGroupId)
 	GetSource() StreamingServiceKey
-	GetMarket()Market
- 	GetLink() string
+	GetMarket() Market
+	GetLink() string
 }
 
 func UnmarshalThingsFromCursor(ctx context.Context, cur *mongo.Cursor) ([]Thing, error) {
@@ -56,7 +56,7 @@ func UnmarshalThing(raw bson.Raw) (Thing, error) {
 	switch thingType {
 	case ArtistThing:
 		var artist *Artist
-		if err := bson.Unmarshal(raw, &artist); err != nil{
+		if err := bson.Unmarshal(raw, &artist); err != nil {
 			return nil, err
 		}
 
@@ -64,7 +64,7 @@ func UnmarshalThing(raw bson.Raw) (Thing, error) {
 
 	case AlbumThing:
 		var album *Album
-		if err := bson.Unmarshal(raw, &album); err != nil{
+		if err := bson.Unmarshal(raw, &album); err != nil {
 			return nil, err
 		}
 
@@ -72,7 +72,7 @@ func UnmarshalThing(raw bson.Raw) (Thing, error) {
 
 	case TrackThing:
 		var track *Track
-		if err := bson.Unmarshal(raw, &track); err != nil{
+		if err := bson.Unmarshal(raw, &track); err != nil {
 			return nil, err
 		}
 

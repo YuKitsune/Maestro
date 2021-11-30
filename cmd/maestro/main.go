@@ -94,7 +94,7 @@ func serve(_ *cobra.Command, _ []string) error {
 	}()
 
 	grace.WaitForShutdownSignalOrError(errorChan, func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		_ = maestroApi.Shutdown(ctx)
 	})

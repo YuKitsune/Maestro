@@ -9,7 +9,7 @@ import (
 )
 
 type appleMusicStreamingService struct {
-	client *AppleMusicClient
+	client           *AppleMusicClient
 	shareLinkPattern *regexp.Regexp
 }
 
