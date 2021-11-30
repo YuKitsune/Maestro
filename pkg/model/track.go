@@ -1,18 +1,12 @@
 package model
 
-import (
-	"fmt"
-	"maestro/pkg/hasher"
-	"sort"
-	"strings"
-)
-
 type Track struct {
 	Name     string
 	ArtistNames []string
 	AlbumName  string
 
-	Hash ThingHash
+
+	GroupId ThingGroupId
 	Source StreamingServiceKey
 	ThingType ThingType
 	Market Market
@@ -20,20 +14,14 @@ type Track struct {
 }
 
 func NewTrack(name string, artistNames []string, albumName string, source StreamingServiceKey, market Market, link string) *Track {
-
-	sort.Strings(artistNames)
-	str := strings.ToLower(fmt.Sprintf("%s_%s_%s", strings.Join(artistNames, "&"), albumName, name))
-	hash := ThingHash(hasher.NewSha1Hasher().ComputeHash(str))
-
 	return &Track{
-		name,
-		artistNames,
-		albumName,
-		hash,
-		source,
-		TrackThing,
-		market,
-		link,
+		Name: name,
+		ArtistNames: artistNames,
+		AlbumName: albumName,
+		Source: source,
+		ThingType: TrackThing,
+		Market: market,
+		Link: link,
 	}
 }
 
@@ -41,8 +29,12 @@ func (t *Track) Type() ThingType {
 	return t.ThingType
 }
 
-func (t *Track) GetHash() ThingHash {
-	return t.Hash
+func (t *Track) GetGroupId() ThingGroupId {
+	return t.GroupId
+}
+
+func (t *Track) SetGroupId(groupId ThingGroupId)  {
+	t.GroupId = groupId
 }
 
 func (t *Track) GetSource() StreamingServiceKey {

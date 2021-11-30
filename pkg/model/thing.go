@@ -1,7 +1,7 @@
 package model
 
 type ThingType string
-type ThingHash string
+type ThingGroupId string
 
 const ThingsCollectionName = "things"
 
@@ -13,7 +13,8 @@ const (
 
 type Thing interface {
 	Type() ThingType
-	GetHash() ThingHash
+	GetGroupId() ThingGroupId
+	SetGroupId(ThingGroupId)
 	GetSource() StreamingServiceKey
 	GetMarket()Market
  	GetLink() string

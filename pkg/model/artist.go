@@ -1,14 +1,10 @@
 package model
 
-import (
-	"maestro/pkg/hasher"
-)
-
 type Artist struct {
 	Name string
 	ArtworkLink string
 
-	Hash ThingHash
+	GroupId ThingGroupId
 	Source StreamingServiceKey
 	ThingType ThingType
 	Market Market
@@ -16,17 +12,13 @@ type Artist struct {
 }
 
 func NewArtist(name string, artworkLink string, source StreamingServiceKey, market Market, link string) *Artist {
-
-	hash := ThingHash(hasher.NewSha1Hasher().ComputeHash(name))
-
 	return &Artist{
-		name,
-		artworkLink,
-		hash,
-		source,
-		ArtistThing,
-		market,
-		link,
+		Name: name,
+		ArtworkLink: artworkLink,
+		Source: source,
+		ThingType: ArtistThing,
+		Market: market,
+		Link: link,
 	}
 }
 
@@ -34,8 +26,12 @@ func (a *Artist) Type() ThingType {
 	return a.ThingType
 }
 
-func (a *Artist) GetHash() ThingHash {
-	return a.Hash
+func (a *Artist) GetGroupId() ThingGroupId {
+	return a.GroupId
+}
+
+func (a *Artist) SetGroupId(groupId ThingGroupId)  {
+	a.GroupId = groupId
 }
 
 func (a *Artist) GetSource() StreamingServiceKey {
