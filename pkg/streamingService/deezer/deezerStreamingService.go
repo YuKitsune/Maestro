@@ -1,18 +1,15 @@
 package deezer
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
-	"net/url"
 	"regexp"
 )
 
 type deezerStreamingService struct {
-	client           *http.Client
+	client           *DeezerClient
 	shareLinkPattern *regexp.Regexp
 }
 
@@ -37,7 +34,7 @@ func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
 
 func NewDeezerStreamingService(shareLinkPattern string) streamingService.StreamingService {
 	shareLinkPatternRegex := regexp.MustCompile(shareLinkPattern)
-	return &deezerStreamingService{&http.Client{}, shareLinkPatternRegex}
+	return &deezerStreamingService{NewDeezerClient(), shareLinkPatternRegex}
 }
 
 func (s *deezerStreamingService) LinkBelongsToService(link string) bool {
@@ -50,28 +47,14 @@ func (s *deezerStreamingService) Name() model.StreamingServiceKey {
 
 func (s *deezerStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, error) {
 
-	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\"", artist.Name))
-	apiUrl := fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", q)
-
-	httpRes, err := s.client.Get(apiUrl)
-	defer httpRes.Body.Close()
-
-	resBytes, err := ioutil.ReadAll(httpRes.Body)
+	searchRes, err := s.client.SearchArtist(artist.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	var apiRes *searchArtistResponse
-	err = json.Unmarshal(resBytes, &apiRes)
-	if err != nil {
-		return nil, err
-	}
+	// Todo: Narrow down results
+	deezerArtist := searchRes[0]
 
-	if len(apiRes.Data) == 0 {
-		return nil, nil
-	}
-
-	deezerArtist := apiRes.Data[0]
 	res := model.NewArtist(
 		deezerArtist.Name,
 		deezerArtist.Picture,
@@ -84,70 +67,57 @@ func (s *deezerStreamingService) SearchArtist(artist *model.Artist) (*model.Arti
 
 func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, error) {
 
-	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistNames[0], album.Name))
-	apiUrl := fmt.Sprintf("https://api.deezer.com/search/album?q=%s", q)
+	// Deezer only has one artist per track/album, need to check each artist
 
-	httpRes, err := s.client.Get(apiUrl)
-	defer httpRes.Body.Close()
+	var res *model.Album
+	for _, artistName := range album.ArtistNames {
 
-	resBytes, err := ioutil.ReadAll(httpRes.Body)
-	if err != nil {
-		return nil, err
+		searchRes, err := s.client.SearchAlbum(artistName, album.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		if searchRes == nil || len(searchRes) == 0 {
+			continue
+		}
+
+		// Todo: Narrow down results
+		deezerAlbum := searchRes[0]
+		res = model.NewAlbum(
+			deezerAlbum.Title,
+			[]string {deezerAlbum.Artist.Name},
+			deezerAlbum.Cover,
+			s.Name(),
+			model.DefaultMarket,
+			deezerAlbum.Link)
 	}
-
-	var apiRes *searchAlbumResponse
-	err = json.Unmarshal(resBytes, &apiRes)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(apiRes.Data) == 0 {
-		return nil, nil
-	}
-
-	deezerAlbum := apiRes.Data[0]
-	res := model.NewAlbum(
-		deezerAlbum.Title,
-		[]string {deezerAlbum.Artist.Name}, // Todo:
-		deezerAlbum.Cover,
-		s.Name(),
-		model.DefaultMarket,
-		deezerAlbum.Link)
 
 	return res, nil
 }
 
-func (s *deezerStreamingService) SearchSong(song *model.Track) (*model.Track, error) {
+func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, error) {
 
-	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", song.ArtistNames[0], song.AlbumName, song.Name))
-	apiUrl := fmt.Sprintf("https://api.deezer.com/search/track?q=%s", q)
+	var res *model.Track
+	for _, artistName := range track.ArtistNames {
 
-	httpRes, err := s.client.Get(apiUrl)
-	defer httpRes.Body.Close()
+		searchRes, err := s.client.SearchTrack(artistName, track.AlbumName, track.Name)
+		if err != nil {
+			return nil, err
+		}
 
-	resBytes, err := ioutil.ReadAll(httpRes.Body)
-	if err != nil {
-		return nil, err
+		if searchRes == nil || len(searchRes) == 0 {
+			continue
+		}
+
+		deezerTrack := searchRes[0]
+		res = model.NewTrack(
+			deezerTrack.Title,
+			[]string {deezerTrack.Artist.Name},
+			deezerTrack.Album.Title,
+			s.Name(),
+			model.DefaultMarket,
+			deezerTrack.Link)
 	}
-
-	var apiRes *searchTrackResponse
-	err = json.Unmarshal(resBytes, &apiRes)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(apiRes.Data) == 0 {
-		return nil, nil
-	}
-
-	deezerTrack := apiRes.Data[0]
-	res := model.NewTrack(
-		deezerTrack.Title,
-		[]string {deezerTrack.Artist.Name}, // Todo:
-		deezerTrack.Album.Title,
-		s.Name(),
-		model.DefaultMarket,
-		deezerTrack.Link)
 
 	return res, nil
 }
@@ -171,90 +141,55 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 	typ := matches["type"]
 	id := matches["id"]
 
-	var apiUrl string
-	var unmarshalFunc func(rb []byte) (model.Thing, error)
-
 	switch typ {
 	case "artist":
-		apiUrl = fmt.Sprintf("https://api.deezer.com/artist/%s", id)
-		unmarshalFunc = func(rb []byte) (model.Thing, error) {
-			var apiRes *Artist
-			err := json.Unmarshal(rb, &apiRes)
-			if err != nil {
-				return nil, err
-			}
-
-			artist := model.NewArtist(
-				apiRes.Name,
-				apiRes.Picture,
-				s.Name(),
-				model.DefaultMarket,
-				apiRes.Link)
-			return artist, nil
+		foundArtist, err := s.client.GetArtist(id)
+		if err != nil {
+			return nil, err
 		}
 
-		break
+		artist := model.NewArtist(
+			foundArtist.Name,
+			foundArtist.Picture,
+			s.Name(),
+			model.DefaultMarket,
+			foundArtist.Link)
+
+		return artist, nil
 
 	case "album":
-		apiUrl = fmt.Sprintf("https://api.deezer.com/album/%s", id)
-		unmarshalFunc = func(rb []byte) (model.Thing, error) {
-			var apiRes *Album
-			err := json.Unmarshal(rb, &apiRes)
-			if err != nil {
-				return nil, err
-			}
-
-			album := model.NewAlbum(
-				apiRes.Title,
-				[]string {apiRes.Artist.Name}, // Todo:
-				apiRes.Cover,
-				s.Name(),
-				model.DefaultMarket,
-				apiRes.Link)
-
-			return album, nil
+		foundAlbum, err := s.client.GetAlbum(id)
+		if err != nil {
+			return nil, err
 		}
-		break
+
+		album := model.NewAlbum(
+			foundAlbum.Title,
+			[]string {foundAlbum.Artist.Name}, // Todo:
+			foundAlbum.Cover,
+			s.Name(),
+			model.DefaultMarket,
+			foundAlbum.Link)
+
+		return album, nil
 
 	case "track":
-		apiUrl = fmt.Sprintf("https://api.deezer.com/track/%s", id)
-		unmarshalFunc = func(rb []byte) (model.Thing, error) {
-			var apiRes *Track
-			err := json.Unmarshal(rb, &apiRes)
-			if err != nil {
-				return nil, err
-			}
-
-			track := model.NewTrack(
-				apiRes.Title,
-				[]string {apiRes.Artist.Name}, // Todo:
-				apiRes.Album.Title,
-				s.Name(),
-				model.DefaultMarket,
-				apiRes.Link)
-
-			return track, nil
+		foundTrack, err := s.client.GetTrack(id)
+		if err != nil {
+			return nil, err
 		}
-		break
+
+		track := model.NewTrack(
+			foundTrack.Title,
+			[]string {foundTrack.Artist.Name}, // Todo:
+			foundTrack.Album.Title,
+			s.Name(),
+			model.DefaultMarket,
+			foundTrack.Link)
+
+		return track, nil
 
 	default:
 		return nil, fmt.Errorf("unknown type %s", typ)
 	}
-
-	httpRes, err := s.client.Get(apiUrl)
-	defer httpRes.Body.Close()
-
-	if httpRes.StatusCode == http.StatusNotFound {
-		// return nil, fmt.Errorf("no %s found in region %s with id %s", typ, store, id)
-		return nil, fmt.Errorf("no %s found with id %s", typ, id)
-	}
-
-	resBytes, err := ioutil.ReadAll(httpRes.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := unmarshalFunc(resBytes)
-
-	return res, err
 }
