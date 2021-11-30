@@ -10,9 +10,7 @@ import (
 	"net/http"
 )
 
-// Todo: Need to refine the flagging process
-
-func HandleFlag(w http.ResponseWriter, r *http.Request) {
+func HandleGroup(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	groupId, ok := vars["groupId"]
@@ -27,21 +25,35 @@ func HandleFlag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = container.Resolve(func(ctx context.Context, db *mongo.Database) error {
+	res, err := container.ResolveWithResult(func(ctx context.Context, db *mongo.Database) (interface{}, error) {
 
+		var foundThings []model.Thing
+
+		// Search the database for an existing thing with the given link
 		coll := db.Collection(model.ThingsCollectionName)
+		cur, err := coll.Find(ctx, bson.D{{"groupid", groupId}})
 
-		_, err := coll.DeleteMany(ctx, bson.D{{"groupid", groupId}})
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		return nil
+		foundThings, err = model.UnmarshalThingsFromCursor(ctx, cur)
+		if err != nil {
+			return nil, err
+		}
+
+		return foundThings, nil
 	})
+
 	if err != nil {
 		Error(w, err)
 		return
 	}
 
-	EmptyResponse(w, http.StatusOK)
+	if res == nil {
+		NotFound(w)
+		return
+	}
+
+	Response(w, res, http.StatusOK)
 }

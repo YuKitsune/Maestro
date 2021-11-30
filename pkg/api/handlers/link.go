@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	mcontext "maestro/pkg/api/context"
-	"maestro/pkg/api/db"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
@@ -29,14 +28,12 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func(ctx context.Context, cd *db.Config, mc *mongo.Client, ss []streamingService.StreamingService) (interface{}, error) {
+	res, err := container.ResolveWithResult(func(ctx context.Context, db *mongo.Database, ss []streamingService.StreamingService) (interface{}, error) {
 
 		// Trim service-specific stuff from the link
 		for _, service := range ss {
 			reqLink = service.CleanLink(reqLink)
 		}
-
-		db := mc.Database(cd.Database)
 
 		var foundThing model.Thing
 
