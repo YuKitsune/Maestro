@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"maestro/pkg/hasher"
+	"sort"
 	"strings"
 )
 
@@ -20,7 +21,8 @@ type Album struct {
 
 func NewAlbum(name string, artistNames []string, artworkLink string, source StreamingServiceKey, market Market, link string) *Album {
 
-	str := fmt.Sprintf("%s_%s", strings.ToLower(strings.Join(artistNames, "&")), strings.ToLower(NewNameNormalizer().NormalizeAlbumName(name)))
+	sort.Strings(artistNames)
+	str := strings.ToLower(fmt.Sprintf("%s_%s", strings.Join(artistNames, "&"), name))
 	hash := ThingHash(hasher.NewSha1Hasher().ComputeHash(str))
 
 	return &Album{

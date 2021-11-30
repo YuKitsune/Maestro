@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"maestro/pkg/hasher"
+	"sort"
 	"strings"
 )
 
@@ -20,8 +21,8 @@ type Track struct {
 
 func NewTrack(name string, artistNames []string, albumName string, source StreamingServiceKey, market Market, link string) *Track {
 
-	normalizer := NewNameNormalizer()
-	str := fmt.Sprintf("%s_%s_%s", strings.ToLower(strings.Join(artistNames, "&")), strings.ToLower(normalizer.NormalizeAlbumName(albumName)), strings.ToLower(normalizer.NormalizeTrackName(name)))
+	sort.Strings(artistNames)
+	str := strings.ToLower(fmt.Sprintf("%s_%s_%s", strings.Join(artistNames, "&"), albumName, name))
 	hash := ThingHash(hasher.NewSha1Hasher().ComputeHash(str))
 
 	return &Track{

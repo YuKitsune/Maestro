@@ -56,7 +56,13 @@ func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Alb
 	// Todo: Narrow down results
 	foundAlbum := searchRes[0]
 
-	return s.newAlbum(&foundAlbum, album.Market)
+	// Load the album directly so we get the relationships
+	fullAlbum, err := s.client.GetAlbum(foundAlbum.Id, album.Market)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.newAlbum(fullAlbum, album.Market)
 }
 
 func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track, error) {
@@ -70,7 +76,13 @@ func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track
 	// Todo: Narrow down results
 	foundSong := searchRes[0]
 
-	return s.newTrack(&foundSong, song.Market)
+	// Load the song directly so we get the relationships
+	fullSong, err := s.client.GetSong(foundSong.Id, song.Market)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.newTrack(fullSong, song.Market)
 }
 
 func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, error) {
@@ -136,6 +148,17 @@ func (s *appleMusicStreamingService) newArtist(artist *Artist, market model.Mark
 
 func (s *appleMusicStreamingService) newAlbum(album *Album, market model.Market) (*model.Album, error) {
 
+	// Clean up album name
+	// Todo: Revisit
+	albumName := album.Attributes.Name
+	if album.Attributes.IsSingle {
+		singleRegex := regexp.MustCompile("\\s-\\sSingle$")
+		indexes := singleRegex.FindStringIndex(albumName)
+		if len(indexes) > 0 {
+			albumName = albumName[0:indexes[0]]
+		}
+	}
+
 	// Query relationships for artist names
 	artistNames, err := s.getAlbumArtistNames(album, market)
 	if err != nil {
@@ -143,7 +166,7 @@ func (s *appleMusicStreamingService) newAlbum(album *Album, market model.Market)
 	}
 
 	newAlbum := model.NewAlbum(
-		album.Attributes.Name,
+		albumName,
 		artistNames,
 		album.Attributes.Artwork.Url,
 		s.Name(),
@@ -216,155 +239,3 @@ func (s *appleMusicStreamingService) getSongArtistNames(song *Song, market model
 func (s *appleMusicStreamingService) getSongAlbumName(song *Song) (string, error) {
 	return song.Attributes.AlbumName, nil
 }
-
-//func normalizeAlbumName(album *Album) string {
-//	suffix := " - Single"
-//	suffixLen := len(suffix)
-//
-//	name := album.Attributes.Name
-//	nameLen := len(name)
-//
-//	if album.Attributes.IsSingle && strings.HasSuffix(name, suffix) {
-//		normName := name[0:nameLen - suffixLen]
-//		return normName
-//	}
-//
-//	return album.Attributes.Name
-//}
-//
-//func (s *appleMusicStreamingService) getArtistNames(rel *applemusic.ArtistRelationships, fallback string) ([]string, error) {
-//	var names []string
-//
-//	if rel == nil || rel.Artists.Data == nil || len(rel.Artists.Data) == 0 {
-//		return []string {fallback}, nil
-//	}
-//
-//	for _, data := range rel.Artists.Data {
-//		if data.Type != "artists" {
-//			continue
-//		}
-//
-//		url := fmt.Sprintf("%s/%s", baseUrl, data.Href)
-//		httpRes, err := s.c.Get(url)
-//		defer httpRes.Body.Close()
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		resBytes, err := ioutil.ReadAll(httpRes.Body)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		var res *ArtistsResult
-//		err = json.Unmarshal(resBytes, &res)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		names = append(names, res.Data[0].Attributes.Name)
-//	}
-//
-//	return names, nil
-//}
-//
-//func (s *appleMusicStreamingService) getAlbumName(rel *Relationships, targetAlbumNames ...string) (string, error) {
-//	for _, data := range rel.Albums.Data {
-//		if data.Type != "albums" {
-//			continue
-//		}
-//
-//		url := fmt.Sprintf("%s/%s", baseUrl, data.Href)
-//		httpRes, err := s.c.Get(url)
-//		defer httpRes.Body.Close()
-//		if err != nil {
-//			return "", err
-//		}
-//
-//		resBytes, err := ioutil.ReadAll(httpRes.Body)
-//		if err != nil {
-//			return "", err
-//		}
-//
-//		var res *AlbumResult
-//		err = json.Unmarshal(resBytes, &res)
-//		if err != nil {
-//			return "", err
-//		}
-//
-//		album := res.Data[0]
-//
-//		// Yuck...
-//		normName := album.Attributes.Name
-//		if len(targetAlbumNames) > 0 {
-//			for _, name := range targetAlbumNames {
-//				if len(name) > 0 && normName == name {
-//					return normName, nil
-//				}
-//			}
-//		} else {
-//			return normName, nil
-//		}
-//	}
-//
-//	return "", nil
-//}
-//
-//func (s *appleMusicStreamingService) filterSongs(songResult *SongResult, targetTrack *model.Track) (*Song, error) {
-//
-//	for _, songSearchResult := range songResult.Data {
-//
-//		httpRes, err := s.c.Get(fmt.Sprintf("%s/v1/catalog/%s/songs/%s", baseUrl, targetTrack.Market, songSearchResult.Id))
-//		if err != nil {
-//			return nil, err
-//		}
-//		defer httpRes.Body.Close()
-//
-//		resBytes, err := ioutil.ReadAll(httpRes.Body)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		var sr *SongResult
-//		err = json.Unmarshal(resBytes, &sr)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		song := sr.Data[0]
-//
-//		namesMatch := song.Attributes.Name == targetTrack.Name
-//
-//		songArtists, err := s.getArtistNames(song.Relationships, song.Attributes.ArtistName)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		targetArtists := targetTrack.ArtistNames
-//		artistsMatch := true
-//		sort.Strings(songArtists)
-//		for _, artist := range targetArtists {
-//			if sort.SearchStrings(songArtists, artist) == len(songArtists) {
-//				artistsMatch = false
-//			}
-//		}
-//
-//		albumsMatch := true
-//		if len(targetTrack.AlbumName) > 0 {
-//			songAlbum, err := s.getAlbumName(song.Relationships, targetTrack.AlbumName)
-//			if err != nil {
-//				return nil, err
-//			}
-//
-//			if len(songAlbum) > 0 {
-//				albumsMatch = songAlbum == targetTrack.AlbumName
-//			}
-//		}
-//
-//		if namesMatch && artistsMatch && albumsMatch {
-//			return song, nil
-//		}
-//	}
-//
-//	return nil, nil
-//}

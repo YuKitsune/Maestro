@@ -100,26 +100,36 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 
 	country := album.Market.String()
 
-	q := fmt.Sprintf("artist:\"%s\" album:\"%s\"", album.ArtistNames[0], album.Name)
-	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeAlbum, &spotify.Options{
-		Country: &country,
-	})
-	if err != nil {
-		return nil, err
-	}
+	// Spotify search API doesn't like multiple artist names in the search query
+	// need to query each artist separately
+	// Sigh...
 
-	if searchRes.Albums == nil || len(searchRes.Albums.Albums) == 0 {
-		return nil, nil
-	}
+	var res *model.Album
+	for _, name := range album.ArtistNames {
 
-	spotifyAlbum := searchRes.Albums.Albums[0]
-	res := model.NewAlbum(
-		spotifyAlbum.Name,
-		artistName(spotifyAlbum.Artists),
-		imageUrl(spotifyAlbum.Images),
-		s.Name(),
-		model.DefaultMarket,
-		spotifyAlbum.ExternalURLs["spotify"])
+		q := fmt.Sprintf("artist:\"%s\" album:\"%s\"", name, album.Name)
+		searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeAlbum, &spotify.Options{
+			Country: &country,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if searchRes.Albums == nil || len(searchRes.Albums.Albums) == 0 {
+			continue
+		}
+
+		// Todo: Narrow down results
+		spotifyAlbum := searchRes.Albums.Albums[0]
+
+		res = model.NewAlbum(
+			spotifyAlbum.Name,
+			artistName(spotifyAlbum.Artists),
+			imageUrl(spotifyAlbum.Images),
+			s.Name(),
+			model.DefaultMarket,
+			spotifyAlbum.ExternalURLs["spotify"])
+	}
 
 	return res, nil
 }
@@ -128,26 +138,36 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 
 	country := track.Market.String()
 
-	q := fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", track.ArtistNames[0], track.AlbumName, track.Name)
-	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeTrack, &spotify.Options{
-		Country: &country,
-	})
-	if err != nil {
-		return nil, err
-	}
+	// Spotify search API doesn't like multiple artist names in the search query
+	// need to query each artist separately
+	// Sigh...
 
-	if searchRes.Tracks == nil || len(searchRes.Tracks.Tracks) == 0 {
-		return nil, nil
-	}
+	var res *model.Track
+	for _, name := range track.ArtistNames {
 
-	spotifyTrack := searchRes.Tracks.Tracks[0]
-	res := model.NewTrack(
-		spotifyTrack.Name,
-		artistName(spotifyTrack.Artists),
-		spotifyTrack.Album.Name,
-		s.Name(),
-		model.DefaultMarket,
-		spotifyTrack.ExternalURLs["spotify"])
+		q := fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", name, track.AlbumName, track.Name)
+		searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeTrack, &spotify.Options{
+			Country: &country,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if searchRes.Tracks == nil || len(searchRes.Tracks.Tracks) == 0 {
+			continue
+		}
+
+		// Todo: Narrow down results
+		spotifyTrack := searchRes.Tracks.Tracks[0]
+
+		res = model.NewTrack(
+			spotifyTrack.Name,
+			artistName(spotifyTrack.Artists),
+			spotifyTrack.Album.Name,
+			s.Name(),
+			model.DefaultMarket,
+			spotifyTrack.ExternalURLs["spotify"])
+	}
 
 	return res, nil
 }
