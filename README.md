@@ -5,3 +5,9 @@
   - [ ] include frontend
   - [ ] specify config files for API
 - [ ] Tidy up the frontend
+  - [ ] Back to Home button
+  - [ ] Artist images
+  - [ ] Album images
+  - [ ] Track images (use album image if necessary)
+- [ ] Logging and metrics
+- [ ] Analytics
