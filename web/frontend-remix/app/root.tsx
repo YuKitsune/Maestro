@@ -1,5 +1,4 @@
 import {
-  Link,
   Links,
   LiveReload,
   Meta,
@@ -11,7 +10,6 @@ import {
 import type { LinksFunction } from "remix";
 
 import tailwindStylesUrl from "./tailwind.css"
-// import globalStylesUrl from "~/styles/global.css";
 
 // https://remix.run/api/app#links
 export let links: LinksFunction = () => {
@@ -116,8 +114,8 @@ function Document({
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col flex-grow items-center justify-between h-screen overflow-y-scroll p-8 gap-8 bg-gray-200 dark:bg-gray-800">
-      <div className={"flex-grow rounded-lg bg-white dark:bg-black shadow-2xl p-4"}>
+    <div className="flex flex-col flex-grow items-center justify-between h-screen overflow-y-scroll p-8 gap-8 bg-gray-200 dark:bg-gray-700 dark:text-white">
+      <div className={"flex-grow rounded-lg bg-white dark:bg-gray-800 shadow-2xl p-4 max-w-md"}>
         {children}
       </div>
       <footer>

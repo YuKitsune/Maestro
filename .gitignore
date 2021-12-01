@@ -31,3 +31,4 @@ logs
 bin
 *.log
 configs/maestro.yaml
+web/frontend-remix/app/tailwind.css
