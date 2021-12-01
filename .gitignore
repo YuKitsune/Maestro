@@ -32,3 +32,4 @@ bin
 *.log
 configs/maestro.yaml
 web/frontend-remix/app/tailwind.css
+web/frontend-remix/app/tailwind.css
