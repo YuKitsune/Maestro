@@ -164,6 +164,7 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 			spotifyTrack.Name,
 			artistName(spotifyTrack.Artists),
 			spotifyTrack.Album.Name,
+			imageUrl(spotifyTrack.Album.Images),
 			s.Name(),
 			model.DefaultMarket,
 			spotifyTrack.ExternalURLs["spotify"])
@@ -226,6 +227,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			foundTrack.Name,
 			artistName(foundTrack.Artists),
 			foundTrack.Album.Name,
+			imageUrl(foundTrack.Album.Images),
 			s.Name(),
 			model.DefaultMarket,
 			foundTrack.ExternalURLs["spotify"])

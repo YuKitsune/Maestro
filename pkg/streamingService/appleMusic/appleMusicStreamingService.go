@@ -198,6 +198,7 @@ func (s *appleMusicStreamingService) newTrack(song *Song, market model.Market) (
 		song.Attributes.Name,
 		artistNames,
 		song.Attributes.AlbumName,
+		"", // Todo: Get artwork from album
 		s.Name(),
 		market,
 		song.Attributes.Url)

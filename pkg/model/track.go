@@ -4,6 +4,7 @@ type Track struct {
 	Name        string
 	ArtistNames []string
 	AlbumName   string
+	ArtworkLink string
 
 	GroupId   ThingGroupId
 	Source    StreamingServiceKey
@@ -12,11 +13,12 @@ type Track struct {
 	Link      string
 }
 
-func NewTrack(name string, artistNames []string, albumName string, source StreamingServiceKey, market Market, link string) *Track {
+func NewTrack(name string, artistNames []string, albumName string, artworkLink string, source StreamingServiceKey, market Market, link string) *Track {
 	return &Track{
 		Name:        name,
 		ArtistNames: artistNames,
 		AlbumName:   albumName,
+		ArtworkLink: artworkLink,
 		Source:      source,
 		ThingType:   TrackThing,
 		Market:      market,
@@ -26,6 +28,10 @@ func NewTrack(name string, artistNames []string, albumName string, source Stream
 
 func (t *Track) Type() ThingType {
 	return t.ThingType
+}
+
+func (t *Track) GetArtworkLink() string {
+	return t.ArtworkLink
 }
 
 func (t *Track) GetGroupId() ThingGroupId {

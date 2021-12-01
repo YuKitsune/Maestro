@@ -26,6 +26,10 @@ func (a *Artist) Type() ThingType {
 	return a.ThingType
 }
 
+func (a *Artist) GetArtworkLink() string {
+	return a.ArtworkLink
+}
+
 func (a *Artist) GetGroupId() ThingGroupId {
 	return a.GroupId
 }

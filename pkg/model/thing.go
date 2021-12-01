@@ -20,6 +20,7 @@ const (
 
 type Thing interface {
 	Type() ThingType
+	GetArtworkLink() string
 	GetGroupId() ThingGroupId
 	SetGroupId(ThingGroupId)
 	GetSource() StreamingServiceKey

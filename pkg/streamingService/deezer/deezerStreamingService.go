@@ -114,6 +114,7 @@ func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, e
 			deezerTrack.Title,
 			[]string{deezerTrack.Artist.Name},
 			deezerTrack.Album.Title,
+			deezerTrack.Album.Cover,
 			s.Name(),
 			model.DefaultMarket,
 			deezerTrack.Link)
@@ -183,6 +184,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 			foundTrack.Title,
 			[]string{foundTrack.Artist.Name}, // Todo:
 			foundTrack.Album.Title,
+			foundTrack.Album.Cover,
 			s.Name(),
 			model.DefaultMarket,
 			foundTrack.Link)
