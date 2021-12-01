@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
@@ -131,6 +132,10 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			return nil, err
+		}
+
+		if targetService == nil {
+			return nil, fmt.Errorf("couldn't find a streaming service for the given link: %s", reqLink)
 		}
 
 		// Query the target streaming service
