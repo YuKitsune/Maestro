@@ -1,16 +1,21 @@
 
 # Todo
-- [ ] Add streaming service logos to config
-- [ ] Fix spotify token expiring every now and then
-- [ ] Update docker compose file to:
-  - [ ] include frontend
-  - [ ] specify config files for API
 - [ ] Tidy up the frontend
   - [X] Back to Home button
   - [X] Artist images
   - [X] Album images
   - [X] Track images (use album image if necessary)
+  - [ ] Remix-ify
   - [ ] Theme
   - [ ] Proper tidy up
+- [ ] Services
+  - [ ] Fix spotify token expiring every now and then
+  - [ ] Fix deezer share link
+  - [ ] Fix Apple Music track artwork
+- [ ] Update docker compose file
+  - [ ] include frontend
+  - [ ] specify config files for API
+- [ ] Logos
+  - [ ] Figure out how we're gonna do logos
 - [ ] Logging and metrics
 - [ ] Analytics
