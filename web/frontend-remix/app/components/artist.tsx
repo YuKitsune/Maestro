@@ -9,13 +9,13 @@ const Artist = (props: ArtistProps) => {
 
     const artist = props.artist;
 
-    const openLink = useCallback(() => {
-        window.open(artist.Link, "_blank");
-    }, [props])
-
-    return <div className={"bg-gray-200 rounded-lg p-2 cursor-pointer"} onClick={openLink}>
-        <div>{artist.Name}</div>
-        <div>{artist.Source}</div>
+    return <div className={"bg-gray-200 dark:bg-gray-700 rounded-lg p-2"}>
+        <div className={"flex flex-row gap-1"}>
+            <img src={artist.ArtworkLink} alt={artist.Name} className={"h-40 rounded-lg mr-2"}/>
+            <div className={"flex flex-col gap-1"}>
+                <div className={"text-xl font-bold"}>{artist.Name}</div>
+            </div>
+        </div>
     </div>;
 }
 

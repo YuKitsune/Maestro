@@ -10,14 +10,14 @@ const Album = (props: AlbumProps) => {
 
     const artistNames = album.ArtistNames.join(", ");
 
-    const openLink = useCallback(() => {
-        window.open(album.Link, "_blank");
-    }, [props])
-
-    return <div className={"bg-gray-200 rounded-lg p-2 cursor-pointer"} onClick={openLink}>
-        <div>{album.Name}</div>
-        <div>{artistNames}</div>
-        <div>{album.Source}</div>
+    return <div className={"bg-gray-200 dark:bg-gray-700 rounded-lg p-2"}>
+        <div className={"flex flex-row gap-1"}>
+            <img src={album.ArtworkLink} alt={album.Name} className={"h-40 rounded-lg mr-2"}/>
+            <div className={"flex flex-col gap-1"}>
+                <div className={"text-xl font-bold"}>{album.Name}</div>
+                <div>{artistNames}</div>
+            </div>
+        </div>
     </div>;
 }
 

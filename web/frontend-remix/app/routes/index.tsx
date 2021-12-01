@@ -34,11 +34,11 @@ export default function Index() {
       <h3 className={"text-xl"}>Paste a link to an Artist, Album or Track here:</h3>
       <Form method={"post"} className={"w-full flex flex-row gap-2"}>
         <input
-            className={"w-full rounded-lg border-2 border-blue-100 px-1 focus-within:border-blue-500 outline-none"}
+            className={"w-full rounded-lg border-2 border-blue-100 dark:border-blue-900 dark:bg-black px-1 focus-within:border-blue-500 outline-none"}
             type="text"
             placeholder={"https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"}
             name={"link"}/>
-        <button type="submit" className={"rounded-lg px-1 bg-green-200"}>Go!</button>
+        <button type="submit" className={"rounded-lg px-1 bg-green-200 dark:bg-green-800"}>Go!</button>
       </Form>
     </div>
   );
