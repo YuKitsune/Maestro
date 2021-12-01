@@ -5,9 +5,9 @@
   "license": "",
   "scripts": {
     "env": "",
-    "build:css": "tailwindcss -o ./app/tailwind.css",
+    "build:css": "tailwindcss -c ./config/tailwind.config.js -o ./app/tailwind.css",
     "build": "npm run build:css && remix build",
-    "dev:css": "tailwindcss -o ./app/tailwind.css --watch",
+    "dev:css": "tailwindcss -c ./config/tailwind.config.js -o ./app/tailwind.css --watch",
     "dev": "node -r dotenv/config node_modules/.bin/concurrently \"npm run dev:css\" \"remix dev\"",
     "postinstall": "remix setup node",
     "start": "remix-serve build"
