@@ -5,7 +5,7 @@
   - [X] Artist images
   - [X] Album images
   - [X] Track images (use album image if necessary)
-  - [ ] Remix-ify
+  - [X] Remix-ify
   - [ ] Theme
   - [ ] Proper tidy up
 - [ ] Services
