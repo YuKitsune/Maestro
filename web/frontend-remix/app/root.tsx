@@ -10,11 +10,13 @@ import {
 import type { LinksFunction } from "remix";
 
 import tailwindStylesUrl from "./tailwind.css"
+import spinnerStylesUrl from "./components/spinner.css"
 
 // https://remix.run/api/app#links
 export let links: LinksFunction = () => {
   return [
     { rel: "stylesheet", href: tailwindStylesUrl },
+    { rel: "stylesheet", href: spinnerStylesUrl },
   ];
 };
 

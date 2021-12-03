@@ -1,0 +1,13 @@
+@keyframes spinner-rotate {
+    0% {
+        transform: rotate(0);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    border-right-color: transparent;
+    animation: spinner-rotate 1s linear infinite;
+}
