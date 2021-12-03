@@ -5,16 +5,27 @@
   - [X] Artist images
   - [X] Album images
   - [X] Track images (use album image if necessary)
-  - [X] Remix-ify
-  - [ ] Theme
-  - [ ] Proper tidy up
+  - [X] ~~Remix-ify~~ Wanted to do a nested route, but remix doesn't support nested index route
+  - [x] ~~Theme~~ Too complicated, UI is simple enough
+  - [X] Proper tidy up
+- [X] Update docker compose file
+  - [X] include frontend
+  - [X] ~~specify config files for API~~ Just using environment variables
 - [ ] Services
   - [ ] Fix spotify token expiring every now and then
   - [ ] Fix deezer share link
   - [ ] Fix Apple Music track artwork
-- [ ] Update docker compose file
-  - [ ] include frontend
-  - [ ] specify config files for API
+  - [ ] Deep search
+    - [ ] When querying artists
+      - [ ] Query albums 👇
+    - [ ] When querying albums
+      - [ ] Ensure matches are correct using track IDs and positions
+      - [ ] Store matches for each track 
+  - [ ] Dedicated services API
+    - [ ] List all available services with logos
+- [ ] Error handling
+  - [ ] Return proper error responses
+  - [ ] Handle errors on the frontend
 - [ ] Logos
   - [ ] Figure out how we're gonna do logos
 - [ ] Logging and metrics
