@@ -11,6 +11,7 @@ import (
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
+	"reflect"
 	"sort"
 )
 
@@ -156,6 +157,10 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 			foundThing, err := streamingService.SearchThing(service, thing)
 			if err != nil {
 				return err
+			}
+
+			if foundThing == nil || reflect.ValueOf(foundThing).IsNil() {
+				return nil
 			}
 
 			foundThing.SetGroupId(groupId)
