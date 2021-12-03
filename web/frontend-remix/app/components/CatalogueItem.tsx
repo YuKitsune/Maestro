@@ -1,13 +1,12 @@
-import {useNavigate} from "remix";
-import {Thing} from "~/model/thing";
-import {useCallback} from "react";
+import {findBestThing, Thing} from "~/model/thing";
+import React, {useCallback} from "react";
 import {Artist as ArtistModel} from "~/model/artist";
 import {Album as AlbumModel} from "~/model/album";
 import {Track as TrackModel} from "~/model/track";
-import Link from "~/components/link";
-import Artist from "~/components/artist";
-import Album from "~/components/album";
-import Track from "~/components/track";
+import CatalogueItemLink from "~/components/catalogueItemLink";
+import ArtistPreview from "~/components/artistPreview";
+import AlbumPreview from "~/components/albumPreview";
+import TrackPreview from "~/components/trackPreview";
 
 type CatalogueItemProps = {
     items: Thing[]
@@ -40,20 +39,20 @@ const CatalogueItem = (props: CatalogueItemProps) => {
     }
 
     // Find the most appropriate thing
-    let bestThing = things.find(t => t.ArtworkLink && t.ArtworkLink.length > 0);
+    let bestThing = findBestThing(things);
     let preview: React.ReactNode;
 
     switch (bestThing!.ThingType) {
         case "artist":
-            preview = <Artist artist={bestThing as ArtistModel} />
+            preview = <ArtistPreview artist={bestThing as ArtistModel} />
             break
 
         case "album":
-            preview = <Album album={bestThing as AlbumModel} />
+            preview = <AlbumPreview album={bestThing as AlbumModel} />
             break
 
         case "track":
-            preview = <Track track={bestThing as TrackModel} />
+            preview = <TrackPreview track={bestThing as TrackModel} />
             break
 
         default:
@@ -66,14 +65,14 @@ const CatalogueItem = (props: CatalogueItemProps) => {
         <div className={"flex flex-col"}>
 
             {/* Preview */}
-            <div className={"mb-1"}>
+            <div className={"bg-gray-200 dark:bg-gray-700 rounded-lg p-2 mb-1"}>
                 {preview}
             </div>
 
             {/* Links */}
             <div className={"flex flex-col gap-1"}>
                 {things.map(t =>
-                    <Link key={t.Link} link={t.Link}>
+                    <CatalogueItemLink key={t.Link} link={t.Link}>
                         <div className={"flex flex-row content-center gap-1"}>
 
                             {/* Logo */}
@@ -89,7 +88,7 @@ const CatalogueItem = (props: CatalogueItemProps) => {
                                 </div>
                             </div>
                         </div>
-                    </Link>
+                    </CatalogueItemLink>
                 )}
             </div>
         </div>

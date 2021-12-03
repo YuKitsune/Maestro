@@ -1,8 +1,8 @@
-import {Link, LoaderFunction, useLoaderData, useNavigate} from "remix";
+import {LoaderFunction, MetaFunction, useLoaderData} from "remix";
 import type {Thing} from "~/model/thing";
-import {useCallback} from "react";
-import CatalogueItem from "~/components/CatalogueItem";
-import ArrowIcon, {ArrowDirection} from "~/components/icons/arrow";
+import CatalogueItem from "~/components/catalogueItem";
+import HomeButton from "~/components/homeButton";
+import {findBestThing} from "~/model/thing";
 
 export let loader: LoaderFunction = async ({ params }) => {
 
@@ -17,25 +17,35 @@ export let loader: LoaderFunction = async ({ params }) => {
     return json as Thing[];
 };
 
+export const meta: MetaFunction = ({data} : { data : Thing[] | undefined}) => {
+    if (!data) {
+        return {
+            title: "Nothing found...",
+            description: "🤦‍"
+        };
+    }
+
+    const things = data as Thing[]
+    let bestThing = findBestThing(things)
+
+    let title = bestThing.Name;
+    let image = bestThing.ArtworkLink;
+    return {
+        title: title,
+        "og:title": title,
+        "og:image": image,
+        "og:site_name": "Maestro",
+        "og:description": "Share music regardless of streaming service!",
+    };
+};
+
 export default function Group() {
     let data = useLoaderData();
     let things = data as Thing[]
 
-    const navigate = useNavigate()
-    const goHome = useCallback(() => {
-        navigate("/");
-    }, [])
-
     return (
         <div className={"flex flex-col gap-2"}>
-
-            <div className={"flex flex-initial"}>
-                <Link to={"/"} className={"flex flex-row flex-initial content-center border-b border-opacity-0 hover:border-opacity-100"}>
-                    <ArrowIcon direction={ArrowDirection.Left} className={"h-6 w-6 pr-2"} />
-                    <div>Back to Maestro</div>
-                </Link>
-            </div>
-
+            <HomeButton />
             <CatalogueItem items={things} />
         </div>
     );

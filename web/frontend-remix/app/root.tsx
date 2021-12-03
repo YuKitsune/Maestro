@@ -114,13 +114,13 @@ function Document({
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col flex-grow items-center justify-between h-screen overflow-y-scroll p-8 gap-8 bg-gray-200 dark:bg-gray-700 dark:text-white">
-      <div className={"flex-grow rounded-lg bg-white dark:bg-gray-800 shadow-2xl p-4 max-w-md"}>
+    <div className="flex flex-col flex-grow items-center justify-between h-screen overflow-y-scroll p-8 gap-8 bg-gray-200 dark:bg-gray-800 dark:text-white">
+      <div className={"flex-grow rounded-lg bg-gray-100 dark:bg-gray-900 shadow-2xl p-4 w-full max-w-md"}>
         {children}
       </div>
       <footer>
         <div>
-          <p>&copy; YuKitsune</p>
+          <p>&copy; <a className={"underline text-blue-400"} href={"https://github.com/YuKitsune"}>YuKitsune</a></p>
         </div>
       </footer>
     </div>

@@ -1,12 +1,6 @@
 import type {ActionFunction, MetaFunction} from "remix";
-import {
-    Form,
-    useSearchParams,
-    LoaderFunction,
-    useLoaderData, redirect
-} from "remix";
+import { Form, redirect } from "remix";
 import {Thing} from "~/model/thing";
-import CatalogueItem from "~/components/CatalogueItem";
 
 // https://remix.run/api/conventions#meta
 export let meta: MetaFunction = () => {
@@ -38,9 +32,9 @@ export const action: ActionFunction = async ({request}) => {
 // https://remix.run/guides/routing#index-routes
 export default function Index() {
   return (
-    <div className={"flex flex-col gap-1 align-center items-center"}>
-      <h1 className={"text-4xl text-align-center mb-2"}>Welcome to Maestro!</h1>
-      <h3 className={"text-lg mb-2"}>Paste a link to an Artist, Album or Track here:</h3>
+    <div className={"flex flex-col gap-2 align-center items-center"}>
+      <h1 className={"text-4xl text-align-center"}>Welcome to Maestro!</h1>
+      <div className={"text-align-center"}>Paste a link to an Artist, Album or Track here:</div>
       <Form method={"post"} className={"w-full flex flex-row gap-2"}>
         <input
             className={"w-full rounded-lg border-2 border-blue-100 dark:border-blue-900 dark:bg-black px-1 focus-within:border-blue-500 outline-none"}
@@ -48,7 +42,7 @@ export default function Index() {
             placeholder={"https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"}
             name={"link"}
         />
-        <button type="submit" className={"rounded-lg px-1 bg-green-200 dark:bg-green-800"}>Go!</button>
+        <button type="submit" className={"rounded-lg px-1 bg-green-300 hover:bg-green-400 dark:bg-green-800 dark:hover:bg-green-900"}>Go!</button>
       </Form>
     </div>
   );
