@@ -28,8 +28,14 @@
 # Local History for Visual Studio Code
 .history/
 logs
+
+# Maestro specific
+# Build output
 bin
+
+# Logs
 *.log
-configs/maestro.yaml
-web/frontend-remix/app/tailwind.css
-web/frontend-remix/app/tailwind.css
+
+# Configs
+maestro.yaml
+.env
