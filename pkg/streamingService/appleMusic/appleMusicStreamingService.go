@@ -13,10 +13,10 @@ type appleMusicStreamingService struct {
 	shareLinkPattern *regexp.Regexp
 }
 
-func NewAppleMusicStreamingService(token string, shareLinkPattern string) streamingService.StreamingService {
-	shareLinkPatternRegex := regexp.MustCompile(shareLinkPattern)
+func NewAppleMusicStreamingService(cfg *Config) streamingService.StreamingService {
+	shareLinkPatternRegex := regexp.MustCompile("(?:https:\\/\\/music\\.apple\\.com\\/)(?P<storefront>[A-Za-z0-9]+)\\/(?P<type>[A-Za-z]+)\\/(?:.+\\/)(?P<id>[0-9]+)(?:\\?i=(?P<song_id>[0-9]+))?")
 
-	amc := NewAppleMusicClient(token)
+	amc := NewAppleMusicClient(cfg.Token)
 
 	return &appleMusicStreamingService{
 		amc,

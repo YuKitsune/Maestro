@@ -48,10 +48,10 @@ func GetAccessToken(clientId string, secret string) (token string, error error) 
 	return token, nil
 }
 
-func NewSpotifyStreamingService(clientId string, clientSecret string, shareLinkPattern string) (streamingService.StreamingService, error) {
-	shareLinkPatternRegex := regexp.MustCompile(shareLinkPattern)
+func NewSpotifyStreamingService(cfg *Config) (streamingService.StreamingService, error) {
+	shareLinkPatternRegex := regexp.MustCompile("(?:https:\\/\\/open\\.spotify\\.com\\/)(?P<type>[A-Za-z]+)\\/(?P<id>[A-Za-z0-9]+)")
 
-	token, err := GetAccessToken(clientId, clientSecret)
+	token, err := GetAccessToken(cfg.ClientId, cfg.ClientSecret)
 	if err != nil {
 		return nil, err
 	}

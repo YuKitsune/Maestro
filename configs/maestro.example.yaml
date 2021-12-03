@@ -7,18 +7,12 @@ database:
   password: maestro
   database: maestro
 services:
-  - serviceName: AppleMusic
+  apple_music:
     enabled: true
-    properties:
-      token:
-      shareLinkPattern: "(?:https:\/\/music\.apple\.com\/)(?P<storefront>[A-Za-z0-9]+)\/(?P<type>[A-Za-z]+)\/(?:.+\/)(?P<id>[0-9]+)(?:\?i=(?P<song_id>[0-9]+))?"
-  - serviceName: Spotify
+    token:
+  deezer:
     enabled: true
-    properties:
-      - clientId:
-      - clientSecret:
-      - shareLinkPattern: '(?:https:\/\/open\.spotify\.com\/)(?P<type>[A-Za-z]+)\/(?P<id>[A-Za-z0-9]+)'
-  - serviceName: Deezer
+  spotify:
     enabled: true
-    properties:
-      - shareLinkPattern: '(?:https:\/\/www\.deezer\.com\/)(?P<lang>[A-Za-z]+\/)?(?P<type>[A-Za-z]+)\/(?P<id>[0-9]+)'
+    client_id:
+    client_secret:

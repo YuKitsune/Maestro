@@ -21,10 +21,10 @@ type MaestroApi struct {
 	svr *http.Server
 }
 
-func NewMaestroApi(apiCfg *Config, dbCfg *db.Config, svgCfgs []streamingService.Config) (*MaestroApi, error) {
+func NewMaestroApi(apiCfg *Config, dbCfg *db.Config, scfg streamingService.Config) (*MaestroApi, error) {
 
 	cb := camogo.NewBuilder()
-	if err := setupContainer(cb, dbCfg, svgCfgs); err != nil {
+	if err := setupContainer(cb, dbCfg, scfg); err != nil {
 		return nil, err
 	}
 
@@ -59,7 +59,7 @@ func (api *MaestroApi) Shutdown(ctx context.Context) error {
 	return api.svr.Shutdown(ctx)
 }
 
-func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, svcCfgs []streamingService.Config) error {
+func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, scfg streamingService.Config) error {
 
 	// Todo: Context timeout here
 	if err := cb.RegisterFactory(func() context.Context {
@@ -73,43 +73,45 @@ func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, svcCfgs []stre
 		return err
 	}
 
-	if err := registerStreamingServices(cb, svcCfgs); err != nil {
+	if err := registerStreamingServices(cb, scfg); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func registerStreamingServices(cb camogo.ContainerBuilder, svcCfg []streamingService.Config) error {
+func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingService.Config) error {
 
 	// Todo: Use keys from config
 	// Todo: Camogo needs slice support
 	var services []streamingService.StreamingService
-	for _, config := range svcCfg {
-		if !config.Enabled {
+
+	for key, config := range scfg {
+		if !config.Enabled() {
 			continue
 		}
 
-		switch config.ServiceName {
-		case appleMusic.ConfigKey:
-			token := config.Properties[appleMusic.TokenKey]
-			shareUrlPattern := config.Properties[streamingService.ShareLinkPatternKey]
-			services = append(services, appleMusic.NewAppleMusicStreamingService(token, shareUrlPattern))
+		switch key {
+		case appleMusic.Key:
+			cfg := config.(*appleMusic.Config)
+			s := appleMusic.NewAppleMusicStreamingService(cfg)
+			services = append(services, s)
+			break
 
-		case deezer.ConfigKey:
-			shareUrlPattern := config.Properties[streamingService.ShareLinkPatternKey]
-			services = append(services, deezer.NewDeezerStreamingService(shareUrlPattern))
+		case deezer.Key:
+			s := deezer.NewDeezerStreamingService()
+			services = append(services, s)
+			break
 
-		case spotify.ConfigKey:
-			clientId := config.Properties[spotify.ClientIdKey]
-			clientSecret := config.Properties[spotify.ClientSecretKey]
-			shareUrlPattern := config.Properties[streamingService.ShareLinkPatternKey]
-			spService, err := spotify.NewSpotifyStreamingService(clientId, clientSecret, shareUrlPattern)
+		case spotify.Key:
+			cfg := config.(*spotify.Config)
+			s, err := spotify.NewSpotifyStreamingService(cfg)
 			if err != nil {
 				return err
 			}
 
-			services = append(services, spService)
+			services = append(services, s)
+			break
 		}
 	}
 

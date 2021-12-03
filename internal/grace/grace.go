@@ -1,7 +1,6 @@
 package grace
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -72,12 +71,6 @@ func getShutdownSignalChan() chan os.Signal {
 	return shutdownSignalChan
 }
 
-func ExitFromError(err error) {
-	format := "error: %v\n"
-	if _, printErr := fmt.Fprintf(os.Stderr, format, err); printErr != nil {
-		// couldn't print to stderr, just print normally i guess
-		fmt.Printf(format, err)
-	}
-
+func ExitFromError() {
 	os.Exit(1)
 }
