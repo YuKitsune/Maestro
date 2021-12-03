@@ -1,10 +1,9 @@
 {
   "private": true,
-  "name": "remix-app-template",
-  "description": "",
+  "name": "maestro-frontend",
+  "description": "Maestro Frontend",
   "license": "",
   "scripts": {
-    "env": "",
     "build:css": "tailwindcss -c ./config/tailwind.config.js -o ./app/tailwind.css",
     "build": "npm run build:css && remix build",
     "dev:css": "tailwindcss -c ./config/tailwind.config.js -o ./app/tailwind.css --watch",

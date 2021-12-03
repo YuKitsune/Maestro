@@ -1,0 +1,10 @@
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+README.md
+
+.DS_Store
+
+node_modules
+npm-debug.log
