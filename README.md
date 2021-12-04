@@ -1,6 +1,6 @@
 
 # Todo
-- [ ] Tidy up the frontend
+- [X] Tidy up the frontend
   - [X] Back to Home button
   - [X] Artist images
   - [X] Album images
@@ -14,7 +14,7 @@
 - [ ] Services
   - [ ] Fix spotify token expiring every now and then
   - [ ] Fix deezer share link
-  - [ ] Fix Apple Music track artwork
+  - [X] Fix Apple Music track artwork
   - [ ] Deep search
     - [ ] When querying artists
       - [ ] Query albums 👇

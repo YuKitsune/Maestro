@@ -194,11 +194,17 @@ func (s *appleMusicStreamingService) newTrack(song *Song, market model.Market) (
 		return nil, err
 	}
 
+	// Query relationships for album artwork
+	artworkLink, err := s.getSongArtwork(song, market)
+	if err != nil {
+		return nil, err
+	}
+
 	track := model.NewTrack(
 		song.Attributes.Name,
 		artistNames,
 		song.Attributes.AlbumName,
-		"", // Todo: Get artwork from album
+		artworkLink,
 		s.Name(),
 		market,
 		song.Attributes.Url)
@@ -242,4 +248,22 @@ func (s *appleMusicStreamingService) getSongArtistNames(song *Song, market model
 	}
 
 	return names, nil
+}
+
+func (s *appleMusicStreamingService) getSongArtwork(song *Song, market model.Market) (string, error) {
+
+	var artworkLink string
+	if len(song.Relationships.Albums.Data) > 0 {
+
+		data := song.Relationships.Albums.Data[0]
+
+		album, err := s.client.GetAlbum(data.Id, market)
+		if err != nil {
+			return artworkLink, err
+		}
+
+		artworkLink = getArtworkUrl(&album.Attributes.Artwork)
+	}
+
+	return artworkLink, nil
 }
