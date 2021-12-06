@@ -82,40 +82,47 @@ func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, scfg streaming
 
 func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingService.Config) error {
 
-	// Todo: Use keys from config
-	// Todo: Camogo needs slice support
-	var services []streamingService.StreamingService
-
-	for key, config := range scfg {
-		if !config.Enabled() {
-			continue
-		}
-
-		switch key {
-		case appleMusic.Key:
-			cfg := config.(*appleMusic.Config)
-			s := appleMusic.NewAppleMusicStreamingService(cfg)
-			services = append(services, s)
-			break
-
-		case deezer.Key:
-			s := deezer.NewDeezerStreamingService()
-			services = append(services, s)
-			break
-
-		case spotify.Key:
-			cfg := config.(*spotify.Config)
-			s, err := spotify.NewSpotifyStreamingService(cfg)
-			if err != nil {
-				return err
-			}
-
-			services = append(services, s)
-			break
-		}
+	if err := cb.RegisterInstance(scfg); err != nil {
+		return err
 	}
 
-	if err := cb.RegisterInstance(services); err != nil {
+	// Todo: Camogo needs slice support
+	factory := func (c streamingService.Config) ([]streamingService.StreamingService, error) {
+		var services []streamingService.StreamingService
+		for key, config := range c {
+			if !config.Enabled() {
+				continue
+			}
+
+			switch key {
+			case appleMusic.Key:
+				cfg := config.(*appleMusic.Config)
+				s := appleMusic.NewAppleMusicStreamingService(cfg)
+				services = append(services, s)
+				break
+
+			case deezer.Key:
+				s := deezer.NewDeezerStreamingService()
+				services = append(services, s)
+				break
+
+			case spotify.Key:
+				cfg := config.(*spotify.Config)
+				s, err := spotify.NewSpotifyStreamingService(cfg)
+				if err != nil {
+					return services, err
+				}
+
+				services = append(services, s)
+				break
+			}
+		}
+
+		return services, nil
+	}
+
+	// Need to register these as transient (scoped) because Spotify doesn't provide refresh tokens for client credentials
+	if err := cb.RegisterFactory(factory, camogo.ScopedLifetime); err != nil {
 		return err
 	}
 

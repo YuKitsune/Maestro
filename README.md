@@ -12,7 +12,7 @@
   - [X] include frontend
   - [X] ~~specify config files for API~~ Just using environment variables
 - [ ] Services
-  - [ ] Fix spotify token expiring every now and then
+  - [X] Fix spotify token expiring every now and then
   - [ ] Fix deezer share link
   - [X] Fix Apple Music track artwork
   - [ ] Deep search
