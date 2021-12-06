@@ -11,6 +11,7 @@ import (
 type deezerStreamingService struct {
 	client           *DeezerClient
 	shareLinkPattern *regexp.Regexp
+	actualLinkPattern *regexp.Regexp
 }
 
 func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
@@ -33,8 +34,9 @@ func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
 }
 
 func NewDeezerStreamingService() streamingService.StreamingService {
-	shareLinkPatternRegex := regexp.MustCompile("(?:https:\\/\\/www\\.deezer\\.com\\/)(?P<lang>[A-Za-z]+\\/)?(?P<type>[A-Za-z]+)\\/(?P<id>[0-9]+)")
-	return &deezerStreamingService{NewDeezerClient(), shareLinkPatternRegex}
+	shareLinkPattern := regexp.MustCompile("(?:https:\\/\\/deezer\\.page\\.link\\/)(?P<id>[A-Za-z0-9]+)")
+	actualLinkPattern := regexp.MustCompile("(?:https:\\/\\/www\\.deezer\\.com\\/)(?P<lang>[A-Za-z]+\\/)?(?P<type>[A-Za-z]+)\\/(?P<id>[0-9]+)")
+	return &deezerStreamingService{NewDeezerClient(), shareLinkPattern, actualLinkPattern}
 }
 
 func (s *deezerStreamingService) LinkBelongsToService(link string) bool {
@@ -131,12 +133,12 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 	// format: 	https://www.deezer.com/<lang>/<artist|album|track>/<id>
 	// Todo: How we gonna get the region?
 
-	actualLink, err := getActualLink(link, s.shareLinkPattern)
+	actualLink, err := getActualLink(link, s.actualLinkPattern)
 	if err != nil {
 		return nil, err
 	}
 
-	matches := streamingService.FindStringSubmatchMap(s.shareLinkPattern, actualLink)
+	matches := streamingService.FindStringSubmatchMap(s.actualLinkPattern, actualLink)
 
 	// store := matches["storefront"]
 	typ := matches["type"]

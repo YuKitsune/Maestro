@@ -13,7 +13,7 @@
   - [X] ~~specify config files for API~~ Just using environment variables
 - [ ] Services
   - [X] Fix spotify token expiring every now and then
-  - [ ] Fix deezer share link
+  - [X] Fix deezer share link
   - [X] Fix Apple Music track artwork
   - [ ] Deep search
     - [ ] When querying artists
@@ -26,6 +26,8 @@
 - [ ] Error handling
   - [ ] Return proper error responses
   - [ ] Handle errors on the frontend
+  - [ ] Back button to home page
+  - [ ] Report button for a quick GitHub issue
 - [ ] Logos
   - [ ] Figure out how we're gonna do logos
 - [ ] Logging and metrics
