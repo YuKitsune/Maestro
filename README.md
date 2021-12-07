@@ -25,8 +25,10 @@
     - [ ] When an artist has been found
       - [ ] Query other streaming services for the same artist based on name
       - Don't bother creating links for albums and tracks, that would take way too long...
-      - [ ] Dedicated services API
-        - [ ] List all available services with logos
+  - [ ] Dedicated services API
+    - [ ] List all available services with logos
+  - [ ] Tidy up regex for better handling
+
 - [ ] Error handling
   - [ ] Return proper error responses
   - [ ] Handle errors on the frontend
