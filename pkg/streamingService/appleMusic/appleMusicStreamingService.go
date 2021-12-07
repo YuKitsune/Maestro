@@ -24,8 +24,8 @@ func NewAppleMusicStreamingService(cfg *Config) streamingService.StreamingServic
 	}
 }
 
-func (s *appleMusicStreamingService) Name() model.StreamingServiceKey {
-	return "Apple Music"
+func (s *appleMusicStreamingService) Key() model.StreamingServiceKey {
+	return Key
 }
 
 func (s *appleMusicStreamingService) LinkBelongsToService(link string) bool {
@@ -158,7 +158,7 @@ func (s *appleMusicStreamingService) newArtist(artist *Artist, market model.Mark
 	newArtist := model.NewArtist(
 		artist.Attributes.Name,
 		"",
-		s.Name(),
+		s.Key(),
 		market,
 		artist.Attributes.Url)
 
@@ -188,7 +188,7 @@ func (s *appleMusicStreamingService) newAlbum(album *Album, market model.Market)
 		albumName,
 		artistNames,
 		getArtworkUrl(&album.Attributes.Artwork),
-		s.Name(),
+		s.Key(),
 		market,
 		album.Attributes.Url)
 
@@ -215,7 +215,7 @@ func (s *appleMusicStreamingService) newTrack(song *Song, market model.Market) (
 		artistNames,
 		song.Attributes.AlbumName,
 		artworkLink,
-		s.Name(),
+		s.Key(),
 		market,
 		song.Attributes.Url)
 

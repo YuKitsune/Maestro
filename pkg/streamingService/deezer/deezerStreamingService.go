@@ -43,8 +43,8 @@ func (s *deezerStreamingService) LinkBelongsToService(link string) bool {
 	return s.shareLinkPattern.MatchString(link)
 }
 
-func (s *deezerStreamingService) Name() model.StreamingServiceKey {
-	return "Deezer"
+func (s *deezerStreamingService) Key() model.StreamingServiceKey {
+	return Key
 }
 
 func (s *deezerStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, error) {
@@ -60,7 +60,7 @@ func (s *deezerStreamingService) SearchArtist(artist *model.Artist) (*model.Arti
 	res := model.NewArtist(
 		deezerArtist.Name,
 		deezerArtist.Picture,
-		s.Name(),
+		s.Key(),
 		model.DefaultMarket,
 		deezerArtist.Link)
 
@@ -89,7 +89,7 @@ func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, 
 			deezerAlbum.Title,
 			[]string{deezerAlbum.Artist.Name},
 			deezerAlbum.Cover,
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			deezerAlbum.Link)
 	}
@@ -128,7 +128,7 @@ func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, e
 			[]string{deezerTrack.Artist.Name},
 			deezerTrack.Album.Title,
 			deezerTrack.Album.Cover,
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			deezerTrack.Link)
 	}
@@ -165,7 +165,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 		artist := model.NewArtist(
 			foundArtist.Name,
 			foundArtist.Picture,
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			foundArtist.Link)
 
@@ -181,7 +181,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 			foundAlbum.Title,
 			[]string{foundAlbum.Artist.Name}, // Todo:
 			foundAlbum.Cover,
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			foundAlbum.Link)
 
@@ -199,7 +199,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 			[]string{foundTrack.Artist.Name}, // Todo:
 			foundTrack.Album.Title,
 			foundTrack.Album.Cover,
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			foundTrack.Link)
 

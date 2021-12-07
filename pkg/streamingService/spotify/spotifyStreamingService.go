@@ -61,8 +61,8 @@ func NewSpotifyStreamingService(cfg *Config) (streamingService.StreamingService,
 	return &spotifyStreamingService{&sc, shareLinkPatternRegex}, nil
 }
 
-func (s *spotifyStreamingService) Name() model.StreamingServiceKey {
-	return "Spotify"
+func (s *spotifyStreamingService) Key() model.StreamingServiceKey {
+	return Key
 }
 
 func (s *spotifyStreamingService) LinkBelongsToService(link string) bool {
@@ -89,7 +89,7 @@ func (s *spotifyStreamingService) SearchArtist(artist *model.Artist) (*model.Art
 	res := model.NewArtist(
 		spotifyArtist.Name,
 		imageUrl(spotifyArtist.Images),
-		s.Name(),
+		s.Key(),
 		model.DefaultMarket,
 		spotifyArtist.ExternalURLs["spotify"])
 
@@ -126,7 +126,7 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 			spotifyAlbum.Name,
 			artistName(spotifyAlbum.Artists),
 			imageUrl(spotifyAlbum.Images),
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			spotifyAlbum.ExternalURLs["spotify"])
 	}
@@ -173,7 +173,7 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 			artistName(spotifyTrack.Artists),
 			spotifyTrack.Album.Name,
 			imageUrl(spotifyTrack.Album.Images),
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			spotifyTrack.ExternalURLs["spotify"])
 	}
@@ -203,7 +203,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 		artist := model.NewArtist(
 			foundArtist.Name,
 			imageUrl(foundArtist.Images),
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			foundArtist.ExternalURLs["spotify"])
 
@@ -219,7 +219,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			foundAlbum.Name,
 			artistName(foundAlbum.Artists),
 			imageUrl(foundAlbum.Images),
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			foundAlbum.ExternalURLs["spotify"])
 
@@ -237,7 +237,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			artistName(foundTrack.Artists),
 			foundTrack.Album.Name,
 			imageUrl(foundTrack.Album.Images),
-			s.Name(),
+			s.Key(),
 			model.DefaultMarket,
 			foundTrack.ExternalURLs["spotify"])
 

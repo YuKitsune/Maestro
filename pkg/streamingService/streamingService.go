@@ -12,7 +12,7 @@ import (
 // 	Might be better off flattening the model and using some kind of correlation ID / hash instead to relate entities
 
 type StreamingService interface {
-	Name() model.StreamingServiceKey
+	Key() model.StreamingServiceKey
 	LinkBelongsToService(link string) bool
 	SearchArtist(artist *model.Artist) (*model.Artist, error)
 	SearchAlbum(album *model.Album) (*model.Album, error)

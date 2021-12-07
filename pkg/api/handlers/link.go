@@ -90,7 +90,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 				sort.Strings(foundServices)
 				var newThings []model.Thing
 				for _, service := range ss {
-					if sort.SearchStrings(foundServices, service.Name().String()) != len(foundServices) {
+					if sort.SearchStrings(foundServices, service.Key().String()) != len(foundServices) {
 						continue
 					}
 

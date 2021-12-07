@@ -48,7 +48,7 @@ func HandleSearchArtist(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 
-			res.Results[service.Name()] = results
+			res.Results[service.Key()] = results
 			return nil
 		})
 	})
@@ -89,7 +89,7 @@ func HandleSearchAlbum(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 
-			res.Results[service.Name()] = results
+			res.Results[service.Key()] = results
 			return nil
 		})
 	})
@@ -129,7 +129,7 @@ func HandleSearchSong(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 
-			res.Results[service.Name()] = results
+			res.Results[service.Key()] = results
 			return nil
 		})
 	})
