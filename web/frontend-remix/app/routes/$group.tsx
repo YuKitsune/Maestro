@@ -3,6 +3,7 @@ import type {Thing} from "~/model/thing";
 import CatalogueItem from "~/components/catalogueItem";
 import HomeButton from "~/components/homeButton";
 import {findBestThing} from "~/model/thing";
+import {ServiceContextProvider} from "~/components/context/serviceContext";
 
 export let loader: LoaderFunction = async ({ params }) => {
 
@@ -17,6 +18,7 @@ export let loader: LoaderFunction = async ({ params }) => {
     return json as Thing[];
 };
 
+// @ts-ignore
 export const meta: MetaFunction = ({data} : { data : Thing[] | undefined}) => {
     if (!data) {
         return {
@@ -46,7 +48,9 @@ export default function Group() {
     return (
         <div className={"flex flex-col gap-2"}>
             <HomeButton />
-            <CatalogueItem items={things} />
+            <ServiceContextProvider>
+                <CatalogueItem items={things} />
+            </ServiceContextProvider>
         </div>
     );
 }
