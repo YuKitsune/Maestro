@@ -145,7 +145,14 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 	var res *model.Track
 	for _, name := range track.ArtistNames {
 
-		q := fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", name, track.AlbumName, track.Name)
+		var spotifyTrack spotify.FullTrack
+		var q string
+		if len(track.Isrc) > 0 {
+			q = fmt.Sprintf("isrc:\"%s\"", track.Isrc)
+		} else {
+			q = fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", name, track.AlbumName, track.Name)
+		}
+
 		searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeTrack, &spotify.Options{
 			Country: &country,
 		})
@@ -158,9 +165,10 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 		}
 
 		// Todo: Narrow down results
-		spotifyTrack := searchRes.Tracks.Tracks[0]
+		spotifyTrack = searchRes.Tracks.Tracks[0]
 
 		res = model.NewTrack(
+			spotifyTrack.ExternalIDs["isrc"],
 			spotifyTrack.Name,
 			artistName(spotifyTrack.Artists),
 			spotifyTrack.Album.Name,
@@ -224,6 +232,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 		}
 
 		track := model.NewTrack(
+			foundTrack.ExternalIDs["isrc"],
 			foundTrack.Name,
 			artistName(foundTrack.Artists),
 			foundTrack.Album.Name,

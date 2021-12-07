@@ -67,10 +67,19 @@ func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Alb
 
 func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track, error) {
 
-	term := fmt.Sprintf("%s %s", strings.Join(song.ArtistNames, " "), song.Name)
-	searchRes, err := s.client.SearchSong(term, song.GetMarket())
-	if err != nil {
-		return nil, err
+	var searchRes []Song
+	var err error
+	if len(song.Isrc) > 0 {
+		searchRes, err = s.client.GetSongByIsrc(song.Isrc, song.Market)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		term := fmt.Sprintf("%s %s", strings.Join(song.ArtistNames, " "), song.Name)
+		searchRes, err = s.client.SearchSong(term, song.GetMarket())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Todo: Narrow down results
@@ -201,6 +210,7 @@ func (s *appleMusicStreamingService) newTrack(song *Song, market model.Market) (
 	}
 
 	track := model.NewTrack(
+		song.Attributes.Isrc,
 		song.Attributes.Name,
 		artistNames,
 		song.Attributes.AlbumName,

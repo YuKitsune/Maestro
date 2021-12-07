@@ -16,13 +16,17 @@
   - [X] Fix deezer share link
   - [X] Fix Apple Music track artwork
   - [ ] Deep search
-    - [ ] When querying artists
-      - [ ] Query albums 👇
-    - [ ] When querying albums
-      - [ ] Ensure matches are correct using track IDs and positions
-      - [ ] Store matches for each track 
-  - [ ] Dedicated services API
-    - [ ] List all available services with logos
+    - [ ] When a track has been found
+      - [ ] Query other streaming services for the same ISRC code
+    - [ ] When an album has been found
+      - [ ] Query other streaming services for the same album and artist name
+      - [ ] Ensure all track ISRCs match
+      - [ ] Create entries for each track too
+    - [ ] When an artist has been found
+      - [ ] Query other streaming services for the same artist based on name
+      - Don't bother creating links for albums and tracks, that would take way too long...
+      - [ ] Dedicated services API
+        - [ ] List all available services with logos
 - [ ] Error handling
   - [ ] Return proper error responses
   - [ ] Handle errors on the frontend

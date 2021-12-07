@@ -40,6 +40,7 @@ type Song struct {
 }
 
 type SongAttributes struct {
+	Isrc        string
 	AlbumName   string //(Required) The name of the album the song appears on.
 	ArtistName  string //(Required) The artist’s name.
 	TrackNumber int    //(Required) The track number.
@@ -300,4 +301,32 @@ func (a *AppleMusicClient) GetSong(id string, storefront model.Market) (*Song, e
 	song := res.Data[0]
 
 	return song, nil
+}
+
+func (a *AppleMusicClient) GetSongByIsrc(isrc string, storefront model.Market) ([]Song, error) {
+
+	url := fmt.Sprintf("%s/v1/catalog/%s/songs?filter[isrc]=%s", baseUrl, storefront, isrc)
+
+	httpRes, err := a.client.Get(url)
+	defer httpRes.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	resBytes, err := ioutil.ReadAll(httpRes.Body)
+
+	var res *SearchResponse
+	err = json.Unmarshal(resBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	var songs []Song
+	if res != nil && res.Results.Songs != nil {
+		for _, song := range res.Results.Songs.Data {
+			songs = append(songs, *song)
+		}
+	}
+
+	return songs, nil
 }

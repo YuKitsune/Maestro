@@ -1,6 +1,7 @@
 package model
 
 type Track struct {
+	Isrc		string
 	Name        string
 	ArtistNames []string
 	AlbumName   string
@@ -13,8 +14,9 @@ type Track struct {
 	Link      string
 }
 
-func NewTrack(name string, artistNames []string, albumName string, artworkLink string, source StreamingServiceKey, market Market, link string) *Track {
+func NewTrack(isrc string, name string, artistNames []string, albumName string, artworkLink string, source StreamingServiceKey, market Market, link string) *Track {
 	return &Track{
+		Isrc:		 isrc,
 		Name:        name,
 		ArtistNames: artistNames,
 		AlbumName:   albumName,

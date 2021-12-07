@@ -102,17 +102,28 @@ func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, e
 	var res *model.Track
 	for _, artistName := range track.ArtistNames {
 
-		searchRes, err := s.client.SearchTrack(artistName, track.AlbumName, track.Name)
-		if err != nil {
-			return nil, err
+		var deezerTrack *Track
+		var err error
+		if len(track.Isrc) > 0 {
+			deezerTrack, err = s.client.GetTrackByIsrc(track.Isrc)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			foundTracks, err := s.client.SearchTrack(artistName, track.AlbumName, track.Name)
+			if err != nil {
+				return nil, err
+			}
+
+			if foundTracks == nil || len(foundTracks) == 0 {
+				continue
+			}
+
+			deezerTrack = &foundTracks[0]
 		}
 
-		if searchRes == nil || len(searchRes) == 0 {
-			continue
-		}
-
-		deezerTrack := searchRes[0]
 		res = model.NewTrack(
+			deezerTrack.Isrc,
 			deezerTrack.Title,
 			[]string{deezerTrack.Artist.Name},
 			deezerTrack.Album.Title,
@@ -183,6 +194,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 		}
 
 		track := model.NewTrack(
+			foundTrack.Isrc,
 			foundTrack.Title,
 			[]string{foundTrack.Artist.Name}, // Todo:
 			foundTrack.Album.Title,
