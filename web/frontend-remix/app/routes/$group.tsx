@@ -3,31 +3,50 @@ import type {Thing} from "~/model/thing";
 import CatalogueItem from "~/components/catalogueItem";
 import HomeButton from "~/components/homeButton";
 import {findBestThing} from "~/model/thing";
-import {ServiceContextProvider} from "~/components/context/serviceContext";
+import {Service} from "~/model/service";
+
+type GroupData = {
+    things: Thing[];
+    services: Service[];
+}
+
+const loadThings = async (groupId: string): Promise<Thing[]> => {
+    const apiUrl = `${process.env.API_URL}/${groupId}`
+    const res = await fetch(apiUrl)
+    const json = await res.json()
+    return json as Thing[];
+}
+
+const loadServices = async (): Promise<Service[]> => {
+    const apiUrl = `${process.env.API_URL}/services`
+    const res = await fetch(apiUrl)
+    const json = await res.json()
+    return json as Service[];
+}
 
 export let loader: LoaderFunction = async ({ params }) => {
-
     if (params.group === undefined) {
         throw new Error("Huston, we have a problem...")
     }
 
-    const apiUrl = `${process.env.API_URL}/${params.group}`
-    const res = await fetch(apiUrl)
-    const json = await res.json()
+    const things = await loadThings(params.group)
+    const services = await loadServices()
 
-    return json as Thing[];
+    return {
+        things,
+        services
+    };
 };
 
 // @ts-ignore
-export const meta: MetaFunction = ({data} : { data : Thing[] | undefined}) => {
-    if (!data) {
+export const meta: MetaFunction = ({things} : GroupData) => {
+    if (!things) {
         return {
             title: "Nothing found...",
             description: "🤦‍"
         };
     }
 
-    const things = data as Thing[]
     let bestThing = findBestThing(things)
 
     let title = bestThing.Name;
@@ -42,15 +61,12 @@ export const meta: MetaFunction = ({data} : { data : Thing[] | undefined}) => {
 };
 
 export default function Group() {
-    let data = useLoaderData();
-    let things = data as Thing[]
+    let {things, services} = useLoaderData<GroupData>();
 
     return (
         <div className={"flex flex-col gap-2"}>
             <HomeButton />
-            <ServiceContextProvider>
-                <CatalogueItem items={things} />
-            </ServiceContextProvider>
+            <CatalogueItem things={things} services={services} />
         </div>
     );
 }
