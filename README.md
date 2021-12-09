@@ -25,8 +25,9 @@
     - [ ] When an artist has been found
       - [ ] Query other streaming services for the same artist based on name
       - Don't bother creating links for albums and tracks, that would take way too long...
-  - [ ] Dedicated services API
-    - [ ] List all available services with logos
+  - [X] Dedicated services API
+    - [X] List all available services with logos
+  - [ ] Use Apple Music private key, team ID and key ID in config instead of token
   - [ ] Tidy up regex for better handling
 
 - [ ] Error handling
@@ -34,7 +35,12 @@
   - [ ] Handle errors on the frontend
   - [ ] Back button to home page
   - [ ] Report button for a quick GitHub issue
-- [ ] Logos
-  - [ ] Figure out how we're gonna do logos
+- [X] Logos
+  - [X] Figure out how we're gonna do logos
 - [ ] Logging and metrics
 - [ ] Analytics
+
+- [ ] Refactoring
+  - [ ] Clear up names
+  - [ ] Make streaming service configs a bit nicer
+  - [ ] Optimize API docker file
