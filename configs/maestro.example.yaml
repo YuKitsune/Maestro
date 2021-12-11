@@ -9,16 +9,18 @@ database:
 services:
   apple_music:
     name: "Apple Music"
-    artwork_link: "TODO"
+    artwork_link:
     enabled: true
-    token:
+    private_key_file:
+    key_id:
+    team_id:
   deezer:
     name: "Deezer"
-    artwork_link: "TODO"
+    artwork_link:
     enabled: true
   spotify:
     name: "Spotify"
-    artwork_link: "TODO"
+    artwork_link:
     enabled: true
     client_id:
     client_secret:

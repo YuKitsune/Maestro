@@ -2,6 +2,8 @@ package appleMusic
 
 import (
 	"fmt"
+	"github.com/yukitsune/amjwt"
+	"io/ioutil"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"regexp"
@@ -13,15 +15,25 @@ type appleMusicStreamingService struct {
 	shareLinkPattern *regexp.Regexp
 }
 
-func NewAppleMusicStreamingService(cfg *Config) streamingService.StreamingService {
+func NewAppleMusicStreamingService(cfg *Config) (streamingService.StreamingService, error) {
 	shareLinkPatternRegex := regexp.MustCompile("(?:https:\\/\\/music\\.apple\\.com\\/)(?P<storefront>[A-Za-z0-9]+)\\/(?P<type>[A-Za-z]+)\\/(?:.+\\/)(?P<id>[0-9]+)(?:\\?i=(?P<song_id>[0-9]+))?")
 
-	amc := NewAppleMusicClient(cfg.Token)
+	pkData, err := ioutil.ReadFile(cfg.PrivateKeyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := amjwt.CreateJwt(cfg.TeamId, cfg.KeyId, 1, pkData)
+	if err != nil {
+		return nil, err
+	}
+
+	amc := NewAppleMusicClient(token)
 
 	return &appleMusicStreamingService{
 		amc,
 		shareLinkPatternRegex,
-	}
+	}, nil
 }
 
 func (s *appleMusicStreamingService) Key() model.StreamingServiceKey {

@@ -42,3 +42,4 @@ bin
 # Configs
 maestro.yaml
 .env
+*.p8
