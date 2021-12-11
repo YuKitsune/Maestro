@@ -35,8 +35,10 @@
   - [ ] Handle errors on the frontend
   - [ ] Back button to home page
   - [ ] Report button for a quick GitHub issue
+
 - [X] Logos
   - [X] Figure out how we're gonna do logos
+
 - [ ] Logging and metrics
 - [ ] Analytics
 
@@ -44,3 +46,12 @@
   - [ ] Clear up names
   - [ ] Make streaming service configs a bit nicer
   - [ ] Optimize API docker file
+
+- [ ] More services
+  - [ ] Tidal
+  - [ ] iHeartRadio
+  - [ ] Pandora
+  - [ ] Amazon Music
+  - [ ] YouTube music
+  - [ ] Bandcamp (Maybe)
+  - [ ] SoundCloud (Maybe)
