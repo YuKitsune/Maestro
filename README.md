@@ -27,7 +27,7 @@
       - Don't bother creating links for albums and tracks, that would take way too long...
   - [X] Dedicated services API
     - [X] List all available services with logos
-  - [ ] Use Apple Music private key, team ID and key ID in config instead of token
+  - [X] Use Apple Music private key, team ID and key ID in config instead of token
   - [ ] Tidy up regex for better handling
 
 - [ ] Error handling

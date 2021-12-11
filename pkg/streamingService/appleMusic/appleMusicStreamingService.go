@@ -16,7 +16,7 @@ type appleMusicStreamingService struct {
 }
 
 func NewAppleMusicStreamingService(cfg *Config) (streamingService.StreamingService, error) {
-	shareLinkPatternRegex := regexp.MustCompile("(?:https:\\/\\/music\\.apple\\.com\\/)(?P<storefront>[A-Za-z0-9]+)\\/(?P<type>[A-Za-z]+)\\/(?:.+\\/)(?P<id>[0-9]+)(?:\\?i=(?P<song_id>[0-9]+))?")
+	shareLinkPatternRegex := regexp.MustCompile("(https?:\\/\\/)?music\\.apple\\.com\\/(?P<storefront>[A-Za-z0-9]+)\\/(?P<type>[A-Za-z]+)\\/(?:.+\\/)(?P<id>[0-9]+)(?:\\?i=(?P<song_id>[0-9]+))?")
 
 	pkData, err := ioutil.ReadFile(cfg.PrivateKeyFile)
 	if err != nil {
