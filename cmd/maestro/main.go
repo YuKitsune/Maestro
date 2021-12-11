@@ -20,8 +20,8 @@ import (
 )
 
 type Config struct {
-	Api      *api.Config               `mapstructure:"api"`
-	Db       *db.Config                `mapstructure:"database"`
+	Api      *api.Config            `mapstructure:"api"`
+	Db       *db.Config             `mapstructure:"database"`
 	Services map[string]interface{} `mapstructure:"services"`
 }
 

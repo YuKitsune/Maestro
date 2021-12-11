@@ -87,7 +87,7 @@ func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingService
 	}
 
 	// Todo: Camogo needs slice support
-	factory := func (c streamingService.Config) ([]streamingService.StreamingService, error) {
+	factory := func(c streamingService.Config) ([]streamingService.StreamingService, error) {
 		var services []streamingService.StreamingService
 		for key, config := range c {
 			if !config.Enabled() {

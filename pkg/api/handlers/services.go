@@ -7,10 +7,10 @@ import (
 )
 
 type serviceResource struct {
-	Name string
-	Key string
+	Name        string
+	Key         string
 	ArtworkLink string
-	Enabled bool
+	Enabled     bool
 }
 
 func ListServices(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +21,7 @@ func ListServices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func (cfg streamingService.Config) ([]serviceResource, error) {
+	res, err := container.ResolveWithResult(func(cfg streamingService.Config) ([]serviceResource, error) {
 
 		var res []serviceResource
 		for k, c := range cfg {

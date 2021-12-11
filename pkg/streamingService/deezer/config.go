@@ -5,9 +5,9 @@ import "maestro/pkg/model"
 const Key model.StreamingServiceKey = "deezer"
 
 type Config struct {
-	ServiceName string `mapstructure:"name"`
+	ServiceName        string `mapstructure:"name"`
 	ServiceArtworkLink string `mapstructure:"artwork_link"`
-	IsEnabled bool `mapstructure:"enabled"`
+	IsEnabled          bool   `mapstructure:"enabled"`
 }
 
 func (c *Config) Name() string {
