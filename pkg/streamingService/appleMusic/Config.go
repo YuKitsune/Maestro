@@ -5,12 +5,10 @@ import "maestro/pkg/model"
 const Key model.StreamingServiceKey = "apple_music"
 
 type Config struct {
-	ServiceName        string `mapstructure:"name"`
+	ServiceName string `mapstructure:"name"`
 	ServiceArtworkLink string `mapstructure:"artwork_link"`
-	IsEnabled          bool   `mapstructure:"enabled"`
-	PrivateKeyFile     string `mapstructure:"private_key_file"`
-	KeyId              string `mapstructure:"key_id"`
-	TeamId             string `mapstructure:"team_id"`
+	IsEnabled bool `mapstructure:"enabled"`
+	Token string `mapstructure:"token"`
 }
 
 func (c *Config) Name() string {
