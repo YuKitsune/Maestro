@@ -2,17 +2,10 @@ package handlers
 
 import (
 	mcontext "maestro/pkg/api/context"
-	"maestro/pkg/api/errors"
+	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
 )
-
-type serviceResource struct {
-	Name        string
-	Key         string
-	ArtworkLink string
-	Enabled     bool
-}
 
 func ListServices(w http.ResponseWriter, r *http.Request) {
 
@@ -22,11 +15,11 @@ func ListServices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func(cfg streamingService.Config) ([]serviceResource, error) {
+	res, err := container.ResolveWithResult(func(cfg streamingService.Config) ([]model.StreamingService, error) {
 
-		var res []serviceResource
+		var res []model.StreamingService
 		for k, c := range cfg {
-			sr := serviceResource{
+			sr := model.StreamingService{
 				Name:        c.Name(),
 				Key:         k.String(),
 				ArtworkLink: c.ArtworkLink(),
@@ -44,7 +37,7 @@ func ListServices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	services := res.([]serviceResource)
+	services := res.([]model.StreamingService)
 	if res == nil || len(services) == 0 {
 		NotFound(w, "could not find any services")
 		return
