@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	mcontext "maestro/pkg/api/context"
+	"maestro/pkg/api/errors"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
@@ -143,7 +144,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		groupId := model.ThingGroupId(uuid.New().String())
 		thing, err := targetService.SearchFromLink(reqLink)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %s", targetService.Key(), err.Error())
 		}
 
 		thing.SetGroupId(groupId)
@@ -156,7 +157,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
 			foundThing, err := streamingService.SearchThing(service, thing)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: %s", service.Key(), err.Error())
 			}
 
 			if foundThing == nil || reflect.ValueOf(foundThing).IsNil() {
@@ -182,6 +183,13 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		Error(w, err)
+		return
+	}
+
+	things := res.([]model.Thing)
+	if things == nil || len(things) == 0 {
+		// Todo: Improve this error message
+		Error(w, errors.NotFound("could not find anything"))
 		return
 	}
 

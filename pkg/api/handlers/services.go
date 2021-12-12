@@ -2,6 +2,7 @@ package handlers
 
 import (
 	mcontext "maestro/pkg/api/context"
+	"maestro/pkg/api/errors"
 	"maestro/pkg/streamingService"
 	"net/http"
 )
@@ -40,6 +41,12 @@ func ListServices(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		Error(w, err)
+		return
+	}
+
+	services := res.([]serviceResource)
+	if res == nil || len(services) == 0 {
+		Error(w, errors.NotFound("could not find any services"))
 		return
 	}
 

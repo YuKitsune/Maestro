@@ -2,9 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"maestro/pkg/api/errors"
 	"net/http"
 )
+
+type ErrorResource struct {
+	Error string
+}
 
 func Response(w http.ResponseWriter, res interface{}, status int) {
 
@@ -22,40 +26,28 @@ func Response(w http.ResponseWriter, res interface{}, status int) {
 	}
 }
 
-func EmptyResponse(w http.ResponseWriter, status int) {
-	w.WriteHeader(status)
-}
-
-func Unauthorized(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusUnauthorized)
-}
-
-func NotFound(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
+func NotFound(w http.ResponseWriter, message string) {
+	res := &ErrorResource{message}
+	Response(w, res, http.StatusBadRequest)
 }
 
 func BadRequest(w http.ResponseWriter, message string) {
-	w.WriteHeader(http.StatusBadRequest)
-	fmt.Fprintln(w, message)
-}
-
-func BadRequestf(w http.ResponseWriter, format string, s ...interface{}) {
-	w.WriteHeader(http.StatusBadRequest)
-	fmt.Fprintf(w, format, s...)
+	res := &ErrorResource{message}
+	Response(w, res, http.StatusBadRequest)
 }
 
 func Error(w http.ResponseWriter, err error) {
+
 	switch err.(type) {
 
 	// Todo: Write known errors here
 
+	case *errors.NotFoundError:
+		NotFound(w, err.Error())
+
 	default:
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err.Error())
+		res := &ErrorResource{err.Error()}
+		Response(w, res, http.StatusInternalServerError)
 		break
 	}
-}
-
-func EmptyError(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusInternalServerError)
 }
