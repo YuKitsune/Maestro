@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"maestro/pkg/api/errors"
+	"fmt"
 	"net/http"
 )
 
@@ -28,7 +28,13 @@ func Response(w http.ResponseWriter, res interface{}, status int) {
 
 func NotFound(w http.ResponseWriter, message string) {
 	res := &ErrorResource{message}
-	Response(w, res, http.StatusBadRequest)
+	Response(w, res, http.StatusNotFound)
+}
+
+func NotFoundf(w http.ResponseWriter, format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v)
+	res := &ErrorResource{msg}
+	Response(w, res, http.StatusNotFound)
 }
 
 func BadRequest(w http.ResponseWriter, message string) {
@@ -37,17 +43,6 @@ func BadRequest(w http.ResponseWriter, message string) {
 }
 
 func Error(w http.ResponseWriter, err error) {
-
-	switch err.(type) {
-
-	// Todo: Write known errors here
-
-	case *errors.NotFoundError:
-		NotFound(w, err.Error())
-
-	default:
-		res := &ErrorResource{err.Error()}
-		Response(w, res, http.StatusInternalServerError)
-		break
-	}
+	res := &ErrorResource{err.Error()}
+	Response(w, res, http.StatusInternalServerError)
 }

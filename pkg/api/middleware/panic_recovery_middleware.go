@@ -15,7 +15,7 @@ func PanicRecovery(next http.Handler) http.Handler {
 				n := runtime.Stack(buf, false)
 				buf = buf[:n]
 
-				// Todo: Log error
+				// Todo: Log error and stacktrace
 				// Todo: It'd be nice to not have to fetch the container here
 				//container, _ := context.Container(r.Context())
 				//if container != nil {
@@ -24,6 +24,7 @@ func PanicRecovery(next http.Handler) http.Handler {
 				//	})
 				//}
 
+				// Write error message only
 				handlers.Error(w, fmt.Errorf("%s", err))
 			}
 		}()

@@ -8,7 +8,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	mcontext "maestro/pkg/api/context"
-	"maestro/pkg/api/errors"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
@@ -189,7 +188,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 	things := res.([]model.Thing)
 	if things == nil || len(things) == 0 {
 		// Todo: Improve this error message
-		Error(w, errors.NotFound("could not find anything"))
+		NotFound(w, "could not find anything")
 		return
 	}
 

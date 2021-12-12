@@ -46,7 +46,7 @@ func ListServices(w http.ResponseWriter, r *http.Request) {
 
 	services := res.([]serviceResource)
 	if res == nil || len(services) == 0 {
-		Error(w, errors.NotFound("could not find any services"))
+		NotFound(w, "could not find any services")
 		return
 	}
 

@@ -6,7 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	mcontext "maestro/pkg/api/context"
-	"maestro/pkg/api/errors"
 	"maestro/pkg/model"
 	"net/http"
 )
@@ -53,7 +52,7 @@ func HandleGroup(w http.ResponseWriter, r *http.Request) {
 
 	things := res.([]model.Thing)
 	if things == nil || len(things) == 0 {
-		Error(w, errors.NotFoundf("could not find group with id %s", groupId))
+		NotFoundf(w, "could not find group with id %s", groupId)
 		return
 	}
 
