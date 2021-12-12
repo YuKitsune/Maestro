@@ -30,11 +30,11 @@
   - [X] Use Apple Music private key, team ID and key ID in config instead of token
   - [X] Tidy up regex for better handling
 
-- [ ] Error handling
-  - [ ] Return proper error responses
-  - [ ] Handle errors on the frontend
-  - [ ] Back button to home page
-  - [ ] Report button for a quick GitHub issue
+- [X] Error handling
+  - [X] Return proper error responses
+  - [X] Handle errors on the frontend
+  - [X] Back button to home page
+  - [X] Report button for a quick GitHub issue
 
 - [X] Logos
   - [X] Figure out how we're gonna do logos
