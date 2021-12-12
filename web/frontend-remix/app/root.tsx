@@ -1,16 +1,16 @@
 import {
-  Links,
-  LiveReload,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useCatch
+    Links,
+    LiveReload,
+    Meta,
+    Outlet,
+    Scripts,
+    ScrollRestoration, useCatch,
 } from "remix";
 import type { LinksFunction } from "remix";
 
 import tailwindStylesUrl from "./tailwind.css"
 import spinnerStylesUrl from "./components/spinner.css"
+import HomeButton from "~/components/homeButton";
 
 // https://remix.run/api/app#links
 export let links: LinksFunction = () => {
@@ -38,14 +38,14 @@ export function ErrorBoundary({ error }: { error: Error }) {
   return (
     <Document title="Error!">
       <Layout>
-        <div>
-          <h1>There was an error</h1>
-          <p>{error.message}</p>
-          <hr />
-          <p>
-            Hey, developer, you should replace this with what you want your
-            users to see.
-          </p>
+        <div className={"flex flex-col gap-2"}>
+            <HomeButton />
+            <h1 className={"text-2xl text-center"}>Something went wrong 😔</h1>
+            {error.message && <div className={"bg-gray-200 dark:bg-gray-700 rounded-lg p-2 mb-1 font-mono"}>{error.message}</div>}
+            <div className={"text-center"}>
+                <p>Try again and see if it works.</p>
+                <p>Feel free to open a <a className={"underline text-blue-400"} href={"https://github.com/YuKitsune/Maestro/issues/new"}>GitHub issue</a>.</p>
+            </div>
         </div>
       </Layout>
     </Document>
@@ -59,17 +59,11 @@ export function CatchBoundary() {
   let message;
   switch (caught.status) {
     case 401:
-      message = (
-        <p>
-          Oops! Looks like you tried to visit a page that you do not have access
-          to.
-        </p>
-      );
+      message = <span>Huh. You shouldn't be here... 👮</span>
       break;
+
     case 404:
-      message = (
-        <p>Oops! Looks like you tried to visit a page that does not exist.</p>
-      );
+        message = <span>Where are you going? 🤔</span>
       break;
 
     default:
@@ -79,10 +73,10 @@ export function CatchBoundary() {
   return (
     <Document title={`${caught.status} ${caught.statusText}`}>
       <Layout>
-        <h1>
-          {caught.status}: {caught.statusText}
-        </h1>
-        {message}
+          <div className={"flex flex-col gap-2"}>
+              <HomeButton />
+              <h1 className={"text-2xl text-center"}>{message}</h1>
+          </div>
       </Layout>
     </Document>
   );

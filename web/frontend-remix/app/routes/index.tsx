@@ -1,7 +1,7 @@
 import type {ActionFunction, MetaFunction} from "remix";
 import {Form, redirect, useTransition} from "remix";
-import {Thing} from "~/model/thing";
 import Spinner from "~/components/spinner";
+import MaestroApiClient from "~/maestroApiClient";
 
 // https://remix.run/api/conventions#meta
 export let meta: MetaFunction = () => {
@@ -12,22 +12,18 @@ export let meta: MetaFunction = () => {
 };
 
 export const action: ActionFunction = async ({request}) => {
+    const client = new MaestroApiClient(process.env.API_URL as string)
 
     const formData = await request.formData();
     const link = formData.get("link") as string;
-    const urlSafeLink = encodeURIComponent(link);
-    const apiUrl = `${process.env.API_URL}/link?link=${urlSafeLink}`
-    const res = await fetch(apiUrl)
-    const json = await res.json()
-
-    const things = json as Thing[];
+    const things = await client.searchFromLink(link);
 
     if (things && things.length > 0) {
         const groupId = things[0].GroupId;
         return redirect(`/${groupId}`)
+    } else {
+        return redirect(`/nothing`)
     }
-
-    // Todo: Navigate to a "No results page"
 }
 
 // https://remix.run/guides/routing#index-routes
