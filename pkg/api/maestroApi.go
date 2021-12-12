@@ -140,18 +140,12 @@ func setupHandlers(container camogo.Container) *mux.Router {
 	r.Use(middleware.PanicRecovery)
 
 	// Routes
-	// Search
-	r.HandleFunc("/search/artist", handlers.HandleSearchArtist).Methods("GET").Queries("name", "{name}")
-	r.HandleFunc("/search/album", handlers.HandleSearchAlbum).Methods("GET").Queries("name", "{name}")
-	r.HandleFunc("/search/song", handlers.HandleSearchSong).Methods("GET").Queries("name", "{name}")
-
 	// Services
 	r.HandleFunc("/services", handlers.ListServices).Methods("GET")
 
 	// Links
 	r.HandleFunc("/link", handlers.HandleLink).Methods("GET").Queries("link", "{link}")
 	r.HandleFunc("/{groupId}", handlers.HandleGroup).Methods("GET")
-	// r.HandleFunc("/flag", handlers.HandleFlag).Methods("GET").Queries("thingId", "{thingId}", "thingType", "{thingType}")
 
 	return r
 }
