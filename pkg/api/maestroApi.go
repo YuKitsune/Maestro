@@ -137,6 +137,8 @@ func setupHandlers(container camogo.Container) *mux.Router {
 	containerInjectionMiddleware := middleware.NewContainerInjectionMiddleware(container)
 	r.Use(containerInjectionMiddleware.Middleware)
 
+	r.Use(middleware.PanicRecovery)
+
 	// Routes
 	// Search
 	r.HandleFunc("/search/artist", handlers.HandleSearchArtist).Methods("GET").Queries("name", "{name}")
