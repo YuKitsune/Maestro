@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"maestro/pkg/api/context"
 	"maestro/pkg/api/handlers"
+	"maestro/pkg/log"
 	"net/http"
 	"time"
 )
@@ -48,12 +49,17 @@ func RequestLogging(next http.Handler) http.Handler {
 		next.ServeHTTP(&rwd, r)
 		duration := time.Since(start)
 
-		_ = ctr.Resolve(func(log *logrus.Logger) {
-			reqLogger := log.WithField("request_id", reqId).
+		_ = ctr.Resolve(func(logger *logrus.Entry) {
+			reqLogger := logger.WithField(log.RequestIdField, reqId).
 				WithField("method", r.Method).
 				WithField("path", r.URL.Path).
 				WithField("status", rwd.statusCode).
 				WithField("duration", duration)
+
+			q := r.URL.Query()
+			if len(q) > 0 {
+				reqLogger = reqLogger.WithField("query", q)
+			}
 
 			reqLogger.Infoln("")
 		})

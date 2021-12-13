@@ -43,6 +43,7 @@
 - [ ] Analytics
 
 - [ ] Refactoring
+  - [ ] Clean up context usages
   - [ ] Clear up names
   - [ ] Make streaming service configs a bit nicer
   - [ ] Optimize API docker file

@@ -20,7 +20,7 @@ func PanicRecovery(next http.Handler) http.Handler {
 				// Todo: It'd be nice to not have to fetch the container here
 				container, _ := context.Container(r.Context())
 				if container != nil {
-					_ = container.Resolve(func(logger *logrus.Logger) {
+					_ = container.Resolve(func(logger *logrus.Entry) {
 						logger.
 							WithField("error", err).
 							WithField("stacktrace", fmt.Sprintf("%s", buf)).

@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/camogo"
+	mcontext "maestro/pkg/api/context"
 	"maestro/pkg/api/db"
 	"maestro/pkg/api/handlers"
 	"maestro/pkg/api/middleware"
@@ -76,7 +77,7 @@ func setupContainer(cb camogo.ContainerBuilder, lCfg *log.Config, dbCfg *db.Conf
 	}
 
 	// Logger
-	if err := cb.RegisterFactory(configureLogger, camogo.TransientLifetime); err != nil {
+	if err := cb.RegisterFactory(configureLogger, camogo.ScopedLifetime); err != nil {
 		return err
 	}
 
@@ -94,7 +95,7 @@ func setupContainer(cb camogo.ContainerBuilder, lCfg *log.Config, dbCfg *db.Conf
 	return nil
 }
 
-func configureLogger(cfg *log.Config) (*logrus.Logger, error) {
+func configureLogger(cfg *log.Config, ctx context.Context) (*logrus.Entry, error) {
 
 	logger := logrus.New()
 
@@ -109,12 +110,20 @@ func configureLogger(cfg *log.Config) (*logrus.Logger, error) {
 		logger.SetFormatter(&logrus.JSONFormatter{})
 	} else {
 		logger.SetFormatter(&logrus.TextFormatter{
-			ForceColors:  true,
-			PadLevelText: true,
+			ForceColors:   true,
+			PadLevelText:  true,
+			FullTimestamp: true,
 		})
 	}
 
-	return logger, nil
+	entry := logger.WithContext(ctx)
+
+	reqId, err := mcontext.RequestId(ctx)
+	if err == nil {
+		entry = entry.WithField(log.RequestIdField, reqId)
+	}
+
+	return entry, nil
 }
 
 func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingService.Config) error {
@@ -181,6 +190,8 @@ func setupHandlers(container camogo.Container) *mux.Router {
 	r.Use(middleware.PanicRecovery)
 
 	// Routes
+	r.NotFoundHandler = http.HandlerFunc(handlers.HandleNotFound)
+
 	// Services
 	r.HandleFunc("/services", handlers.ListServices).Methods("GET")
 
