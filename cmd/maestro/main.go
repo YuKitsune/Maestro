@@ -10,6 +10,7 @@ import (
 	"maestro/internal/grace"
 	"maestro/pkg/api"
 	"maestro/pkg/api/db"
+	"maestro/pkg/log"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"maestro/pkg/streamingService/appleMusic"
@@ -21,6 +22,7 @@ import (
 
 type Config struct {
 	Api      *api.Config            `mapstructure:"api"`
+	Log      *log.Config            `mapstructure:"logging"`
 	Db       *db.Config             `mapstructure:"database"`
 	Services map[string]interface{} `mapstructure:"services"`
 }
@@ -94,7 +96,7 @@ func serve(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	maestroApi, err := api.NewMaestroApi(cfg.Api, cfg.Db, scfg)
+	maestroApi, err := api.NewMaestroApi(cfg.Api, cfg.Log, cfg.Db, scfg)
 	if err != nil {
 		grace.ExitFromError()
 	}

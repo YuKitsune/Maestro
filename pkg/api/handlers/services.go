@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	mcontext "maestro/pkg/api/context"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
@@ -16,6 +17,8 @@ func ListServices(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := container.ResolveWithResult(func(cfg streamingService.Config) ([]model.StreamingService, error) {
+
+		return nil, fmt.Errorf("fuck you")
 
 		var res []model.StreamingService
 		for k, c := range cfg {

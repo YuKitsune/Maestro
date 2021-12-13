@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"maestro/pkg/api/context"
 	"maestro/pkg/api/handlers"
 	"net/http"
 	"runtime"
@@ -15,14 +17,16 @@ func PanicRecovery(next http.Handler) http.Handler {
 				n := runtime.Stack(buf, false)
 				buf = buf[:n]
 
-				// Todo: Log error and stacktrace
 				// Todo: It'd be nice to not have to fetch the container here
-				//container, _ := context.Container(r.Context())
-				//if container != nil {
-				//	_ = container.Resolve(func(logger *logrus.Logger) {
-				//		logger.Errorf("Recovering from panic: %v\n%s\n", err, buf)
-				//	})
-				//}
+				container, _ := context.Container(r.Context())
+				if container != nil {
+					_ = container.Resolve(func(logger *logrus.Logger) {
+						logger.
+							WithField("error", err).
+							WithField("stacktrace", fmt.Sprintf("%s", buf)).
+							Error("recovering from panic")
+					})
+				}
 
 				// Write error message only
 				handlers.Error(w, fmt.Errorf("%s", err))

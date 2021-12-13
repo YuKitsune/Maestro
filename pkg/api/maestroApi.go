@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/camogo"
 	"maestro/pkg/api/db"
 	"maestro/pkg/api/handlers"
 	"maestro/pkg/api/middleware"
+	"maestro/pkg/log"
 	"maestro/pkg/streamingService"
 	"maestro/pkg/streamingService/appleMusic"
 	"maestro/pkg/streamingService/deezer"
@@ -21,10 +23,10 @@ type MaestroApi struct {
 	svr *http.Server
 }
 
-func NewMaestroApi(apiCfg *Config, dbCfg *db.Config, scfg streamingService.Config) (*MaestroApi, error) {
+func NewMaestroApi(apiCfg *Config, lCfg *log.Config, dbCfg *db.Config, scfg streamingService.Config) (*MaestroApi, error) {
 
 	cb := camogo.NewBuilder()
-	if err := setupContainer(cb, dbCfg, scfg); err != nil {
+	if err := setupContainer(cb, lCfg, dbCfg, scfg); err != nil {
 		return nil, err
 	}
 
@@ -59,7 +61,7 @@ func (api *MaestroApi) Shutdown(ctx context.Context) error {
 	return api.svr.Shutdown(ctx)
 }
 
-func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, scfg streamingService.Config) error {
+func setupContainer(cb camogo.ContainerBuilder, lCfg *log.Config, dbCfg *db.Config, sCfg streamingService.Config) error {
 
 	// Todo: Context timeout here
 	if err := cb.RegisterFactory(func() context.Context {
@@ -68,16 +70,51 @@ func setupContainer(cb camogo.ContainerBuilder, dbCfg *db.Config, scfg streaming
 		return nil
 	}
 
+	// Log Config
+	if err := cb.RegisterInstance(lCfg); err != nil {
+		return err
+	}
+
+	// Logger
+	if err := cb.RegisterFactory(configureLogger, camogo.TransientLifetime); err != nil {
+		return err
+	}
+
+	// Database
 	dbMod := &db.DatabaseModule{Config: dbCfg}
 	if err := cb.RegisterModule(dbMod); err != nil {
 		return err
 	}
 
-	if err := registerStreamingServices(cb, scfg); err != nil {
+	// Streaming services
+	if err := registerStreamingServices(cb, sCfg); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func configureLogger(cfg *log.Config) (*logrus.Logger, error) {
+
+	logger := logrus.New()
+
+	lvl, err := logrus.ParseLevel(cfg.Level)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.SetLevel(lvl)
+
+	if cfg.UseJsonFormatter {
+		logger.SetFormatter(&logrus.JSONFormatter{})
+	} else {
+		logger.SetFormatter(&logrus.TextFormatter{
+			ForceColors:  true,
+			PadLevelText: true,
+		})
+	}
+
+	return logger, nil
 }
 
 func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingService.Config) error {
@@ -134,8 +171,12 @@ func setupHandlers(container camogo.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Middleware
+	r.Use(middleware.RequestTagging)
+
 	containerInjectionMiddleware := middleware.NewContainerInjectionMiddleware(container)
 	r.Use(containerInjectionMiddleware.Middleware)
+
+	r.Use(middleware.RequestLogging)
 
 	r.Use(middleware.PanicRecovery)
 
