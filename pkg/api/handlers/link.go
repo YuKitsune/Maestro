@@ -60,8 +60,8 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Todo: Improve this error message
 	if res == nil || len(res.([]model.Thing)) == 0 {
-		// Todo: Improve this error message
 		NotFound(w, "could not find anything")
 		return
 	}
@@ -124,6 +124,8 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 			allThings := append(relatedThings, foundThing)
 
 			// Check if we're missing any services from our results
+			// Todo: It'd be good to have a "Not-found thing" so we can tell if a thing wasn't found for a service,
+			// 	rather than assuming it's been newly added
 			if len(allThings) < len(ss) {
 				logger.Infof("looks like we have some new services since we found this thing (found %d, looking for %d)\n", len(allThings), len(ss))
 
@@ -201,8 +203,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 
 		thing.SetGroupId(groupId)
 
-		// Todo: Strong type would be nice here, but mongo doesn't like it
-		var things []interface{}
+		var things []model.Thing
 		things = append(things, thing)
 
 		// Query the other streaming services using what we found from the target streaming service
@@ -227,7 +228,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		}
 
 		// Store the new thing in the database
-		insertRes, err := coll.InsertMany(ctx, things)
+		insertRes, err := coll.InsertMany(ctx, thingsToInterfaces(things))
 		if err != nil {
 			return nil, err
 		}
@@ -241,4 +242,13 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func thingsToInterfaces(things []model.Thing) []interface{} {
+	var s []interface{}
+	for _, thing := range things {
+		s = append(s, thing)
+	}
+
+	return s
 }
