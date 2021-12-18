@@ -39,6 +39,10 @@ func (s *appleMusicStreamingService) SearchArtist(artist *model.Artist) (*model.
 		return nil, err
 	}
 
+	if len(searchRes) == 0 {
+		return nil, nil
+	}
+
 	// Todo: Narrow down results
 	foundArtist := searchRes[0]
 
@@ -51,6 +55,10 @@ func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Alb
 	searchRes, err := s.client.SearchAlbum(term, album.GetMarket())
 	if err != nil {
 		return nil, err
+	}
+
+	if len(searchRes) == 0 {
+		return nil, nil
 	}
 
 	// Todo: Narrow down results
@@ -80,6 +88,10 @@ func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if len(searchRes) == 0 {
+		return nil, nil
 	}
 
 	// Todo: Narrow down results

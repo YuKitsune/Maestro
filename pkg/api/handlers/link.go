@@ -48,8 +48,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	things := res.([]model.Thing)
-	if things == nil || len(things) == 0 {
+	if res == nil || len(res.([]model.Thing)) == 0 {
 		// Todo: Improve this error message
 		NotFound(w, "could not find anything")
 		return
@@ -140,12 +139,14 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 				}
 
 				// Add the new things to the database
-				insertRes, err := coll.InsertMany(ctx, newThings)
-				if err != nil {
-					return nil, err
-				}
+				if len(newThings) != 0 {
+					insertRes, err := coll.InsertMany(ctx, newThings)
+					if err != nil {
+						return nil, err
+					}
 
-				logger.Infof("%d new %ss added\n", len(insertRes.InsertedIDs), foundThing.Type())
+					logger.Infof("%d new %ss added\n", len(insertRes.InsertedIDs), foundThing.Type())
+				}
 			}
 
 			return allThings, nil

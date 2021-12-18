@@ -54,6 +54,10 @@ func (s *deezerStreamingService) SearchArtist(artist *model.Artist) (*model.Arti
 		return nil, err
 	}
 
+	if len(searchRes) == 0 {
+		return nil, nil
+	}
+
 	// Todo: Narrow down results
 	deezerArtist := searchRes[0]
 
@@ -80,6 +84,10 @@ func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, 
 		}
 
 		if searchRes == nil || len(searchRes) == 0 {
+			continue
+		}
+
+		if len(searchRes) == 0 {
 			continue
 		}
 
@@ -116,6 +124,10 @@ func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, e
 			}
 
 			if foundTracks == nil || len(foundTracks) == 0 {
+				continue
+			}
+
+			if len(foundTracks) == 0 {
 				continue
 			}
 
