@@ -58,7 +58,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 	Response(w, res, http.StatusOK)
 }
 
-func findForLink(link string, container camogo.Container) ([]model.Thing, error) {
+func findForLink(link string, container camogo.Container) (interface{}, error) {
 	res, err := container.ResolveWithResult(func(ctx context.Context, db *mongo.Database, ss []streamingService.StreamingService, logger *logrus.Entry) (interface{}, error) {
 
 		// Trim service-specific stuff from the link
@@ -227,5 +227,5 @@ func findForLink(link string, container camogo.Container) ([]model.Thing, error)
 		return nil, err
 	}
 
-	return res.([]model.Thing), nil
+	return res, nil
 }
