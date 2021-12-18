@@ -26,6 +26,7 @@ type Thing interface {
 	GetSource() StreamingServiceKey
 	GetMarket() Market
 	GetLink() string
+	GetLabel() string
 }
 
 func UnmarshalThingsFromCursor(ctx context.Context, cur *mongo.Cursor) ([]Thing, error) {

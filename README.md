@@ -39,7 +39,8 @@
 - [X] Logos
   - [X] Figure out how we're gonna do logos
 
-- [ ] Logging and metrics
+- [X] Logging
+- [ ] Metrics
 - [ ] Analytics
 
 - [ ] Refactoring
@@ -47,6 +48,7 @@
   - [ ] Clear up names
   - [ ] Make streaming service configs a bit nicer
   - [ ] Optimize API docker file
+  - [ ] Clean up logging
 
 - [ ] More services
   - [ ] Tidal

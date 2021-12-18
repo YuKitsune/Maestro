@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
+	"github.com/yukitsune/camogo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	mcontext "maestro/pkg/api/context"
@@ -30,19 +32,48 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func(ctx context.Context, db *mongo.Database, ss []streamingService.StreamingService) (interface{}, error) {
+	// Todo: Add interceptor / middleware support to camogo
+	res, err := container.ResolveWithResult(func(logger *logrus.Entry) (interface{}, error) {
+
+		res, err := findForLink(reqLink, container)
+		if err != nil {
+			logger.Errorf("failed to find things for link %s: %s", reqLink, err.Error())
+		}
+
+		return res, err
+	})
+
+	if err != nil {
+		Error(w, err)
+		return
+	}
+
+	things := res.([]model.Thing)
+	if things == nil || len(things) == 0 {
+		// Todo: Improve this error message
+		NotFound(w, "could not find anything")
+		return
+	}
+
+	Response(w, res, http.StatusOK)
+}
+
+func findForLink(link string, container camogo.Container) ([]model.Thing, error) {
+	res, err := container.ResolveWithResult(func(ctx context.Context, db *mongo.Database, ss []streamingService.StreamingService, logger *logrus.Entry) (interface{}, error) {
 
 		// Trim service-specific stuff from the link
 		for _, service := range ss {
-			reqLink = service.CleanLink(reqLink)
+			link = service.CleanLink(link)
 		}
+
+		logger = logger.WithField("link", link)
 
 		var foundThing model.Thing
 
 		// Search the database for an existing thing with the given link
 		coll := db.Collection(model.ThingsCollectionName)
-		res := coll.FindOne(ctx, bson.D{{"link", reqLink}})
-		err = res.Err()
+		res := coll.FindOne(ctx, bson.D{{"link", link}})
+		err := res.Err()
 		if err != nil {
 			if err != mongo.ErrNoDocuments {
 				return nil, res.Err()
@@ -61,6 +92,8 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 		if foundThing != nil {
 			// Link found
+			logger = logger.WithField("group_id", foundThing.GetGroupId())
+			logger.Infoln("found a thing")
 
 			// Find other things with the same hash
 			cur, err := coll.Find(ctx, bson.D{
@@ -81,6 +114,8 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 			// Check if we're missing any services from our results
 			if len(allThings) < len(ss) {
+				logger.Infof("looks like we have some new services since we found this thing (found %d, looking for %d)\n", len(allThings), len(ss))
+
 				var foundServices []string
 				for _, thing := range allThings {
 					foundServices = append(foundServices, thing.GetSource().String())
@@ -88,12 +123,13 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 				// Query the remaining streaming service
 				sort.Strings(foundServices)
-				var newThings []model.Thing
+				var newThings []interface{}
 				for _, service := range ss {
 					if sort.SearchStrings(foundServices, service.Key().String()) != len(foundServices) {
 						continue
 					}
 
+					logger.Infof("fetching thing from %s\n", service.Key())
 					thing, err := streamingService.SearchThing(service, foundThing)
 					if err != nil {
 						return nil, err
@@ -104,26 +140,26 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 				}
 
 				// Add the new things to the database
-				for _, newThing := range newThings {
-					_, err := coll.InsertOne(ctx, newThing)
-					if err != nil {
-						return nil, err
-					}
-
-					allThings = append(allThings, newThing)
+				insertRes, err := coll.InsertMany(ctx, newThings)
+				if err != nil {
+					return nil, err
 				}
+
+				logger.Infof("%d new %ss added\n", len(insertRes.InsertedIDs), foundThing.Type())
 			}
 
 			return allThings, nil
 		}
+
+		logger.Infoln("looks like this is a new thing")
 
 		// No links found, query the streaming service and find the same entry on other services
 		var targetService streamingService.StreamingService
 		var otherServices []streamingService.StreamingService
 
 		// Figure out which streaming service the link belongs to
-		err := streamingService.ForEachStreamingService(ss, func(service streamingService.StreamingService) error {
-			if service.LinkBelongsToService(reqLink) {
+		err = streamingService.ForEachStreamingService(ss, func(service streamingService.StreamingService) error {
+			if service.LinkBelongsToService(link) {
 				targetService = service
 			} else {
 				otherServices = append(otherServices, service)
@@ -136,12 +172,16 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if targetService == nil {
-			return nil, fmt.Errorf("couldn't find a streaming service for the given link: %s", reqLink)
+			return nil, fmt.Errorf("couldn't find a streaming service for the given link: %s", link)
 		}
 
 		// Query the target streaming service
 		groupId := model.ThingGroupId(uuid.New().String())
-		thing, err := targetService.SearchFromLink(reqLink)
+		logger = logger.WithField("group_id", groupId)
+		logger.Infoln("using new group id")
+
+		logger.Infof("searching %s\n", targetService.Key())
+		thing, err := targetService.SearchFromLink(link)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s", targetService.Key(), err.Error())
 		}
@@ -154,6 +194,8 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 		// Query the other streaming services using what we found from the target streaming service
 		err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
+
+			logger.Infof("searching %s for %s with name %s\n", targetService.Key(), thing.Type(), thing.GetLabel())
 			foundThing, err := streamingService.SearchThing(service, thing)
 			if err != nil {
 				return fmt.Errorf("%s: %s", service.Key(), err.Error())
@@ -172,25 +214,18 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Store the new thing in the database
-		_, err = coll.InsertMany(ctx, things)
+		insertRes, err := coll.InsertMany(ctx, things)
 		if err != nil {
 			return nil, err
 		}
 
+		logger.Infof("%d new %ss added\n", len(insertRes.InsertedIDs), thing.Type())
 		return things, nil
 	})
 
 	if err != nil {
-		Error(w, err)
-		return
+		return nil, err
 	}
 
-	things := res.([]model.Thing)
-	if things == nil || len(things) == 0 {
-		// Todo: Improve this error message
-		NotFound(w, "could not find anything")
-		return
-	}
-
-	Response(w, res, http.StatusOK)
+	return res.([]model.Thing), nil
 }

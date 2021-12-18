@@ -1,5 +1,10 @@
 package model
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Track struct {
 	Isrc        string
 	Name        string
@@ -54,4 +59,8 @@ func (t *Track) GetMarket() Market {
 
 func (t *Track) GetLink() string {
 	return t.Link
+}
+
+func (t *Track) GetLabel() string {
+	return fmt.Sprintf("%s - %s", strings.Join(t.ArtistNames, ", "), t.Name)
 }

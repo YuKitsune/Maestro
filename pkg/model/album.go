@@ -1,5 +1,10 @@
 package model
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Album struct {
 	Name        string
 	ArtistNames []string
@@ -50,4 +55,8 @@ func (a *Album) GetMarket() Market {
 
 func (a *Album) GetLink() string {
 	return a.Link
+}
+
+func (a *Album) GetLabel() string {
+	return fmt.Sprintf("%s (%s)", a.Name, strings.Join(a.ArtistNames, ", "))
 }

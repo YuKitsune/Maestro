@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"github.com/yukitsune/camogo"
 	maestroContext "maestro/pkg/api/context"
+	"maestro/pkg/api/handlers"
 	"net/http"
 )
 
@@ -40,8 +40,7 @@ func (m *ContextInjection) Middleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, err.Error())
+			handlers.Error(w, err)
 			return
 		}
 

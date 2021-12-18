@@ -49,3 +49,7 @@ func (a *Artist) GetMarket() Market {
 func (a *Artist) GetLink() string {
 	return a.Link
 }
+
+func (a *Artist) GetLabel() string {
+	return a.Name
+}

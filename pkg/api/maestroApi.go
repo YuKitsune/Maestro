@@ -20,11 +20,17 @@ import (
 )
 
 type MaestroApi struct {
-	cfg *Config
-	svr *http.Server
+	cfg    *Config
+	logger *logrus.Entry
+	svr    *http.Server
 }
 
 func NewMaestroApi(apiCfg *Config, lCfg *log.Config, dbCfg *db.Config, scfg streamingService.Config) (*MaestroApi, error) {
+
+	logger, err := configureLogger(context.Background(), lCfg)
+	if err != nil {
+		return nil, err
+	}
 
 	cb := camogo.NewBuilder()
 	if err := setupContainer(cb, lCfg, dbCfg, scfg); err != nil {
@@ -47,18 +53,22 @@ func NewMaestroApi(apiCfg *Config, lCfg *log.Config, dbCfg *db.Config, scfg stre
 		Handler: r,
 	}
 
-	return &MaestroApi{apiCfg, svr}, nil
+	return &MaestroApi{apiCfg, logger, svr}, nil
 }
 
 func (api *MaestroApi) Start() error {
+	api.logger.Warnln("TLS not enabled")
+	api.logger.Infof("listening on %s", api.svr.Addr)
 	return api.svr.ListenAndServe()
 }
 
 func (api *MaestroApi) StartTLS() error {
+	api.logger.Infof("listening on %s", api.svr.Addr)
 	return api.svr.ListenAndServeTLS(api.cfg.CertFile, api.cfg.KeyFile)
 }
 
 func (api *MaestroApi) Shutdown(ctx context.Context) error {
+	api.logger.Infof("shutting down")
 	return api.svr.Shutdown(ctx)
 }
 
@@ -95,7 +105,7 @@ func setupContainer(cb camogo.ContainerBuilder, lCfg *log.Config, dbCfg *db.Conf
 	return nil
 }
 
-func configureLogger(cfg *log.Config, ctx context.Context) (*logrus.Entry, error) {
+func configureLogger(ctx context.Context, cfg *log.Config) (*logrus.Entry, error) {
 
 	logger := logrus.New()
 

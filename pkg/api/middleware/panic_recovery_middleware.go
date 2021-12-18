@@ -22,9 +22,8 @@ func PanicRecovery(next http.Handler) http.Handler {
 				if container != nil {
 					_ = container.Resolve(func(logger *logrus.Entry) {
 						logger.
-							WithField("error", err).
 							WithField("stacktrace", fmt.Sprintf("%s", buf)).
-							Error("recovering from panic")
+							Errorf("recovering from panic: %s\n", err)
 					})
 				}
 
