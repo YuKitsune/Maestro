@@ -13,6 +13,7 @@ import (
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
 )
@@ -23,6 +24,17 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 	reqLink, ok := vars["link"]
 	if !ok {
 		BadRequest(w, "missing parameter \"link\"")
+		return
+	}
+
+	u, err := url.Parse(reqLink)
+	if err != nil || u == nil {
+		BadRequestf(w, "couldn't parse the given link: %s", reqLink)
+		return
+	}
+
+	if !u.IsAbs() {
+		BadRequest(w, "given link must be absolute")
 		return
 	}
 

@@ -42,6 +42,12 @@ func BadRequest(w http.ResponseWriter, message string) {
 	Response(w, res, http.StatusBadRequest)
 }
 
+func BadRequestf(w http.ResponseWriter, format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v)
+	res := &ErrorResource{msg}
+	Response(w, res, http.StatusBadRequest)
+}
+
 func Error(w http.ResponseWriter, err error) {
 	res := &ErrorResource{err.Error()}
 	Response(w, res, http.StatusInternalServerError)
