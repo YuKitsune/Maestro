@@ -95,7 +95,7 @@ func findForLink(link string, container camogo.Container) ([]model.Thing, error)
 			logger = logger.WithField("group_id", foundThing.GetGroupId())
 			logger.Infoln("found a thing")
 
-			// Find other things with the same hash
+			// Find other things with the same group id
 			cur, err := coll.Find(ctx, bson.D{
 				{"groupid", foundThing.GetGroupId()},
 				{"source", bson.D{{"$ne", foundThing.GetSource()}}},
