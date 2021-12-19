@@ -61,5 +61,11 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 		return err
 	}
 
+	// Repository
+	err = cb.RegisterFactory(NewMongoRepository, camogo.TransientLifetime)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

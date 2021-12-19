@@ -7,9 +7,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/camogo"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	mcontext "maestro/pkg/api/context"
+	"maestro/pkg/api/db"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
@@ -70,7 +69,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func findForLink(link string, container camogo.Container) (interface{}, error) {
-	res, err := container.ResolveWithResult(func(ctx context.Context, db *mongo.Database, ss []streamingService.StreamingService, logger *logrus.Entry) (interface{}, error) {
+	res, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository, ss []streamingService.StreamingService, logger *logrus.Entry) (interface{}, error) {
 
 		// Trim service-specific stuff from the link
 		for _, service := range ss {
@@ -79,49 +78,22 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 
 		logger = logger.WithField("link", link)
 
-		var foundThing model.Thing
-
 		// Search the database for an existing thing with the given link
-		coll := db.Collection(model.ThingsCollectionName)
-		res := coll.FindOne(ctx, bson.D{{"link", link}})
-		err := res.Err()
+		foundThing, err := repo.GetThingByLink(ctx, link)
 		if err != nil {
-			if err != mongo.ErrNoDocuments {
-				return nil, res.Err()
-			}
-		} else {
-			thingBytes, err := res.DecodeBytes()
-			if err != nil {
-				return nil, err
-			}
-
-			foundThing, err = model.UnmarshalThing(thingBytes)
-			if err != nil {
-				return nil, err
-			}
+			return nil, err
 		}
 
 		if foundThing != nil {
+
 			// Link found
 			logger = logger.WithField("group_id", foundThing.GetGroupId())
 			logger.Infoln("found a thing")
 
-			// Find other things with the same group id
-			cur, err := coll.Find(ctx, bson.D{
-				{"groupid", foundThing.GetGroupId()},
-				{"source", bson.D{{"$ne", foundThing.GetSource()}}},
-			})
+			allThings, err := repo.GetThingsByGroupId(ctx, foundThing.GetGroupId())
 			if err != nil {
 				return nil, err
 			}
-
-			var relatedThings []model.Thing
-			relatedThings, err = model.UnmarshalThingsFromCursor(ctx, cur)
-			if err != nil {
-				return nil, err
-			}
-
-			allThings := append(relatedThings, foundThing)
 
 			// Check if we're missing any services from our results
 			// Todo: It'd be good to have a "Not-found thing" so we can tell if a thing wasn't found for a service,
@@ -136,7 +108,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 
 				// Query the remaining streaming service
 				sort.Strings(foundServices)
-				var newThings []interface{}
+				var newThings []model.Thing
 				for _, service := range ss {
 					if sort.SearchStrings(foundServices, service.Key().String()) != len(foundServices) {
 						continue
@@ -154,12 +126,12 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 
 				// Add the new things to the database
 				if len(newThings) != 0 {
-					insertRes, err := coll.InsertMany(ctx, newThings)
+					n, err := repo.AddThings(ctx, newThings)
 					if err != nil {
 						return nil, err
 					}
 
-					logger.Infof("%d new %ss added\n", len(insertRes.InsertedIDs), foundThing.Type())
+					logger.Infof("%d new %ss added\n", n, foundThing.Type())
 				}
 			}
 
@@ -228,12 +200,9 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		}
 
 		// Store the new thing in the database
-		insertRes, err := coll.InsertMany(ctx, thingsToInterfaces(things))
-		if err != nil {
-			return nil, err
-		}
+		n, err := repo.AddThings(ctx, things)
 
-		logger.Infof("%d new %ss added\n", len(insertRes.InsertedIDs), thing.Type())
+		logger.Infof("%d new %ss added\n", n, thing.Type())
 		return things, nil
 	})
 
@@ -242,13 +211,4 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 	}
 
 	return res, nil
-}
-
-func thingsToInterfaces(things []model.Thing) []interface{} {
-	var s []interface{}
-	for _, thing := range things {
-		s = append(s, thing)
-	}
-
-	return s
 }

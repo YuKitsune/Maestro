@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/camogo"
 	mcontext "maestro/pkg/api/context"
@@ -11,6 +12,7 @@ import (
 	"maestro/pkg/api/handlers"
 	"maestro/pkg/api/middleware"
 	"maestro/pkg/log"
+	"maestro/pkg/metrics"
 	"maestro/pkg/streamingService"
 	"maestro/pkg/streamingService/appleMusic"
 	"maestro/pkg/streamingService/deezer"
@@ -88,6 +90,11 @@ func setupContainer(cb camogo.ContainerBuilder, lCfg *log.Config, dbCfg *db.Conf
 
 	// Logger
 	if err := cb.RegisterFactory(configureLogger, camogo.ScopedLifetime); err != nil {
+		return err
+	}
+
+	// Metrics
+	if err := cb.RegisterFactory(metrics.NewPrometheusMetricsRecorder, camogo.SingletonLifetime); err != nil {
 		return err
 	}
 
@@ -195,12 +202,15 @@ func setupHandlers(container camogo.Container) *mux.Router {
 	containerInjectionMiddleware := middleware.NewContainerInjectionMiddleware(container)
 	r.Use(containerInjectionMiddleware.Middleware)
 
+	r.Use(middleware.Metrics)
 	r.Use(middleware.RequestLogging)
-
 	r.Use(middleware.PanicRecovery)
 
 	// Routes
 	r.NotFoundHandler = http.HandlerFunc(handlers.HandleNotFound)
+
+	// Metrics
+	r.Handle("/metrics", promhttp.Handler())
 
 	// Services
 	r.HandleFunc("/services", handlers.ListServices).Methods("GET")
