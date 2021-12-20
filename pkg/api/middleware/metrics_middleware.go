@@ -23,11 +23,22 @@ func Metrics(next http.Handler) http.Handler {
 		}
 
 		err = ctr.Resolve(func(rec metrics.Recorder) error {
+
+			// wrap original http.ResponseWriter
+			rwd := responseWriterDecorator{
+				ResponseWriter: w,
+				StatusCode:     0,
+			}
+
 			rec.ReportRequestDuration(func() {
-				next.ServeHTTP(w, r)
+				next.ServeHTTP(&rwd, r)
 			})
 
 			go rec.CountRequest()
+
+			if isErrorCode(rwd.StatusCode) {
+				go rec.CountError()
+			}
 
 			return nil
 		})

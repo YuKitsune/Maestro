@@ -7,8 +7,8 @@ import (
 type prometheusMetricsRecorder struct {
 	requestCounter           prometheus.Counter
 	databaseCallCounter      prometheus.Counter
+	errorCounter             prometheus.Counter
 	requestDurationHistogram prometheus.Histogram
-	linkSourceSummary        prometheus.Summary
 }
 
 func NewPrometheusMetricsRecorder() (Recorder, error) {
@@ -31,6 +31,15 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 		return nil, err
 	}
 
+	errCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "maestro_error_call_count",
+		Help: "The total number of errors",
+	})
+
+	if err := prometheus.Register(errCounter); err != nil {
+		return nil, err
+	}
+
 	reqDur := prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: "maestro_request_duration",
 		Help: "The total duration of a HTTP request",
@@ -40,21 +49,11 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 		return nil, err
 	}
 
-	// Todo: Better description
-	linkSummary := prometheus.NewSummary(prometheus.SummaryOpts{
-		Name: "maestro_link_sources",
-		Help: "The number of links per streaming service used",
-	})
-
-	if err := prometheus.Register(linkSummary); err != nil {
-		return nil, err
-	}
-
 	rec := &prometheusMetricsRecorder{
 		reqCounter,
 		dbCounter,
+		errCounter,
 		reqDur,
-		linkSummary,
 	}
 
 	return rec, nil
@@ -66,6 +65,10 @@ func (p prometheusMetricsRecorder) CountRequest() {
 
 func (p prometheusMetricsRecorder) CountDatabaseCall() {
 	p.databaseCallCounter.Inc()
+}
+
+func (p prometheusMetricsRecorder) CountError() {
+	p.errorCounter.Inc()
 }
 
 func (p prometheusMetricsRecorder) ReportRequestDuration(fn func()) {
