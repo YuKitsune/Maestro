@@ -46,9 +46,11 @@ func RequestLogging(next http.Handler) http.Handler {
 				reqLogger = reqLogger.WithField("query", q)
 			}
 
-			level := logrus.InfoLevel
-			if isErrorCode(rwd.StatusCode) {
+			level := logrus.DebugLevel
+			if isServerErrorCode(rwd.StatusCode) {
 				level = logrus.ErrorLevel
+			} else if isClientErrorCode(rwd.StatusCode) {
+				level = logrus.WarnLevel
 			}
 
 			reqLogger.Logln(level)

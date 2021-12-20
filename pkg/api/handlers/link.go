@@ -88,7 +88,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 
 			// Link found
 			logger = logger.WithField("group_id", foundThing.GetGroupId())
-			logger.Infoln("found a thing")
+			logger.Debugln("found a thing")
 
 			allThings, err := repo.GetThingsByGroupId(ctx, foundThing.GetGroupId())
 			if err != nil {
@@ -99,7 +99,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 			// Todo: It'd be good to have a "Not-found thing" so we can tell if a thing wasn't found for a service,
 			// 	rather than assuming it's been newly added
 			if len(allThings) < len(ss) {
-				logger.Infof("looks like we have some new services since we found this thing (found %d, looking for %d)\n", len(allThings), len(ss))
+				logger.Debugf("looks like we have some new services since we found this thing (found %d, looking for %d)\n", len(allThings), len(ss))
 
 				var foundServices []string
 				for _, thing := range allThings {
@@ -114,7 +114,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 						continue
 					}
 
-					logger.Infof("fetching thing from %s\n", service.Key())
+					logger.Debugf("fetching thing from %s\n", service.Key())
 					thing, err := streamingService.SearchThing(service, foundThing)
 					if err != nil {
 						return nil, err
@@ -138,7 +138,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 			return allThings, nil
 		}
 
-		logger.Infoln("looks like this is a new thing")
+		logger.Debugln("looks like this is a new thing")
 
 		// No links found, query the streaming service and find the same entry on other services
 		var targetService streamingService.StreamingService
@@ -165,9 +165,9 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		// Query the target streaming service
 		groupId := model.ThingGroupId(uuid.New().String())
 		logger = logger.WithField("group_id", groupId)
-		logger.Infoln("using new group id")
+		logger.Debugln("using new group id")
 
-		logger.Infof("searching %s\n", targetService.Key())
+		logger.Debugf("searching %s\n", targetService.Key())
 		thing, err := targetService.SearchFromLink(link)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s", targetService.Key(), err.Error())
@@ -181,7 +181,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		// Query the other streaming services using what we found from the target streaming service
 		err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
 
-			logger.Infof("searching %s for %s with name %s\n", targetService.Key(), thing.Type(), thing.GetLabel())
+			logger.Debugf("searching %s for %s with name %s\n", targetService.Key(), thing.Type(), thing.GetLabel())
 			foundThing, err := streamingService.SearchThing(service, thing)
 			if err != nil {
 				return fmt.Errorf("%s: %s", service.Key(), err.Error())

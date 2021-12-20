@@ -7,7 +7,8 @@ import (
 type prometheusMetricsRecorder struct {
 	requestCounter           prometheus.Counter
 	databaseCallCounter      prometheus.Counter
-	errorCounter             prometheus.Counter
+	serverErrorCounter       prometheus.Counter
+	clientErrorCounter       prometheus.Counter
 	requestDurationHistogram prometheus.Histogram
 }
 
@@ -31,12 +32,21 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 		return nil, err
 	}
 
-	errCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "maestro_error_call_count",
-		Help: "The total number of errors",
+	serverErrorCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "maestro_server_error_count",
+		Help: "The total number of server-side errors",
 	})
 
-	if err := prometheus.Register(errCounter); err != nil {
+	if err := prometheus.Register(serverErrorCounter); err != nil {
+		return nil, err
+	}
+
+	clientErrorCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "maestro_client_error_count",
+		Help: "The total number of client-side errors",
+	})
+
+	if err := prometheus.Register(clientErrorCounter); err != nil {
 		return nil, err
 	}
 
@@ -52,7 +62,8 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 	rec := &prometheusMetricsRecorder{
 		reqCounter,
 		dbCounter,
-		errCounter,
+		serverErrorCounter,
+		clientErrorCounter,
 		reqDur,
 	}
 
@@ -67,8 +78,12 @@ func (p prometheusMetricsRecorder) CountDatabaseCall() {
 	p.databaseCallCounter.Inc()
 }
 
-func (p prometheusMetricsRecorder) CountError() {
-	p.errorCounter.Inc()
+func (p prometheusMetricsRecorder) CountServerError() {
+	p.serverErrorCounter.Inc()
+}
+
+func (p prometheusMetricsRecorder) CountClientError() {
+	p.clientErrorCounter.Inc()
 }
 
 func (p prometheusMetricsRecorder) ReportRequestDuration(fn func()) {

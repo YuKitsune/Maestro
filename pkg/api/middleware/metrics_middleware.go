@@ -36,8 +36,10 @@ func Metrics(next http.Handler) http.Handler {
 
 			go rec.CountRequest()
 
-			if isErrorCode(rwd.StatusCode) {
-				go rec.CountError()
+			if isServerErrorCode(rwd.StatusCode) {
+				go rec.CountServerError()
+			} else if isClientErrorCode(rwd.StatusCode) {
+				go rec.CountClientError()
 			}
 
 			return nil

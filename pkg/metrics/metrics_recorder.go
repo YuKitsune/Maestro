@@ -3,6 +3,7 @@ package metrics
 type Recorder interface {
 	CountRequest()
 	CountDatabaseCall()
-	CountError()
+	CountServerError()
+	CountClientError()
 	ReportRequestDuration(func())
 }
