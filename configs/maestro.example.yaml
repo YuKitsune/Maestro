@@ -14,7 +14,6 @@ services:
     name: "Apple Music"
     artwork_link: "TODO"
     enabled: true
-    token:
   deezer:
     name: "Deezer"
     artwork_link: "TODO"
@@ -23,5 +22,3 @@ services:
     name: "Spotify"
     artwork_link: "TODO"
     enabled: true
-    client_id:
-    client_secret:

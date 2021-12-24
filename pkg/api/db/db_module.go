@@ -24,14 +24,14 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 	err := cb.RegisterFactory(func(ctx context.Context, cfg *Config) (*mongo.Client, error) {
 
 		uri := fmt.Sprintf(
-			"mongodb://%s:%d/%s",
+			"mongodb://%s:%d",
 			url.QueryEscape(cfg.Host),
-			cfg.Port,
-			url.QueryEscape(cfg.Database))
+			cfg.Port)
 
 		creds := options.Credential{
-			Username: cfg.User,
-			Password: cfg.Password,
+			Username:   cfg.User,
+			Password:   cfg.Password,
+			AuthSource: cfg.Database,
 		}
 		opts := options.Client().ApplyURI(uri).SetAuth(creds)
 

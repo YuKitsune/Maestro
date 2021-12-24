@@ -2,12 +2,14 @@ version: "3.9"
 services:
   database:
     restart: always
-    image: 'mongo:latest'
+    image: 'mongo:5.0.5'
     ports:
       - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: maestro
-      MONGO_INITDB_ROOT_PASSWORD: maestro
+    env_file:
+      - ../configs/mongo/.env
+    volumes:
+      - ../configs/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
+      # - mongo-data:/data/db
 
   maestro:
     build:
@@ -36,4 +38,3 @@ services:
     environment:
       API_URL: http://maestro:8080
     depends_on:
-      - maestro
