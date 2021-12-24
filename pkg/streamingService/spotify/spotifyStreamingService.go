@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/zmb3/spotify"
 	"io/ioutil"
+	"maestro/pkg/metrics"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/url"
@@ -15,6 +16,7 @@ import (
 type spotifyStreamingService struct {
 	client           *spotify.Client
 	shareLinkPattern *regexp.Regexp
+	metricsRecorder  metrics.Recorder
 }
 
 func GetAccessToken(clientId string, secret string) (token string, error error) {
@@ -48,9 +50,10 @@ func GetAccessToken(clientId string, secret string) (token string, error error) 
 	return token, nil
 }
 
-func NewSpotifyStreamingService(cfg *Config) (streamingService.StreamingService, error) {
+func NewSpotifyStreamingService(cfg *Config, mr metrics.Recorder) (streamingService.StreamingService, error) {
 	shareLinkPatternRegex := regexp.MustCompile("(https?:\\/\\/)?open\\.spotify\\.com\\/(?P<type>[A-Za-z]+)\\/(?P<id>[A-Za-z0-9]+)")
 
+	go mr.CountSpotifyRequest()
 	token, err := GetAccessToken(cfg.ClientId, cfg.ClientSecret)
 	if err != nil {
 		return nil, err
@@ -58,7 +61,11 @@ func NewSpotifyStreamingService(cfg *Config) (streamingService.StreamingService,
 
 	c := streamingService.NewClientWithBearerAuth(token)
 	sc := spotify.NewClient(c)
-	return &spotifyStreamingService{&sc, shareLinkPatternRegex}, nil
+	return &spotifyStreamingService{
+		&sc,
+		shareLinkPatternRegex,
+		mr,
+	}, nil
 }
 
 func (s *spotifyStreamingService) Key() model.StreamingServiceKey {
@@ -72,6 +79,8 @@ func (s *spotifyStreamingService) LinkBelongsToService(link string) bool {
 func (s *spotifyStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, error) {
 
 	country := artist.Market.String()
+
+	go s.metricsRecorder.CountSpotifyRequest()
 
 	q := fmt.Sprintf("artist:\"%s\"", artist.Name)
 	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeArtist, &spotify.Options{
@@ -106,6 +115,8 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 
 	var res *model.Album
 	for _, name := range album.ArtistNames {
+
+		go s.metricsRecorder.CountSpotifyRequest()
 
 		q := fmt.Sprintf("artist:\"%s\" album:\"%s\"", name, album.Name)
 		searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeAlbum, &spotify.Options{
@@ -153,6 +164,8 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 			q = fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", name, track.AlbumName, track.Name)
 		}
 
+		go s.metricsRecorder.CountSpotifyRequest()
+
 		searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeTrack, &spotify.Options{
 			Country: &country,
 		})
@@ -195,6 +208,8 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 
 	switch typ {
 	case "artist":
+		go s.metricsRecorder.CountSpotifyRequest()
+
 		foundArtist, err := s.client.GetArtist(id)
 		if err != nil {
 			return nil, err
@@ -210,6 +225,8 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 		return artist, nil
 
 	case "album":
+		go s.metricsRecorder.CountSpotifyRequest()
+
 		foundAlbum, err := s.client.GetAlbum(id)
 		if err != nil {
 			return nil, err
@@ -226,6 +243,8 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 		return album, nil
 
 	case "track":
+		go s.metricsRecorder.CountSpotifyRequest()
+
 		foundTrack, err := s.client.GetTrack(id)
 		if err != nil {
 			return nil, err

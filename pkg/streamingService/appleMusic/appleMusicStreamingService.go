@@ -2,6 +2,7 @@ package appleMusic
 
 import (
 	"fmt"
+	"maestro/pkg/metrics"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"regexp"
@@ -11,9 +12,10 @@ import (
 type appleMusicStreamingService struct {
 	client           *AppleMusicClient
 	shareLinkPattern *regexp.Regexp
+	metricsRecorder  metrics.Recorder
 }
 
-func NewAppleMusicStreamingService(cfg *Config) streamingService.StreamingService {
+func NewAppleMusicStreamingService(cfg *Config, mr metrics.Recorder) streamingService.StreamingService {
 	shareLinkPatternRegex := regexp.MustCompile("(https?:\\/\\/)?music\\.apple\\.com\\/(?P<storefront>[A-Za-z0-9]+)\\/(?P<type>[A-Za-z]+)\\/(?:.+\\/)(?P<id>[0-9]+)(?:\\?i=(?P<song_id>[0-9]+))?")
 
 	amc := NewAppleMusicClient(cfg.Token)
@@ -21,6 +23,7 @@ func NewAppleMusicStreamingService(cfg *Config) streamingService.StreamingServic
 	return &appleMusicStreamingService{
 		amc,
 		shareLinkPatternRegex,
+		mr,
 	}
 }
 
@@ -34,6 +37,7 @@ func (s *appleMusicStreamingService) LinkBelongsToService(link string) bool {
 
 func (s *appleMusicStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, error) {
 
+	go s.metricsRecorder.CountAppleMusicRequest()
 	searchRes, err := s.client.SearchArtist(artist.Name, artist.GetMarket())
 	if err != nil {
 		return nil, err
@@ -51,6 +55,7 @@ func (s *appleMusicStreamingService) SearchArtist(artist *model.Artist) (*model.
 
 func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Album, error) {
 
+	go s.metricsRecorder.CountAppleMusicRequest()
 	term := fmt.Sprintf("%s %s", strings.Join(album.ArtistNames, " "), album.Name)
 	searchRes, err := s.client.SearchAlbum(term, album.GetMarket())
 	if err != nil {
@@ -74,6 +79,8 @@ func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Alb
 }
 
 func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track, error) {
+
+	go s.metricsRecorder.CountAppleMusicRequest()
 
 	var searchRes []Song
 	var err error
@@ -127,6 +134,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, e
 
 	switch typ {
 	case "artist":
+		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetArtist(id, storefront)
 		if err != nil {
 			return nil, err
@@ -135,6 +143,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, e
 		return s.newArtist(res, storefront)
 
 	case "album":
+		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetAlbum(id, storefront)
 		if err != nil {
 			return nil, err
@@ -143,6 +152,7 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, e
 		return s.newAlbum(res, storefront)
 
 	case "song":
+		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetSong(id, storefront)
 		if err != nil {
 			return nil, err
@@ -246,6 +256,9 @@ func (s *appleMusicStreamingService) getAlbumArtistNames(album *Album, market mo
 	var names []string
 
 	for _, data := range album.Relationships.Artists.Data {
+
+		go s.metricsRecorder.CountAppleMusicRequest()
+
 		artist, err := s.client.GetArtist(data.Id, market)
 		if err != nil {
 			return names, nil
@@ -261,6 +274,9 @@ func (s *appleMusicStreamingService) getSongArtistNames(song *Song, market model
 	var names []string
 
 	for _, data := range song.Relationships.Artists.Data {
+
+		go s.metricsRecorder.CountAppleMusicRequest()
+
 		artist, err := s.client.GetArtist(data.Id, market)
 		if err != nil {
 			return names, nil
@@ -279,6 +295,8 @@ func (s *appleMusicStreamingService) getSongArtwork(song *Song, market model.Mar
 
 		data := song.Relationships.Albums.Data[0]
 
+		go s.metricsRecorder.CountAppleMusicRequest()
+		
 		album, err := s.client.GetAlbum(data.Id, market)
 		if err != nil {
 			return artworkLink, err

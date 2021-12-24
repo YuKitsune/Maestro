@@ -150,7 +150,8 @@ func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingService
 	}
 
 	// Todo: Camogo needs slice support
-	factory := func(c streamingService.Config) ([]streamingService.StreamingService, error) {
+	factory := func(c streamingService.Config, mr metrics.Recorder) ([]streamingService.StreamingService, error) {
+
 		var services []streamingService.StreamingService
 		for key, config := range c {
 			if !config.Enabled() {
@@ -160,18 +161,18 @@ func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingService
 			switch key {
 			case appleMusic.Key:
 				cfg := config.(*appleMusic.Config)
-				s := appleMusic.NewAppleMusicStreamingService(cfg)
+				s := appleMusic.NewAppleMusicStreamingService(cfg, mr)
 				services = append(services, s)
 				break
 
 			case deezer.Key:
-				s := deezer.NewDeezerStreamingService()
+				s := deezer.NewDeezerStreamingService(mr)
 				services = append(services, s)
 				break
 
 			case spotify.Key:
 				cfg := config.(*spotify.Config)
-				s, err := spotify.NewSpotifyStreamingService(cfg)
+				s, err := spotify.NewSpotifyStreamingService(cfg, mr)
 				if err != nil {
 					return services, err
 				}

@@ -2,8 +2,14 @@ package metrics
 
 type Recorder interface {
 	CountRequest()
-	CountDatabaseCall()
+	ReportRequestDuration(func())
+
 	CountServerError()
 	CountClientError()
-	ReportRequestDuration(func())
+
+	CountDatabaseCall()
+
+	CountAppleMusicRequest()
+	CountSpotifyRequest()
+	CountDeezerRequest()
 }

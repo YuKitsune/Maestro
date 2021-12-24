@@ -6,10 +6,16 @@ import (
 
 type prometheusMetricsRecorder struct {
 	requestCounter           prometheus.Counter
-	databaseCallCounter      prometheus.Counter
-	serverErrorCounter       prometheus.Counter
-	clientErrorCounter       prometheus.Counter
 	requestDurationHistogram prometheus.Histogram
+
+	databaseCallCounter prometheus.Counter
+
+	serverErrorCounter prometheus.Counter
+	clientErrorCounter prometheus.Counter
+
+	appleMusicRequestCounter prometheus.Counter
+	spotifyRequestCounter    prometheus.Counter
+	deezerRequestCounter     prometheus.Counter
 }
 
 func NewPrometheusMetricsRecorder() (Recorder, error) {
@@ -23,12 +29,12 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 		return nil, err
 	}
 
-	dbCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "maestro_db_call_count",
-		Help: "The total number of database calls",
+	reqDur := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "maestro_request_duration",
+		Help: "The total duration of a HTTP request",
 	})
 
-	if err := prometheus.Register(dbCounter); err != nil {
+	if err := prometheus.Register(reqDur); err != nil {
 		return nil, err
 	}
 
@@ -50,21 +56,51 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 		return nil, err
 	}
 
-	reqDur := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "maestro_request_duration",
-		Help: "The total duration of a HTTP request",
+	dbCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "maestro_db_call_count",
+		Help: "The total number of database calls",
 	})
 
-	if err := prometheus.Register(reqDur); err != nil {
+	if err := prometheus.Register(dbCounter); err != nil {
+		return nil, err
+	}
+
+	amCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "maestro_apple_music_request_count",
+		Help: "The total number of requests sent to the Apple Music API",
+	})
+
+	if err := prometheus.Register(amCounter); err != nil {
+		return nil, err
+	}
+
+	spCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "maestro_spotify_request_count",
+		Help: "The total number of requests sent to the Spotify API",
+	})
+
+	if err := prometheus.Register(spCounter); err != nil {
+		return nil, err
+	}
+
+	dzCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "maestro_deezer_request_count",
+		Help: "The total number of requests sent to the Deezer API",
+	})
+
+	if err := prometheus.Register(dzCounter); err != nil {
 		return nil, err
 	}
 
 	rec := &prometheusMetricsRecorder{
 		reqCounter,
+		reqDur,
 		dbCounter,
 		serverErrorCounter,
 		clientErrorCounter,
-		reqDur,
+		amCounter,
+		spCounter,
+		dzCounter,
 	}
 
 	return rec, nil
@@ -90,4 +126,16 @@ func (p prometheusMetricsRecorder) ReportRequestDuration(fn func()) {
 	timer := prometheus.NewTimer(p.requestDurationHistogram)
 	fn()
 	timer.ObserveDuration()
+}
+
+func (p prometheusMetricsRecorder) CountAppleMusicRequest() {
+	p.appleMusicRequestCounter.Inc()
+}
+
+func (p prometheusMetricsRecorder) CountSpotifyRequest() {
+	p.spotifyRequestCounter.Inc()
+}
+
+func (p prometheusMetricsRecorder) CountDeezerRequest() {
+	p.deezerRequestCounter.Inc()
 }

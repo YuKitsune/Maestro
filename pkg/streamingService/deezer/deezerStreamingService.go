@@ -2,6 +2,7 @@ package deezer
 
 import (
 	"fmt"
+	"maestro/pkg/metrics"
 	"maestro/pkg/model"
 	"maestro/pkg/streamingService"
 	"net/http"
@@ -12,6 +13,7 @@ type deezerStreamingService struct {
 	client            *DeezerClient
 	shareLinkPattern  *regexp.Regexp
 	actualLinkPattern *regexp.Regexp
+	metricsRecorder   metrics.Recorder
 }
 
 func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
@@ -33,10 +35,15 @@ func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
 	return actualLink, err
 }
 
-func NewDeezerStreamingService() streamingService.StreamingService {
+func NewDeezerStreamingService(mr metrics.Recorder) streamingService.StreamingService {
 	shareLinkPattern := regexp.MustCompile("(https?:\\/\\/)?deezer\\.page\\.link\\/(?P<id>[A-Za-z0-9]+)")
 	actualLinkPattern := regexp.MustCompile("(https?:\\/\\/)?(www\\.)?deezer\\.com\\/(?P<lang>[A-Za-z]+\\/)?(?P<type>[A-Za-z]+)\\/(?P<id>[0-9]+)")
-	return &deezerStreamingService{NewDeezerClient(), shareLinkPattern, actualLinkPattern}
+	return &deezerStreamingService{
+		NewDeezerClient(),
+		shareLinkPattern,
+		actualLinkPattern,
+		mr,
+	}
 }
 
 func (s *deezerStreamingService) LinkBelongsToService(link string) bool {
@@ -48,6 +55,8 @@ func (s *deezerStreamingService) Key() model.StreamingServiceKey {
 }
 
 func (s *deezerStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, error) {
+
+	go s.metricsRecorder.CountDeezerRequest()
 
 	searchRes, err := s.client.SearchArtist(artist.Name)
 	if err != nil {
@@ -77,6 +86,8 @@ func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, 
 
 	var res *model.Album
 	for _, artistName := range album.ArtistNames {
+
+		go s.metricsRecorder.CountDeezerRequest()
 
 		searchRes, err := s.client.SearchAlbum(artistName, album.Name)
 		if err != nil {
@@ -109,6 +120,8 @@ func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, e
 
 	var res *model.Track
 	for _, artistName := range track.ArtistNames {
+
+		go s.metricsRecorder.CountDeezerRequest()
 
 		var deezerTrack *Track
 		var err error
@@ -169,6 +182,8 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 
 	switch typ {
 	case "artist":
+		go s.metricsRecorder.CountDeezerRequest()
+
 		foundArtist, err := s.client.GetArtist(id)
 		if err != nil {
 			return nil, err
@@ -184,6 +199,8 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 		return artist, nil
 
 	case "album":
+		go s.metricsRecorder.CountDeezerRequest()
+
 		foundAlbum, err := s.client.GetAlbum(id)
 		if err != nil {
 			return nil, err
@@ -200,6 +217,8 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 		return album, nil
 
 	case "track":
+		go s.metricsRecorder.CountDeezerRequest()
+
 		foundTrack, err := s.client.GetTrack(id)
 		if err != nil {
 			return nil, err
