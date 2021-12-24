@@ -181,7 +181,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		// Query the other streaming services using what we found from the target streaming service
 		err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
 
-			logger.Debugf("searching %s for %s with name %s\n", targetService.Key(), thing.Type(), thing.GetLabel())
+			logger.Debugf("searching %s for %s with name %s\n", service.Key(), thing.Type(), thing.GetLabel())
 			foundThing, err := streamingService.SearchThing(service, thing)
 			if err != nil {
 				return fmt.Errorf("%s: %s", service.Key(), err.Error())
