@@ -51,3 +51,17 @@ services:
     command: --config.file=/etc/prometheus/prometheus.yml
     depends_on:
       - maestro
+
+  grafana:
+    image: grafana/grafana:8.3.3
+    ports:
+      - "3010:3010"
+    volumes:
+      - ../configs/grafana:/etc/grafana
+      # - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  mongo-data:
+  prometheus-data:
