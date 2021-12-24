@@ -38,3 +38,16 @@ services:
     environment:
       API_URL: http://maestro:8080
     depends_on:
+      - maestro
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:v2.32.1
+    ports:
+      - '9000:9090'
+    volumes:
+      - ../configs/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml
+    depends_on:
+      - maestro
