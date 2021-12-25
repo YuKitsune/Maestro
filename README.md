@@ -49,6 +49,7 @@
   - [ ] Make streaming service configs a bit nicer
   - [ ] Optimize API docker file
   - [ ] Clean up logging
+  - [ ] Tidy up ports
 
 - [ ] More services
   - [ ] Tidal
