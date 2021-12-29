@@ -123,15 +123,11 @@ func configureLogger(ctx context.Context, cfg *log.Config) (*logrus.Entry, error
 
 	logger.SetLevel(lvl)
 
-	if cfg.UseJsonFormatter {
-		logger.SetFormatter(&logrus.JSONFormatter{})
-	} else {
-		logger.SetFormatter(&logrus.TextFormatter{
-			ForceColors:   true,
-			PadLevelText:  true,
-			FullTimestamp: true,
-		})
-	}
+	logger.SetFormatter(&logrus.TextFormatter{
+		ForceColors:   true,
+		PadLevelText:  true,
+		FullTimestamp: true,
+	})
 
 	entry := logger.WithContext(ctx)
 

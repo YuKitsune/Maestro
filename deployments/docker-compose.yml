@@ -9,7 +9,7 @@ services:
       - ../configs/mongo/.env
     volumes:
       - ../configs/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
-      # - mongo-data:/data/db
+      - mongo-data:/data/db
 
   maestro:
     build:

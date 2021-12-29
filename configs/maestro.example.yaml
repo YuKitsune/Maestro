@@ -2,7 +2,6 @@ api:
   port: 8182
 logging:
   level: debug
-  use_json_format: false
 database:
   host: localhost
   port: 27017
