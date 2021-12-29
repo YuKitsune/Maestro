@@ -45,7 +45,15 @@ func GetAccessToken(clientId string, secret string) (token string, error error) 
 		return token, err
 	}
 
-	token = resMap["access_token"].(string)
+	errorMessage, ok := resMap["error"].(string)
+	if ok && len(errorMessage) > 0 {
+		return "", fmt.Errorf("failed to get access token: %s", errorMessage)
+	}
+
+	token, ok = resMap["access_token"].(string)
+	if !ok {
+		return "", fmt.Errorf("could not find access token in response")
+	}
 
 	return token, nil
 }
