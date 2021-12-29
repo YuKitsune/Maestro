@@ -51,6 +51,12 @@
   - [ ] Clean up logging
   - [ ] Tidy up ports
 
+- [ ] Todo later
+  - [ ] Fix viper not working with environment variables
+  - [ ] Get mongo metrics exporting to prometheus
+  - [ ] Get maestro logs exporting to loki
+  - [ ] Include API route in duration histogram
+
 - [ ] More services
   - [ ] Tidal
   - [ ] iHeartRadio
