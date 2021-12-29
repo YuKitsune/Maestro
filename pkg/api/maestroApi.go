@@ -170,7 +170,7 @@ func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingService
 				cfg := config.(*spotify.Config)
 				s, err := spotify.NewSpotifyStreamingService(cfg, mr)
 				if err != nil {
-					return services, err
+					return services, fmt.Errorf("failed to initialize spotify streaming service: %s", err.Error())
 				}
 
 				services = append(services, s)
