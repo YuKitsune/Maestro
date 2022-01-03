@@ -1,67 +1,20 @@
+<h1 align="center">
+  🎵 Maestro
+</h1>
 
-# Todo
-- [X] Tidy up the frontend
-  - [X] Back to Home button
-  - [X] Artist images
-  - [X] Album images
-  - [X] Track images (use album image if necessary)
-  - [X] ~~Remix-ify~~ Wanted to do a nested route, but remix doesn't support nested index route
-  - [x] ~~Theme~~ Too complicated, UI is simple enough
-  - [X] Proper tidy up
-- [X] Update docker compose file
-  - [X] include frontend
-  - [X] ~~specify config files for API~~ Just using environment variables
-- [ ] Services
-  - [X] Fix spotify token expiring every now and then
-  - [X] Fix deezer share link
-  - [X] Fix Apple Music track artwork
-  - [ ] Deep search
-    - [ ] When a track has been found
-      - [ ] Query other streaming services for the same ISRC code
-    - [ ] When an album has been found
-      - [ ] Query other streaming services for the same album and artist name
-      - [ ] Ensure all track ISRCs match
-      - [ ] Create entries for each track too
-    - [ ] When an artist has been found
-      - [ ] Query other streaming services for the same artist based on name
-      - Don't bother creating links for albums and tracks, that would take way too long...
-  - [X] Dedicated services API
-    - [X] List all available services with logos
-  - [X] Use Apple Music private key, team ID and key ID in config instead of token
-  - [X] Tidy up regex for better handling
+<h3 align="center">
+  A small web application and API that allows music to be shared across streaming services.
+</h3>
 
-- [X] Error handling
-  - [X] Return proper error responses
-  - [X] Handle errors on the frontend
-  - [X] Back button to home page
-  - [X] Report button for a quick GitHub issue
+[//]: # (Todo: Preview image)
 
-- [X] Logos
-  - [X] Figure out how we're gonna do logos
+# Contributing
 
-- [X] Logging
-- [ ] Metrics
-- [ ] Analytics
+Contributions are what make the open source community such an amazing place to be, learn, inspire, and create.
+Any contributions you make are **greatly appreciated**.
 
-- [ ] Refactoring
-  - [ ] Clean up context usages
-  - [ ] Clear up names
-  - [ ] Make streaming service configs a bit nicer
-  - [ ] Optimize API docker file
-  - [ ] Clean up logging
-  - [ ] Tidy up ports
-
-- [ ] Todo later
-  - [ ] Fix viper not working with environment variables
-  - [ ] Get mongo metrics exporting to prometheus
-  - [ ] Get maestro logs exporting to loki
-  - [ ] Include API route in duration histogram
-
-- [ ] More services
-  - [ ] Tidal
-  - [ ] iHeartRadio
-  - [ ] Pandora
-  - [ ] Amazon Music
-  - [ ] YouTube music
-  - [ ] Bandcamp (Maybe)
-  - [ ] SoundCloud (Maybe)
+1. Fork the Project
+2. Create your Feature Branch (`feature/AmazingFeature`)
+3. Commit your Changes
+4. Push to the Branch
+5. Open a Pull Request
