@@ -43,10 +43,20 @@
 - [X] Metrics
 
 - [ ] Deployment
-  - Classic vs k8s
-    - Which is more expensive
-    - Pros and Cons
-    - Is k8s worth the effort?
+  - [ ] Prepare for Prod
+    - [ ] Figure out which env vars need to be added to GitHub
+    - [ ] Centralize env vars a bit better, make it easier to work with (readme stuff too)
+    - [ ] Prod docker compose file
+      - [ ] Traefik/Nginx
+      - [ ] Mongo creds
+      - [ ] Proper volume configs
+      - [ ] Log levels
+      - [ ] Remove monitoring?
+    - [ ] Optimize API Dockerfile
+  - [ ] Pipeline
+    - [ ] Build Dockerfiles
+    - [ ] Upload logos?
+    - [ ] Deploy to prod with docker compose https://www.docker.com/blog/how-to-deploy-on-remote-docker-hosts-with-docker-compose/
 
 - [ ] Refactoring
   - [ ] Clean up context usages

@@ -32,7 +32,7 @@ func NotFound(w http.ResponseWriter, message string) {
 }
 
 func NotFoundf(w http.ResponseWriter, format string, v ...interface{}) {
-	msg := fmt.Sprintf(format, v)
+	msg := fmt.Sprintf(format, v...)
 	res := &ErrorResource{msg}
 	Response(w, res, http.StatusNotFound)
 }
@@ -43,7 +43,7 @@ func BadRequest(w http.ResponseWriter, message string) {
 }
 
 func BadRequestf(w http.ResponseWriter, format string, v ...interface{}) {
-	msg := fmt.Sprintf(format, v)
+	msg := fmt.Sprintf(format, v...)
 	res := &ErrorResource{msg}
 	Response(w, res, http.StatusBadRequest)
 }

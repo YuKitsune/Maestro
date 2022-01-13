@@ -19,6 +19,7 @@ services:
       - '8080:8080'
     environment:
       MAESTRO_API_PORT: 8080
+      MAESTRO_LOGGING_LEVEL: debug
       MAESTRO_DATABASE_HOST: database
       MAESTRO_DATABASE_PORT: 27017
       MAESTRO_DATABASE_USER: maestro
