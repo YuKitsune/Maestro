@@ -1,0 +1,39 @@
+name: Build and Test
+
+on:
+  push: # Temp
+  pull_request:
+
+jobs:
+
+  build_api:
+    name: API
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...
+
+  build_frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2.5.1
+      with:
+        node-version: 14.17.1
+
+    - name: Build
+      working-directory: ./web/frontend-remix
+      run: npm run build
