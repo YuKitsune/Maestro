@@ -9,6 +9,7 @@ import (
 	"maestro"
 	"maestro/internal/grace"
 	"maestro/pkg/api"
+	"maestro/pkg/api/apiConfig"
 	"maestro/pkg/api/db"
 	"maestro/pkg/log"
 	"maestro/pkg/model"
@@ -21,10 +22,11 @@ import (
 )
 
 type Config struct {
-	Api      *api.Config            `mapstructure:"api"`
-	Log      *log.Config            `mapstructure:"logging"`
-	Db       *db.Config             `mapstructure:"database"`
-	Services map[string]interface{} `mapstructure:"services"`
+	Api      *apiConfig.Config `mapstructure:"api"`
+	Log      *log.Config       `mapstructure:"logging"`
+	Db       *db.Config        `mapstructure:"database"`
+	Services map[string]interface {
+	} `mapstructure:"services"`
 }
 
 func main() {

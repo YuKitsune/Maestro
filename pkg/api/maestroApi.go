@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/camogo"
+	"maestro/pkg/api/apiConfig"
 	mcontext "maestro/pkg/api/context"
 	"maestro/pkg/api/db"
 	"maestro/pkg/api/handlers"
@@ -22,12 +23,12 @@ import (
 )
 
 type MaestroApi struct {
-	cfg    *Config
+	cfg    *apiConfig.Config
 	logger *logrus.Entry
 	svr    *http.Server
 }
 
-func NewMaestroApi(apiCfg *Config, lCfg *log.Config, dbCfg *db.Config, scfg streamingService.Config) (*MaestroApi, error) {
+func NewMaestroApi(apiCfg *apiConfig.Config, lCfg *log.Config, dbCfg *db.Config, scfg streamingService.Config) (*MaestroApi, error) {
 
 	logger, err := configureLogger(context.Background(), lCfg)
 	if err != nil {
@@ -35,7 +36,7 @@ func NewMaestroApi(apiCfg *Config, lCfg *log.Config, dbCfg *db.Config, scfg stre
 	}
 
 	cb := camogo.NewBuilder()
-	if err := setupContainer(cb, lCfg, dbCfg, scfg); err != nil {
+	if err := setupContainer(cb, apiCfg, lCfg, dbCfg, scfg); err != nil {
 		return nil, err
 	}
 
@@ -74,7 +75,7 @@ func (api *MaestroApi) Shutdown(ctx context.Context) error {
 	return api.svr.Shutdown(ctx)
 }
 
-func setupContainer(cb camogo.ContainerBuilder, lCfg *log.Config, dbCfg *db.Config, sCfg streamingService.Config) error {
+func setupContainer(cb camogo.ContainerBuilder, aCfg *apiConfig.Config, lCfg *log.Config, dbCfg *db.Config, sCfg streamingService.Config) error {
 
 	// Todo: Context timeout here
 	if err := cb.RegisterFactory(func() context.Context {
@@ -85,6 +86,11 @@ func setupContainer(cb camogo.ContainerBuilder, lCfg *log.Config, dbCfg *db.Conf
 
 	// Log Config
 	if err := cb.RegisterInstance(lCfg); err != nil {
+		return err
+	}
+
+	// API Config
+	if err := cb.RegisterInstance(aCfg); err != nil {
 		return err
 	}
 
@@ -202,6 +208,7 @@ func setupHandlers(container camogo.Container) *mux.Router {
 	r.Use(middleware.Metrics)
 	r.Use(middleware.RequestLogging)
 	r.Use(middleware.PanicRecovery)
+	r.Use(middleware.Cors)
 
 	// Routes
 	r.NotFoundHandler = http.HandlerFunc(handlers.HandleNotFound)
@@ -210,6 +217,7 @@ func setupHandlers(container camogo.Container) *mux.Router {
 	r.Handle("/metrics", promhttp.Handler())
 
 	// Services
+	r.HandleFunc("/services/{serviceName}/logo", handlers.GetLogo).Methods("GET")
 	r.HandleFunc("/services", handlers.ListServices).Methods("GET")
 
 	// Links

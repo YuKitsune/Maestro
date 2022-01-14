@@ -49,7 +49,15 @@ class MaestroApiClient {
             throw new Error(resErr.Error)
         }
 
-        return json as Service[];
+        let services = json as Service[];
+
+        // Get artwork URLs
+        for (const svc of services) {
+            // Todo: Need a public URL here, the docker compose one isn't accessible publicly
+            svc.LogoUrl = `${this.baseUrl}/services/${svc.Key}/logo`;
+        }
+
+        return services;
     }
 }
 

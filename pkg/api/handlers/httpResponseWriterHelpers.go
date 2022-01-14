@@ -26,6 +26,15 @@ func Response(w http.ResponseWriter, res interface{}, status int) {
 	}
 }
 
+func Image(w http.ResponseWriter, bytes []byte) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	_, err := w.Write(bytes)
+	if err != nil {
+		Error(w, err)
+	}
+}
+
 func NotFound(w http.ResponseWriter, message string) {
 	res := &ErrorResource{message}
 	Response(w, res, http.StatusNotFound)

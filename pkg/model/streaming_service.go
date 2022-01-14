@@ -7,8 +7,7 @@ func (s StreamingServiceKey) String() string {
 }
 
 type StreamingService struct {
-	Name        string
-	Key         string
-	ArtworkLink string
-	Enabled     bool
+	Name    string
+	Key     string
+	Enabled bool
 }

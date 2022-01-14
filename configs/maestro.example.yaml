@@ -1,4 +1,5 @@
 api:
+  assets_dir: ./assets
   port: 8182
 logging:
   level: debug
@@ -11,13 +12,13 @@ database:
 services:
   apple_music:
     name: "Apple Music"
-    artwork_link: "TODO"
+    logo_file_name: "apple_music.png"
     enabled: true
   deezer:
     name: "Deezer"
-    artwork_link: "TODO"
+    artwork_link: "deezer.png"
     enabled: true
   spotify:
     name: "Spotify"
-    artwork_link: "TODO"
+    artwork_link: "spotify.png"
     enabled: true

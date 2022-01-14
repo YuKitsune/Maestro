@@ -8,6 +8,6 @@ type Config map[model.StreamingServiceKey]ServiceConfig
 
 type ServiceConfig interface {
 	Name() string
-	ArtworkLink() string
+	LogoFileName() string
 	Enabled() bool
 }
