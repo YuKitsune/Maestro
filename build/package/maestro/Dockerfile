@@ -1,4 +1,12 @@
-FROM golang:1.16-alpine
+# Build
+FROM golang:1.16-alpine as build
+
+ADD . /go/src/github.com/YuKitsune/maestro
+WORKDIR /go/src/github.com/YuKitsune/maestro
+RUN go build -o bin/maestro -ldflags "-X 'github.com/yukitsune/maestro.Version=$VERSION'" cmd/maestro/main.go
+
+# Run
+FROM alpine:3.15.0
 
 # Versioning information
 ARG GIT_COMMIT
@@ -10,7 +18,10 @@ LABEL branch=$GIT_BRANCH \
     dirty=$GIT_DIRTY \
     version=$VERSION
 
-ADD . /go/src/github.com/YuKitsune/maestro
-WORKDIR /go/src/github.com/YuKitsune/maestro
-RUN go build -o bin/maestro -ldflags "-X 'github.com/yukitsune/maestro.Version=$VERSION'" cmd/maestro/main.go
-CMD ["./bin/maestro", "serve"]
+COPY --from=build /go/src/github.com/YuKitsune/maestro/bin/maestro maestro
+COPY --from=build /go/src/github.com/YuKitsune/maestro/assets /assets
+COPY ./configs/maestro.yaml /maestro.yaml
+
+ENV MAESTRO_API_ASSETS_DIR=/assets
+
+CMD  ["./maestro", "serve"]
