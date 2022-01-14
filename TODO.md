@@ -51,8 +51,8 @@
       - [ ] Mongo creds
       - [ ] Proper volume configs
       - [ ] Log levels
-      - [ ] Remove monitoring?
     - [ ] Optimize API Dockerfile
+      - [X] Remove monitoring?
   - [ ] Pipeline
     - [ ] Build Dockerfiles
     - [ ] Upload logos?

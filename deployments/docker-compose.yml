@@ -41,28 +41,6 @@ services:
     depends_on:
       - maestro
 
-  # Monitoring
-  prometheus:
-    image: prom/prometheus:v2.32.1
-    ports:
-      - '9000:9090'
-    volumes:
-      - ../configs/prometheus:/etc/prometheus
-      - prometheus-data:/prometheus
-    command: --config.file=/etc/prometheus/prometheus.yml
-    depends_on:
-      - maestro
-
-  grafana:
-    image: grafana/grafana:8.3.3
-    ports:
-      - "3010:3010"
-    volumes:
-      - ../configs/grafana:/etc/grafana
-      - grafana-data:/var/lib/grafana
-    depends_on:
-      - prometheus
-
 volumes:
   mongo-data:
   prometheus-data:
