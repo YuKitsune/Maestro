@@ -55,7 +55,7 @@
     - [X] Optimize API Dockerfile
   - [ ] Pipeline
     - [ ] Build Dockerfiles
-    - [ ] Upload logos?
+    - [X] Upload logos?
     - [ ] Deploy to prod with docker compose https://www.docker.com/blog/how-to-deploy-on-remote-docker-hosts-with-docker-compose/
 
 - [ ] Refactoring
