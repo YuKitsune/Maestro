@@ -44,8 +44,26 @@
 
 - [ ] Deployment
   - [ ] Prepare for Prod
-    - [ ] Figure out which env vars need to be added to GitHub
-    - [ ] Centralize env vars a bit better, make it easier to work with (readme stuff too)
+    - [X] Figure out which env vars need to be added to GitHub
+      - Database
+        - MONGO_INITDB_ROOT_USERNAME
+        - MONGO_INITDB_ROOT_PASSWORD
+        - MAESTRO_DATABASE
+        - MAESTRO_USERNAME
+        - MAESTRO_PASSWORD
+      - API
+        - MAESTRO_DATABASE_USER
+        - MAESTRO_DATABASE_PASSWORD
+        - MAESTRO_SERVICES_APPLE_MUSIC_TOKEN
+        - MAESTRO_SERVICES_SPOTIFY_CLIENT_ID
+        - MAESTRO_SERVICES_SPOTIFY_CLIENT_SECRET
+      - Github Secrets
+        - DATABASE_ROOT_PASSWORD
+        - DATABASE_MAESTRO_PASSWORD
+        - MAESTRO_SERVICES_APPLE_MUSIC_TOKEN
+        - MAESTRO_SERVICES_SPOTIFY_CLIENT_ID
+        - MAESTRO_SERVICES_SPOTIFY_CLIENT_SECRET
+    - [X] Centralize env vars a bit better, make it easier to work with (readme stuff too)
     - [ ] Prod docker compose file
       - [ ] Traefik/Nginx
       - [ ] Mongo creds

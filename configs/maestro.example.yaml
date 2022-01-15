@@ -14,6 +14,7 @@ services:
     name: "Apple Music"
     logo_file_name: "apple_music.png"
     enabled: true
+    token:
   deezer:
     name: "Deezer"
     artwork_link: "deezer.png"
@@ -22,3 +23,5 @@ services:
     name: "Spotify"
     artwork_link: "spotify.png"
     enabled: true
+    client_id:
+    client_secret:

@@ -6,7 +6,7 @@ services:
     ports:
       - "27017:27017"
     env_file:
-      - ../configs/mongo/.env
+      - ../configs/.env
     volumes:
       - ../configs/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
       - mongo-data:/data/db
@@ -19,12 +19,8 @@ services:
       - '8080:8080'
     environment:
       MAESTRO_API_PORT: 8080
-      MAESTRO_LOGGING_LEVEL: debug
       MAESTRO_DATABASE_HOST: database
       MAESTRO_DATABASE_PORT: 27017
-      MAESTRO_DATABASE_USER: maestro
-      MAESTRO_DATABASE_PASSWORD: maestro
-      MAESTRO_DATABASE_DATABASE: maestro
     env_file:
       - ../configs/.env
     depends_on:
