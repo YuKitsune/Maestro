@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  database:
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - private
+
+  maestro:
+    environment:
+      MAESTRO_LOGGING_LEVEL: Info
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.${HOST}`)"
+      - "traefik.http.routers.api.entrypoints=web"
+    networks:
+      - private
+
+  frontend:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${HOST}`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+    networks:
+      - private
+
+  traefik:
+    image: traefik:v2.5
+    command: --api.insecure=true --providers.docker --entryPoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - private
+      - public
+
+networks:
+  private:
+  public:

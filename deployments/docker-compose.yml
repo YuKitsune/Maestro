@@ -16,9 +16,9 @@ services:
       context: ../
       dockerfile: build/package/maestro/Dockerfile
     ports:
-      - '8080:8080'
+      - '8182:8182'
     environment:
-      MAESTRO_API_PORT: 8080
+      MAESTRO_API_PORT: 8182
       MAESTRO_DATABASE_HOST: database
       MAESTRO_DATABASE_PORT: 27017
     env_file:
@@ -33,7 +33,7 @@ services:
     ports:
       - '3000:3000'
     environment:
-      API_URL: http://maestro:8080
+      API_URL: http://maestro:8182
     depends_on:
       - maestro
 
