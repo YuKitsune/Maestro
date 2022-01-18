@@ -1,6 +1,15 @@
 import HomeButton from "~/components/homeButton";
+import {MetaFunction} from "remix";
 
-export default function Group() {
+// @ts-ignore
+export const meta: MetaFunction = () => {
+    return {
+        title: "Nothing found...",
+        description: "🤦‍"
+    };
+}
+
+export default function Nothing() {
     return (
         <div className={"flex flex-col gap-2"}>
             <HomeButton />

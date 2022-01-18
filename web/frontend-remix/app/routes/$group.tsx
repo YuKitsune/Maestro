@@ -16,7 +16,7 @@ export let loader: LoaderFunction = async ({ params }) => {
         throw new Error("Huston, we have a problem...")
     }
 
-    const client = new MaestroApiClient(process.env.API_URL as string)
+    const client = new MaestroApiClient(process.env.API_URL as string, process.env.PUBLIC_API_URL as string)
 
     const things = await client.getGroup(params.group)
     const services = await client.getServices()
@@ -29,13 +29,6 @@ export let loader: LoaderFunction = async ({ params }) => {
 
 // @ts-ignore
 export const meta: MetaFunction = ({things} : GroupData) => {
-    if (!things) {
-        return {
-            title: "Nothing found...",
-            description: "🤦‍"
-        };
-    }
-
     let bestThing = findBestThing(things)
 
     let title = bestThing.Name;
