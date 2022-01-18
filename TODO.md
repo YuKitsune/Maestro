@@ -66,12 +66,13 @@
     - [X] Centralize env vars a bit better, make it easier to work with (readme stuff too)
     - [X] Prod docker compose file
       - [X] Traefik
-        - [ ] Expose frontend via http://host/
-        - [ ] Expose API via http://api.host/
-        - [ ] Fix API -> DB connection 
+        - [X] Expose frontend via http://host/
+        - [X] Expose API via http://api.host/
+        - [X] Fix API -> DB connection 
+        - [ ] Prevent access to services directly 
       - [X] Mongo creds
       - [ ] Proper volume configs
-      - [ ] Log levels
+      - [X] Log levels
       - [X] Remove monitoring?
     - [X] Optimize API Dockerfile
   - [ ] Pipeline
