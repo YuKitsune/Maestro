@@ -6,7 +6,7 @@ logging:
 database:
   host: localhost
   port: 27017
-  user: maestro
+  username: maestro
   password: maestro
   database: maestro
 services:
