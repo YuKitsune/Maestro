@@ -69,7 +69,7 @@
         - [X] Expose frontend via http://host/
         - [X] Expose API via http://api.host/
         - [X] Fix API -> DB connection 
-        - [ ] Prevent access to services directly 
+        - [X] Prevent access to services directly
       - [X] Mongo creds
       - [ ] Proper volume configs
       - [X] Log levels

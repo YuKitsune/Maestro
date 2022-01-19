@@ -2,6 +2,8 @@ version: '3'
 
 services:
   maestro:
+    ports:
+      - '8182'
     environment:
       MAESTRO_LOGGING_LEVEL: info
     labels:
@@ -11,14 +13,18 @@ services:
       - "traefik.http.middlewares.strip-prefix.stripprefix.forceslash=false"
       - "traefik.http.routers.api.middlewares=strip-prefix@docker"
       - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.port=8182"
 
   frontend:
+    ports:
+      - '3000'
     environment:
       PUBLIC_API_URL: http://${HOST}/api
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`${HOST}`)"
       - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.port=3000"
 
   traefik:
     image: traefik:v2.5

@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  database:
+    ports:
+      - "27017:27017"
+
+  maestro:
+    ports:
+      - '8182:8182'
+    environment:
+      MAESTRO_LOGGING_LEVEL: debug
+
+  frontend:
+    ports:
+      - '3000:3000'

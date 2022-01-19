@@ -27,7 +27,7 @@ DOCKER_BUILD_ARGS := \
 
 ## The base docker-compose command
 PROJECT_NAME := maestro
-DOCKER_COMPOSE_CMD := docker-compose --project-name $(PROJECT_NAME) --file ./deployments/docker-compose.yml
+DOCKER_COMPOSE_CMD := docker-compose --project-name $(PROJECT_NAME) --file ./deployments/docker-compose.yml --file ./deployments/docker-compose.development.yml
 
 # Commands
 

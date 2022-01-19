@@ -3,8 +3,6 @@ services:
   database:
     restart: always
     image: 'mongo:5.0.5'
-    ports:
-      - "27017:27017"
     env_file:
       - ../configs/.env
     volumes:
@@ -15,8 +13,6 @@ services:
     build:
       context: ../
       dockerfile: build/package/maestro/Dockerfile
-    ports:
-      - '8182:8182'
     environment:
       MAESTRO_API_PORT: 8182
       MAESTRO_DATABASE_HOST: database
@@ -30,8 +26,6 @@ services:
     build:
       context: ../web/frontend-remix/
       dockerfile: Dockerfile
-    ports:
-      - '3000:3000'
     environment:
       API_URL: http://maestro:8182
     depends_on:
