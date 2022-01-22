@@ -71,7 +71,7 @@
         - [X] Fix API -> DB connection 
         - [X] Prevent access to services directly
       - [X] Mongo creds
-      - [ ] Proper volume configs
+      - [X] Proper volume configs
       - [X] Log levels
       - [X] Remove monitoring?
     - [X] Optimize API Dockerfile
