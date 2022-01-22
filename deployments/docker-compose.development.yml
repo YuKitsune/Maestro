@@ -4,6 +4,8 @@ services:
   database:
     ports:
       - "27017:27017"
+    volumes:
+      - /data/db
 
   maestro:
     ports:
@@ -14,3 +16,5 @@ services:
   frontend:
     ports:
       - '3000:3000'
+    environment:
+      PUBLIC_API_URL: http://localhost:8182

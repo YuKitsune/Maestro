@@ -1,7 +1,13 @@
 version: '3'
 
 services:
+  database:
+    restart: always
+    volumes:
+      - /data/db:/data/db
+
   maestro:
+    restart: always
     ports:
       - '8182'
     environment:
@@ -16,6 +22,7 @@ services:
       - "traefik.port=8182"
 
   frontend:
+    restart: always
     ports:
       - '3000'
     environment:
@@ -29,6 +36,7 @@ services:
   traefik:
     image: traefik:v2.5
     command: --api.insecure=true --providers.docker --providers.docker.exposedbydefault=false --entrypoints.web.address=:80
+    restart: always
     ports:
       - "80:80"
       - "8080:8080"

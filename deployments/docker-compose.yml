@@ -1,7 +1,6 @@
 version: "3.9"
 services:
   database:
-    restart: always
     image: 'mongo:5.0.5'
     env_file:
       - ../configs/.env
@@ -30,8 +29,3 @@ services:
       API_URL: http://maestro:8182
     depends_on:
       - maestro
-
-volumes:
-  mongo-data:
-  prometheus-data:
-  grafana-data:
