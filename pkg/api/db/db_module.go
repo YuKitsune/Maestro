@@ -24,7 +24,8 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 	err := cb.RegisterFactory(func(ctx context.Context, cfg *Config) (*mongo.Client, error) {
 
 		uri := fmt.Sprintf(
-			"mongodb://%s:%d",
+			"%s://%s:%d",
+			url.QueryEscape(cfg.Protocol),
 			url.QueryEscape(cfg.Host),
 			cfg.Port)
 
