@@ -5,9 +5,6 @@ on:
     status: [ published ]
   workflow_dispatch: # temp
 
-env:
-  REGISTRY: ghcr.io/yukitsune
-
 jobs:
 
   build-api:
@@ -15,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: $REGISTRY/maestro-api:v0.0.1 # ${{ github.event.release.tag_name }}
+      IMAGE_NAME: ghcr.io/yukitsune/maestro-api:v0.0.1 # ${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
@@ -37,14 +34,14 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push API Docker image
-      run: docker push ${{ env.container_registry}}/${{ env.IMAGE_NAME }}
+      run: docker push ${{ env.IMAGE_NAME }}
 
   build-frontend:
     name: Build and push the frontend Docker image
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: $REGISTRY/maestro-frontend:v0.0.1 # ${{ github.event.release.tag_name }}
+      IMAGE_NAME: ghcr.io/yukitsune/maestro-frontend:v0.0.1 # ${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
@@ -63,4 +60,4 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push frontend Docker image
-      run: docker push ${{ env.container_registry}}/${{ env.IMAGE_NAME }} 
+      run: docker push ${{ env.IMAGE_NAME }} 
