@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      DAY_OF_WEEK: Mon
       IMAGE_NAME: maestro-api:v0.0.1 # ${{ github.event.release.tag_name }}
 
     steps:
@@ -23,7 +22,7 @@ jobs:
       run: |
         docker build \
           --file build/package/maestro/Dockerfile \
-          --tag ${{ IMAGE_NAME }} \
+          --tag ${{ env.IMAGE_NAME }} \
           --build-arg GIT_COMMIT="${{ github.sha }}" \
           --build-arg GIT_DIRTY="false" \
           --build-arg VERSION="${{ github.event.release.tag_name }}" \
@@ -37,7 +36,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push API Docker image
-      run: docker push ${{ IMAGE_NAME }} 
+      run: docker push ${{ env.IMAGE_NAME }} 
 
   build-frontend:
     name: Build and push the frontend Docker image
@@ -53,7 +52,7 @@ jobs:
         docker build \
           ./web/frontend-remix \
           --file ./web/frontend-remix/Dockerfile \
-          --tag ${{ IMAGE_NAME }} \
+          --tag ${{ env.IMAGE_NAME }} \
           .
 
     - name: Login to GitHub Container Registry
@@ -64,4 +63,4 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push frontend Docker image
-      run: docker push ${{ IMAGE_NAME }} 
+      run: docker push ${{ env.IMAGE_NAME }} 
