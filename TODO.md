@@ -75,10 +75,11 @@
       - [X] Log levels
       - [X] Remove monitoring?
     - [X] Optimize API Dockerfile
+    - [ ] K8s for prod files
   - [ ] Pipeline
     - [ ] Build Dockerfiles
-    - [X] Upload logos?
-    - [ ] Deploy to prod with docker compose https://www.docker.com/blog/how-to-deploy-on-remote-docker-hosts-with-docker-compose/
+    - [ ] Push Dockerfiles to GHCR
+    - [ ] Deploy to prod with k8s
 
 - [ ] Refactoring
   - [ ] Clean up context usages
