@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # temp
 
 env:
-  container_registry: ghcr.io/yukitsune
+  REGISTRY: ghcr.io/yukitsune
 
 jobs:
 
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: maestro-api:v0.0.1 # ${{ github.event.release.tag_name }}
+      IMAGE_NAME: ${{ env.REGISTRY }}/maestro-api:v0.0.1 # ${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: "maestro-frontend:v0.0.1" # ${{ github.event.release.tag_name }}
+      IMAGE_NAME: ${{ env.REGISTRY }}/maestro-frontend:v0.0.1 # ${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
