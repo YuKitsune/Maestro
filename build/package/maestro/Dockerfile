@@ -20,7 +20,6 @@ LABEL branch=$GIT_BRANCH \
 
 COPY --from=build /go/src/github.com/YuKitsune/maestro/bin/maestro maestro
 COPY --from=build /go/src/github.com/YuKitsune/maestro/assets /assets
-COPY ./configs/maestro.yaml /maestro.yaml
 
 ENV MAESTRO_API_ASSETS_DIR=/assets
 

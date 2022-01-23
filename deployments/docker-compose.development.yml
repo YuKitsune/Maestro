@@ -12,6 +12,8 @@ services:
       - '8182:8182'
     environment:
       MAESTRO_LOGGING_LEVEL: debug
+    volumes:
+      - ../configs/maestro.yaml:/maestro.yaml
 
   frontend:
     ports:
