@@ -41,4 +41,4 @@ bin
 
 # Configs
 maestro.yaml
-.env
+*.env
