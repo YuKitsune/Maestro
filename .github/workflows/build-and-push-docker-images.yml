@@ -46,11 +46,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker image
+      working-directory: web/frontend-remix
       run: |
         docker build \
-          --file ./web/frontend-remix/Dockerfile \
+          --file Dockerfile \
           --tag ${{ env.IMAGE_NAME }} \
-          ./web/frontend-remix
+          .
 
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v1.12.0
