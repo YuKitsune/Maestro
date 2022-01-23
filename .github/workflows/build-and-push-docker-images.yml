@@ -6,15 +6,15 @@ on:
   workflow_dispatch: # temp
 
     
-env:
-  API_IMAGE_NAME: "maestro-api:v0.0.1" # ${{ github.event.release.tag_name }}
-  FRONTEND_IMAGE_NAME: "maestro-frontend:v0.0.1"
 
 jobs:
 
   build-api:
     name: Build and push the API Docker image
     runs-on: ubuntu-latest
+    
+    env:
+      IMAGE_NAME: "maestro-api:v0.0.1" # ${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
@@ -22,7 +22,7 @@ jobs:
       run: |
         docker build \
           --file build/package/maestro/Dockerfile \
-          --tag ${{ API_IMAGE_NAME }} \
+          --tag ${{ IMAGE_NAME }} \
           --build-arg GIT_COMMIT="${{ github.sha }}" \
           --build-arg GIT_DIRTY="false" \
           --build-arg VERSION="${{ github.event.release.tag_name }}" \
@@ -36,11 +36,14 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push API Docker image
-      run: docker push ${{ API_IMAGE_NAME }} 
+      run: docker push ${{ IMAGE_NAME }} 
 
   build-frontend:
     name: Build and push the frontend Docker image
     runs-on: ubuntu-latest
+    
+    env:
+      IMAGE_NAME: "maestro-frontend:v0.0.1" # ${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
@@ -49,7 +52,7 @@ jobs:
         docker build \
           ./web/frontend-remix \
           --file ./web/frontend-remix/Dockerfile \
-          --tag FRONTEND_IMAGE_NAME \
+          --tag ${{ IMAGE_NAME }} \
           .
 
     - name: Login to GitHub Container Registry
@@ -60,4 +63,4 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push frontend Docker image
-      run: docker push ${{ FRONTEND_IMAGE_NAME }} 
+      run: docker push ${{ IMAGE_NAME }} 
