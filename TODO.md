@@ -75,11 +75,15 @@
       - [X] Log levels
       - [X] Remove monitoring?
     - [X] Optimize API Dockerfile
-    - [ ] K8s for prod files
+    
   - [ ] Pipeline
-    - [ ] Build Dockerfiles
-    - [ ] Push Dockerfiles to GHCR
+    - [X] Build Dockerfiles
+    - [X] Push Dockerfiles to GHCR
     - [ ] Deploy to prod with k8s
+      - [ ] Traefik
+      - [ ] API
+      - [ ] Frontend
+      - [ ] Mongo out-of-cluster
 
 - [ ] Refactoring
   - [ ] Clean up context usages
