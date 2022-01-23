@@ -7,8 +7,8 @@ on:
 
     
 env:
-  API_IMAGE_NAME: maestro-api:${{ github.event.release.tag_name }}
-  FRONTEND_IMAGE_NAME: maestro-frontend:${{ github.event.release.tag_name }}
+  API_IMAGE_NAME: maestro-api:v0.0.1
+  FRONTEND_IMAGE_NAME: maestro-frontend:v0.0.1
 
 jobs:
 
