@@ -14,7 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: "maestro-api:v0.0.1" # ${{ github.event.release.tag_name }}
+      DAY_OF_WEEK: Mon
+      IMAGE_NAME: maestro-api:v0.0.1 # ${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
