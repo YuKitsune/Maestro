@@ -2,8 +2,12 @@ version: "3.9"
 services:
   database:
     image: 'mongo:5.0.5'
-    env_file:
-      - ../configs/.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MAESTRO_DATABASE_USERNAME: ${MAESTRO_DATABASE_USERNAME}
+      MAESTRO_DATABASE_PASSWORD: ${MAESTRO_DATABASE_PASSWORD}
+      MAESTRO_DATABASE_DATABASE: ${MAESTRO_DATABASE_DATABASE}
     volumes:
       - ../configs/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
       - mongo-data:/data/db
@@ -14,10 +18,18 @@ services:
       dockerfile: build/package/maestro/Dockerfile
     environment:
       MAESTRO_API_PORT: 8182
+
+      # Database
       MAESTRO_DATABASE_HOST: database
       MAESTRO_DATABASE_PORT: 27017
-    env_file:
-      - ../configs/.env
+      MAESTRO_DATABASE_USERNAME: ${MAESTRO_DATABASE_USERNAME}
+      MAESTRO_DATABASE_PASSWORD: ${MAESTRO_DATABASE_PASSWORD}
+      MAESTRO_DATABASE_DATABASE: ${MAESTRO_DATABASE_DATABASE}
+
+      # Services
+      MAESTRO_SERVICES_APPLE_MUSIC_TOKEN: ${MAESTRO_SERVICES_APPLE_MUSIC_TOKEN}
+      MAESTRO_SERVICES_SPOTIFY_CLIENT_ID: ${MAESTRO_SERVICES_SPOTIFY_CLIENT_ID}
+      MAESTRO_SERVICES_SPOTIFY_CLIENT_SECRET: ${MAESTRO_SERVICES_SPOTIFY_CLIENT_SECRET}
     depends_on:
       - database
 
