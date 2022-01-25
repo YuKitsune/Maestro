@@ -79,10 +79,10 @@
   - [ ] Pipeline
     - [X] Build Dockerfiles
     - [X] Push Dockerfiles to GHCR
-    - [ ] Deploy to prod with k8s
-      - [ ] Traefik
-      - [ ] API
-      - [ ] Frontend
+    - [X] Deploy to prod with k8s
+      - [X] Traefik
+      - [X] API
+      - [X] Frontend
       - [ ] Mongo out-of-cluster
 
 - [ ] Refactoring
