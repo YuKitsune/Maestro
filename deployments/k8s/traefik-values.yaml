@@ -1,0 +1,58 @@
+# Log settings
+logs:
+  general:
+    level: ERROR
+
+# Entrypoints
+ports:
+  web:
+    # (optional) Permanent Redirect to HTTPS
+    redirectTo: websecure
+  websecure:
+    tls:
+      enabled: true
+      # (optional) Set a Default CertResolver
+      certResolver: cloudflare
+
+env:
+
+  # DNS Challenge Credentials
+  - name: CF_API_EMAIL
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-secrets
+        key: email
+
+  - name: CF_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-secrets
+        key: apiKey
+
+# Disable Dashboard
+ingressRoute:
+  dashboard:
+    enabled: false
+
+# Persistent Storage for SSL certificates
+persistence:
+  enabled: true
+  name: ssl-certs
+  size: 1Gi
+  path: /ssl-certs
+
+deployment:
+  initContainers:
+    # The "volume-permissions" init container is required if you run into permission issues.
+    # Related issue: https://github.com/containous/traefik/issues/6972
+    - name: volume-permissions
+      image: busybox:1.31.1
+      command: ["sh", "-c", "chmod -Rv 600 /ssl-certs/*"]
+      volumeMounts:
+        - name: ssl-certs
+          mountPath: /ssl-certs
+
+# Set Traefik as the default Ingress Controller, according to Kubernetes 1.19+ changes.
+ingressClass:
+  enabled: true
+  isDefaultClass: true

@@ -1,0 +1,127 @@
+---
+
+# Maestro API deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maestro-api-deployment
+spec:
+  selector:
+    matchLabels:
+      app: maestro-api
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: maestro-api
+    spec:
+
+      # Maestro config file
+      volumes:
+        - name: config
+          configMap:
+            name: maestro-api-config
+
+      containers:
+        - name: maestro-api
+          image: ghcr.io/yukitsune/maestro-api:v0.0.1
+          ports:
+            - containerPort: 8182
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/maestro"
+              readOnly: true
+          env:
+
+            # Database
+            - name: MAESTRO_DATABASE_PROTOCOL
+              value: mongo+srv
+
+            - name: MAESTRO_DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: maestro-secret
+                  key: database-host
+
+            - name: MAESTRO_DATABASE_PORT
+              value: "27017"
+            - name: MAESTRO_DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: maestro-secret
+                  key: database-username
+
+            - name: MAESTRO_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: maestro-secret
+                  key: database-password
+
+            - name: MAESTRO_DATABASE_NAME
+              value: maestro
+
+            # Services
+            - name: MAESTRO_SERVICES_APPLE_MUSIC_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: maestro-secret
+                  key: apple-music-token
+
+            - name: MAESTRO_SERVICES_SPOTIFY_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: maestro-secret
+                  key: spotify-id
+
+            - name: MAESTRO_SERVICES_SPOTIFY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: maestro-secret
+                  key: spotify-secret
+
+---
+
+# Maestro API service
+apiVersion: v1
+kind: Service
+metadata:
+  name: maestro-api-service
+spec:
+  type: ClusterIP
+  selector:
+    app: maestro-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8182
+
+---
+
+# Strip API prefix middleware
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: strip-api-prefix
+spec:
+  stripPrefix:
+    prefixes:
+      - /api
+
+---
+
+# Maestro API ingress
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: maestro-api-ingress
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`maestro.yukitsune.dev`) && PathPrefix(`/api`) # Wish this could be put into a ConfigMap 😔
+      kind: Rule
+      services:
+        - name: maestro-api-service
+          port: 80
+      middlewares:
+        - name: strip-api-prefix
