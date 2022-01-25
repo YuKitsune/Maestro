@@ -18,11 +18,11 @@ services:
     token:
   deezer:
     name: "Deezer"
-    artwork_link: "deezer.png"
+    logo_file_name: "deezer.png"
     enabled: true
   spotify:
     name: "Spotify"
-    artwork_link: "spotify.png"
+    logo_file_name: "spotify.png"
     enabled: true
     client_id:
     client_secret:
