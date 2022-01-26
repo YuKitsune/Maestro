@@ -8,6 +8,8 @@ services:
       MAESTRO_DATABASE_USERNAME: ${MAESTRO_DATABASE_USERNAME}
       MAESTRO_DATABASE_PASSWORD: ${MAESTRO_DATABASE_PASSWORD}
       MAESTRO_DATABASE_DATABASE: ${MAESTRO_DATABASE_DATABASE}
+    ports:
+      - "27017:27017"
     volumes:
       - ../configs/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
       # - mongo-data:/data/db (Optional) Use this if you want the data to persist between runs
@@ -33,6 +35,8 @@ services:
       MAESTRO_SERVICES_APPLE_MUSIC_TOKEN: ${MAESTRO_SERVICES_APPLE_MUSIC_TOKEN}
       MAESTRO_SERVICES_SPOTIFY_CLIENT_ID: ${MAESTRO_SERVICES_SPOTIFY_CLIENT_ID}
       MAESTRO_SERVICES_SPOTIFY_CLIENT_SECRET: ${MAESTRO_SERVICES_SPOTIFY_CLIENT_SECRET}
+    ports:
+      - "8182:8182"
     volumes:
       - ../configs/maestro.yaml:/maestro.yaml
     depends_on:
@@ -45,5 +49,7 @@ services:
     environment:
       API_URL: http://maestro:8182
       PUBLIC_API_URL: http://localhost:8182
+    ports:
+      - "3000:3000"
     depends_on:
       - maestro
