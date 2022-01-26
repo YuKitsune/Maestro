@@ -2,9 +2,12 @@ package db
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"github.com/yukitsune/camogo"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"io/ioutil"
 )
 
 type DatabaseModule struct {
@@ -26,7 +29,24 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 			Password:   cfg.Password,
 			AuthSource: cfg.Database,
 		}
+
 		opts := options.Client().ApplyURI(cfg.Uri).SetAuth(creds)
+		if cfg.CACertFile != nil && len(*cfg.CACertFile) > 0 {
+
+			pemData, err := ioutil.ReadFile(*cfg.CACertFile)
+			if err != nil {
+				return nil, err
+			}
+
+			pool := x509.NewCertPool()
+			pool.AppendCertsFromPEM(pemData)
+
+			tlsConfig := &tls.Config{
+				ClientCAs: pool,
+			}
+
+			opts.SetTLSConfig(tlsConfig)
+		}
 
 		client, err := mongo.NewClient(opts)
 		if err != nil {
