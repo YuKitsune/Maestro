@@ -43,3 +43,4 @@ bin
 maestro.yaml
 *.secrets.yaml
 *.env
+*.crt

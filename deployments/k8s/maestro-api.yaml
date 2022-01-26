@@ -22,6 +22,11 @@ spec:
           configMap:
             name: maestro-api-config
 
+        # (Optional) MongoDB TLS Certificate
+        - name: mongo-tls
+          configMap:
+            name: maestro-secret-mongo-tls
+
       containers:
         - name: maestro-api
           image: ghcr.io/yukitsune/maestro-api:v0.0.3
@@ -30,6 +35,11 @@ spec:
           volumeMounts:
             - name: config
               mountPath: "/etc/maestro"
+              readOnly: true
+
+            # (Optional) MongoDB TLS Certificate
+            - name: mongo-tls
+              mountPath: "/etc/maestro/mongo"
               readOnly: true
           env:
 
