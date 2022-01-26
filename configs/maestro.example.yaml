@@ -4,9 +4,7 @@ api:
 logging:
   level: debug
 database:
-  protocol: mongo
-  host: localhost
-  port: 27017
+  uri: mongodb://localhost:27017
   username: maestro
   password: maestro
   database: maestro

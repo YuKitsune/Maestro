@@ -65,7 +65,6 @@ func serve(_ *cobra.Command, _ []string) error {
 	// Environment variables
 	viper.SetEnvPrefix("MAESTRO")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
-	viper.AutomaticEnv()
 
 	// Config file
 	viper.SetConfigName("maestro")
@@ -85,6 +84,8 @@ func serve(_ *cobra.Command, _ []string) error {
 			return err
 		}
 	}
+
+	viper.AutomaticEnv()
 
 	// Unmarshal
 	var cfg *Config

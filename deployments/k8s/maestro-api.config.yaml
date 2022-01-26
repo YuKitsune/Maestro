@@ -7,14 +7,21 @@ metadata:
 data:
   maestro.yaml: |
     api:
+      assets_dir: /assets
       port: 8182
     logging:
-      level: info
+      level: debug
+    database:
+      uri:
+      username:
+      password:
+      database: maestro
     services:
       apple_music:
         name: "Apple Music"
         logo_file_name: "apple_music.png"
         enabled: true
+        token:
       deezer:
         name: "Deezer"
         logo_file_name: "deezer.png"
@@ -23,3 +30,5 @@ data:
         name: "Spotify"
         logo_file_name: "spotify.png"
         enabled: true
+        client_id:
+        client_secret:

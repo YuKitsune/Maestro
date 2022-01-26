@@ -2,11 +2,9 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"github.com/yukitsune/camogo"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"net/url"
 )
 
 type DatabaseModule struct {
@@ -23,18 +21,12 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 	// Database
 	err := cb.RegisterFactory(func(ctx context.Context, cfg *Config) (*mongo.Client, error) {
 
-		uri := fmt.Sprintf(
-			"%s://%s:%d",
-			url.QueryEscape(cfg.Protocol),
-			url.QueryEscape(cfg.Host),
-			cfg.Port)
-
 		creds := options.Credential{
 			Username:   cfg.User,
 			Password:   cfg.Password,
 			AuthSource: cfg.Database,
 		}
-		opts := options.Client().ApplyURI(uri).SetAuth(creds)
+		opts := options.Client().ApplyURI(cfg.Uri).SetAuth(creds)
 
 		client, err := mongo.NewClient(opts)
 		if err != nil {

@@ -1,9 +1,7 @@
 package db
 
 type Config struct {
-	Protocol string `mapstructure:"protocol"`
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
+	Uri      string `mapstructure:"uri"`
 	User     string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	Database string `mapstructure:"database"`

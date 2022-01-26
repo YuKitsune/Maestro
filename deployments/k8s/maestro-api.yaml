@@ -24,7 +24,7 @@ spec:
 
       containers:
         - name: maestro-api
-          image: ghcr.io/yukitsune/maestro-api:v0.0.1
+          image: ghcr.io/yukitsune/maestro-api:v0.0.3
           ports:
             - containerPort: 8182
           volumeMounts:
@@ -34,17 +34,12 @@ spec:
           env:
 
             # Database
-            - name: MAESTRO_DATABASE_PROTOCOL
-              value: mongo+srv
-
-            - name: MAESTRO_DATABASE_HOST
+            - name: MAESTRO_DATABASE_URI
               valueFrom:
                 secretKeyRef:
                   name: maestro-secret
-                  key: database-host
+                  key: database-uri
 
-            - name: MAESTRO_DATABASE_PORT
-              value: "27017"
             - name: MAESTRO_DATABASE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -56,9 +51,6 @@ spec:
                 secretKeyRef:
                   name: maestro-secret
                   key: database-password
-
-            - name: MAESTRO_DATABASE_NAME
-              value: maestro
 
             # Services
             - name: MAESTRO_SERVICES_APPLE_MUSIC_TOKEN
