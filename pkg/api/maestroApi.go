@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"github.com/yukitsune/camogo"
 	"maestro/pkg/api/apiConfig"
 	mcontext "maestro/pkg/api/context"
@@ -60,12 +61,18 @@ func NewMaestroApi(apiCfg *apiConfig.Config, lCfg *log.Config, dbCfg *db.Config,
 }
 
 func (api *MaestroApi) Start() error {
+	api.logger.Infoln("starting maestro API")
+	api.logger.Debugf("config: %+v\n", viper.AllSettings())
+
 	api.logger.Warnln("TLS not enabled")
 	api.logger.Infof("listening on %s", api.svr.Addr)
 	return api.svr.ListenAndServe()
 }
 
 func (api *MaestroApi) StartTLS() error {
+	api.logger.Infoln("starting maestro API")
+	api.logger.Debugf("config: %+v\n", viper.AllSettings())
+
 	api.logger.Infof("listening on %s", api.svr.Addr)
 	return api.svr.ListenAndServeTLS(api.cfg.CertFile, api.cfg.KeyFile)
 }

@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"maestro/pkg/api/apiConfig"
 	mcontext "maestro/pkg/api/context"
@@ -66,19 +67,23 @@ func GetLogo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func(scfg streamingService.Config, acfg *apiConfig.Config) ([]byte, error) {
+	res, err := container.ResolveWithResult(func(scfg streamingService.Config, acfg *apiConfig.Config, logger *logrus.Entry) ([]byte, error) {
 		for k, c := range scfg {
 			if k != model.StreamingServiceKey(serviceName) {
 				continue
 			}
 
+			logger.Debugf("logo file name: %s", c.LogoFileName())
+
 			logoFilePath := filepath.Join(acfg.AssetsDirectory, "logos", c.LogoFileName())
+			logger.Debugf("logo path: %s", logoFilePath)
 
 			// Ensure the file exists
 			_, err := os.Stat(logoFilePath)
 			if err != nil {
 				exists := !errors.Is(err, os.ErrNotExist)
 				if !exists {
+					logger.Debugln("logo does not exist")
 					return []byte{}, nil
 				} else {
 					return nil, err
