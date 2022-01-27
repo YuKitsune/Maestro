@@ -10,11 +10,9 @@ data:
       assets_dir: /assets
       port: 8182
     logging:
-      level: debug
+      level: info
     database:
       uri:
-      username:
-      password:
       database: maestro
     services:
       apple_music:

@@ -24,12 +24,12 @@ spec:
 
         # (Optional) MongoDB TLS Certificate
         - name: mongo-tls
-          configMap:
-            name: maestro-secret-mongo-tls
+          secret:
+            secretName: maestro-secret-mongo-tls
 
       containers:
         - name: maestro-api
-          image: ghcr.io/yukitsune/maestro-api:v0.0.3
+          image: ghcr.io/yukitsune/maestro-api:v0.0.6
           ports:
             - containerPort: 8182
           volumeMounts:
