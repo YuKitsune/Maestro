@@ -28,7 +28,8 @@ export let loader: LoaderFunction = async ({ params }) => {
 };
 
 // @ts-ignore
-export const meta: MetaFunction = ({things} : GroupData) => {
+export const meta: MetaFunction = ({data}) => {
+    const things = data.things;
     let bestThing = findBestThing(things)
 
     let title = bestThing.Name;
