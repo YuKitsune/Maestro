@@ -11,13 +11,13 @@ type LinkProps = {
 const CatalogueItemLink = ({thing, service}: LinkProps) => {
 
     const icon = service !== undefined ?
-        <img src={service.LogoUrl} alt={thing.Source} className={"row-span-2 flex-shrink h-12"}/> :
+        <img src={service.LogoUrl} alt={thing.Source} className={"row-span-2 flex-shrink h-12 w-12"}/> :
         <QuestionMarkIcon className={"h-12 w-12"} />;
 
     return <a className={"bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-800 rounded-lg p-2 cursor-pointer"} href={thing.Link} target={"_blank"}>
         <div className={"flex flex-row content-center gap-1"}>
 
-            <div className={"w-12"}>
+            <div className={"w-12 h-12"}>
                 {icon}
             </div>
 
