@@ -11,3 +11,4 @@ data:
 #  traefik-host-api: Host(`maestro.yukitsune.dev`) && PathPrefix(`/api`)
 
   https-host: https://maestro.yukitsune.dev
+  https-api-host: https://maestro.yukitsune.dev/api

@@ -13,7 +13,7 @@ data:
       level: info
     database:
       uri:
-      database: maestro
+      name: maestro
     services:
       apple_music:
         name: "Apple Music"

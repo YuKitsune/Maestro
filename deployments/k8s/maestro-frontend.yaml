@@ -18,7 +18,7 @@ spec:
 
       containers:
         - name: maestro-frontend
-          image: ghcr.io/yukitsune/maestro-frontend:v0.0.1
+          image: ghcr.io/yukitsune/maestro-frontend:v0.0.6
           ports:
             - containerPort: 3000
           env:
@@ -29,7 +29,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: host-config
-                  key: https-host
+                  key: https-api-host
 
 ---
 
