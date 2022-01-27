@@ -1,7 +1,7 @@
 
-var maestroUsername = _getEnv('MAESTRO_DATABASE_USERNAME')
-var maestroPassword = _getEnv('MAESTRO_DATABASE_PASSWORD')
-var maestroDatabase = _getEnv('MAESTRO_DATABASE_DATABASE')
+var maestroUsername = _getEnv('MAESTRO_USERNAME')
+var maestroPassword = _getEnv('MAESTRO_PASSWORD')
+var maestroDatabase = _getEnv('MAESTRO_DATABASE')
 
 db = db.getSiblingDB(maestroDatabase)
 db.createUser({

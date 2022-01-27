@@ -5,14 +5,14 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MAESTRO_DATABASE_USERNAME: ${MAESTRO_DATABASE_USERNAME}
-      MAESTRO_DATABASE_PASSWORD: ${MAESTRO_DATABASE_PASSWORD}
-      MAESTRO_DATABASE_DATABASE: ${MAESTRO_DATABASE_DATABASE}
+      MAESTRO_USERNAME: ${MAESTRO_USERNAME}
+      MAESTRO_PASSWORD: ${MAESTRO_PASSWORD}
+      MAESTRO_DATABASE: ${MAESTRO_DATABASE}
     ports:
       - "27017:27017"
     volumes:
       - ../configs/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
-      # - mongo-data:/data/db (Optional) Use this if you want the data to persist between runs
+      # - mongo-data:/data/db # (Optional) Use this if you want the data to persist between runs
       - /data/db
 
   maestro:
@@ -24,10 +24,7 @@ services:
       MAESTRO_LOGGING_LEVEL: debug
 
       # Database
-      MAESTRO_DATABASE_URI: mongodb://database:27017
-      MAESTRO_DATABASE_USERNAME: ${MAESTRO_DATABASE_USERNAME}
-      MAESTRO_DATABASE_PASSWORD: ${MAESTRO_DATABASE_PASSWORD}
-      MAESTRO_DATABASE_DATABASE: ${MAESTRO_DATABASE_DATABASE}
+      MAESTRO_DATABASE_URI: ${MAESTRO_DATABASE_URI}
 
       # Services
       MAESTRO_SERVICES_APPLE_MUSIC_TOKEN: ${MAESTRO_SERVICES_APPLE_MUSIC_TOKEN}

@@ -50,17 +50,11 @@ spec:
                   name: maestro-secret
                   key: database-uri
 
-            - name: MAESTRO_DATABASE_USERNAME
+            - name: MAESTRO_DATABASE_NAME
               valueFrom:
                 secretKeyRef:
                   name: maestro-secret
-                  key: database-username
-
-            - name: MAESTRO_DATABASE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: maestro-secret
-                  key: database-password
+                  key: database-name
 
             # Services
             - name: MAESTRO_SERVICES_APPLE_MUSIC_TOKEN

@@ -4,10 +4,8 @@ api:
 logging:
   level: debug
 database:
-  uri: mongodb://localhost:27017
-  username: maestro
-  password: maestro
-  database: maestro
+  uri: mongodb+srv://<username>:<password>@localhost:27017/maestro?authSource=admin
+  name: maestro
 services:
   apple_music:
     name: "Apple Music"
