@@ -83,6 +83,7 @@
       - [X] Traefik
       - [X] API
       - [X] Frontend
+      - [ ] Helm chart
       - [ ] Mongo out-of-cluster
 
 - [ ] Refactoring
