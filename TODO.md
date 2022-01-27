@@ -79,14 +79,19 @@
   - [ ] Pipeline
     - [X] Build Dockerfiles
     - [X] Push Dockerfiles to GHCR
-    - [X] Deploy to prod with k8s
+    - [ ] Deploy to prod with k8s
       - [X] Traefik
       - [X] API
       - [X] Frontend
-      - [ ] Helm chart
-      - [ ] Mongo out-of-cluster
+      - [X] Mongo out-of-cluster
+
+- [ ] Public repo
+  - [ ] Build pipeline ready
+  - [ ] Clean up wording and descriptions
+  - [ ] Finish readme files
 
 - [ ] Refactoring
+  - [ ] Migrate k8s config to Helm chart
   - [ ] Clean up context usages
   - [ ] Clear up names
   - [ ] Make streaming service configs a bit nicer
@@ -95,8 +100,7 @@
   - [ ] Tidy up ports
 
 - [ ] Todo later
-  - [ ] Fix viper not working with environment variables
-  - [ ] Get mongo metrics exporting to prometheus
+  - [X] Fix viper not working with environment variables
   - [ ] Get maestro logs exporting to loki
   - [ ] Include API route in duration histogram
   - [ ] Analytics (If metrics are showing some growth)
