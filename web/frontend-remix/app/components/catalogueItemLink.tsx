@@ -15,9 +15,9 @@ const CatalogueItemLink = ({thing, service}: LinkProps) => {
         <QuestionMarkIcon className={"h-12 w-12"} />;
 
     return <a className={"bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-800 rounded-lg p-2 cursor-pointer"} href={thing.Link} target={"_blank"}>
-        <div className={"flex flex-row content-center gap-1"}>
+        <div className={"flex flex-row content-center gap-2"}>
 
-            <div className={"w-12 h-12"}>
+            <div className={"w-12 h-12 flex-none"}>
                 {icon}
             </div>
 

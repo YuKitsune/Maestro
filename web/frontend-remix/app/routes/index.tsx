@@ -7,7 +7,7 @@ import MaestroApiClient from "~/maestroApiClient";
 export let meta: MetaFunction = () => {
   return {
     title: "Maestro",
-    description: "Share music across streaming services."
+    description: "Share music across a number of streaming services."
   };
 };
 

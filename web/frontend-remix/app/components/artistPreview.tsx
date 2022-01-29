@@ -9,7 +9,7 @@ const ArtistPreview = (props: ArtistProps) => {
     const artist = props.artist;
 
     return <CatalogueItemPreview artworkLink={artist.ArtworkLink} artworkAlt={artist.Name}>
-            <div className={"text-xl font-bold"}>{artist.Name}</div>
+        <div className={"text-xl font-bold"}>{artist.Name}</div>
     </CatalogueItemPreview>
 }
 

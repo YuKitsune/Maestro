@@ -20,7 +20,6 @@ const CatalogueItem = ({ things, services }: CatalogueItemProps) => {
         return <h1 className={"text-lg"}>Sorry, couldn't find anything...</h1>
     }
 
-
     // Find the most appropriate thing
     let bestThing = findBestThing(things);
     let preview: React.ReactNode;

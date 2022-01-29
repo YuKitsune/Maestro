@@ -1,10 +1,13 @@
 import {LoaderFunction, MetaFunction, useLoaderData} from "remix";
 import type {Thing} from "~/model/thing";
+import {findBestThing, formatArtistNames} from "~/model/thing";
 import CatalogueItem from "~/components/catalogueItem";
 import HomeButton from "~/components/homeButton";
-import {findBestThing} from "~/model/thing";
 import {Service} from "~/model/service";
 import MaestroApiClient from "~/maestroApiClient";
+import {Artist} from "~/model/artist";
+import {Album} from "~/model/album";
+import {Track} from "~/model/track";
 
 type GroupData = {
     things: Thing[];
@@ -27,21 +30,43 @@ export let loader: LoaderFunction = async ({ params }) => {
     };
 };
 
-// @ts-ignore
 export const meta: MetaFunction = ({data}) => {
     const things = data.things;
     let bestThing = findBestThing(things)
 
-    let title = bestThing.Name;
+    let title = getTitleForThing(bestThing);
     let image = bestThing.ArtworkLink;
     return {
         title: title,
         "og:title": title,
         "og:image": image,
         "og:site_name": "Maestro",
-        "og:description": "Share music regardless of streaming service!",
+        "og:description": `Listen to ${title} on ${things.length} streaming service${things.length > 1 ? "s" : ""}!`,
     };
 };
+
+function getTitleForThing(thing: Thing) : any {
+    switch (thing.ThingType) {
+        case "artist":
+        {
+            return (thing as Artist).Name
+        }
+
+        case "album":
+        {
+            let album = (thing as Album)
+            let artistNames = formatArtistNames(album.ArtistNames);
+            return `${album.Name} by ${artistNames}`
+        }
+
+        case "track":
+        {
+            let track = (thing as Track)
+            let artistNames = formatArtistNames(track.ArtistNames);
+            return `${track.Name} by ${artistNames}`
+        }
+    }
+}
 
 export default function Group() {
     let {things, services} = useLoaderData<GroupData>();
