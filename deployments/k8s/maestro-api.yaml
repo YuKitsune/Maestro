@@ -29,7 +29,7 @@ spec:
 
       containers:
         - name: maestro-api
-          image: ghcr.io/yukitsune/maestro-api:v0.0.7
+          image: ghcr.io/yukitsune/maestro-api:v0.0.8
           ports:
             - containerPort: 8182
           volumeMounts:
