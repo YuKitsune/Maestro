@@ -5,12 +5,6 @@ import (
 	"maestro/pkg/model"
 )
 
-// Todo: Not a fan of these models being separate from the ones in the models package
-// 	but the shape is inherently different...
-// 	The ones in the models package are more of a metadata with many links thing, where as these ones are the links, but
-// 	also need said metadata.
-// 	Might be better off flattening the model and using some kind of correlation ID / hash instead to relate entities
-
 type StreamingService interface {
 	Key() model.StreamingServiceKey
 	LinkBelongsToService(link string) bool
@@ -22,6 +16,22 @@ type StreamingService interface {
 }
 
 func SearchThing(ss StreamingService, thing model.Thing) (model.Thing, error) {
+
+	// Todo: Name normalisation
+	// 	Some services name things differently, making searches much more difficult.
+	//	Example:
+	//		https://open.spotify.com/album/0HVuB4xTfASjULQAfRRS3s
+	//		Spotify:
+	//			Album Name: Eat Sleep Dance
+	//			Artists: ["電音部", "Moe Shop"]
+	//		Apple Music:
+	//			Album Name: Eat Sleep Dance (feat. Moe Shop)
+	//			Artists: ["DENONBU", "Inubousaki Shian (CV: Rena Hasegawa)"]
+
+	// Different languages for artist names, and different naming formats.
+	// Apple Music links will result in a more strict search.
+	// Should normalise these names to our own format, so we can more easily search
+
 	switch t := thing.(type) {
 	case *model.Artist:
 		return ss.SearchArtist(t)

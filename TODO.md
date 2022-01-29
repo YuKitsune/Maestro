@@ -101,6 +101,8 @@
 
 - [ ] Todo later
   - [X] Fix viper not working with environment variables
+  - [ ] Rely more on ISRC codes and less on group IDs for tracks
+  - [ ] Normalise names for an easier search
   - [ ] Get maestro logs exporting to loki
   - [ ] Include API route in duration histogram
   - [ ] Analytics (If metrics are showing some growth)

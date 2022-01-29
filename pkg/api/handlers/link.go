@@ -84,6 +84,9 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 			return nil, err
 		}
 
+		// Todo: If we've found a track, then query the DB with the ISRC code
+		// 	Otherwise, use the group ID
+
 		if foundThing != nil {
 
 			// Link found
