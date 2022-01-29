@@ -4,7 +4,7 @@ api:
 logging:
   level: debug
 database:
-  uri: mongodb+srv://<username>:<password>@localhost:27017/maestro?authSource=admin
+  uri: mongodb://<username>:<password>@localhost:27017/?authSource=admin
   name: maestro
 services:
   apple_music:
