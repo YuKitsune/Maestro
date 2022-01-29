@@ -210,12 +210,21 @@ func (d *DeezerClient) GetTrackByIsrc(isrc string) (*Track, error) {
 		return nil, err
 	}
 
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with code %d", httpRes.StatusCode)
+	}
+
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
 	var res *Track
 	err = json.Unmarshal(resBytes, &res)
 	if err != nil {
 		return nil, err
+	}
+
+	// If we haven't got a valid link, don't bother returning it
+	if len(res.Link) == 0 {
+		return nil, nil
 	}
 
 	return res, nil

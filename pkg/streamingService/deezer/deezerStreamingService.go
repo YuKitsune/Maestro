@@ -130,6 +130,10 @@ func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, e
 			if err != nil {
 				return nil, err
 			}
+
+			if deezerTrack == nil {
+				return nil, nil
+			}
 		} else {
 			foundTracks, err := s.client.SearchTrack(artistName, track.AlbumName, track.Name)
 			if err != nil {
