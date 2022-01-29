@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: ghcr.io/yukitsune/maestro-api:v0.0.7 # ${{ github.event.release.tag_name }}
+      IMAGE_NAME: ghcr.io/yukitsune/maestro-api:v0.0.8 # ${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: ghcr.io/yukitsune/maestro-frontend:v0.0.7 # ${{ github.event.release.tag_name }}
+      IMAGE_NAME: ghcr.io/yukitsune/maestro-frontend:v0.0.8 # ${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
