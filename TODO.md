@@ -85,10 +85,10 @@
       - [X] Frontend
       - [X] Mongo out-of-cluster
 
-- [ ] Public repo
-  - [ ] Build pipeline ready
-  - [ ] Clean up wording and descriptions
-  - [ ] Finish readme files
+- [X] Public repo
+  - [X] Build pipeline ready
+  - [X] Clean up wording and descriptions
+  - [X] Finish readme files
 
 - [ ] Refactoring
   - [ ] Migrate k8s config to Helm chart
