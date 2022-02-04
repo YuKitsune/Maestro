@@ -7,7 +7,7 @@ import MaestroApiClient from "~/maestroApiClient";
 export let meta: MetaFunction = () => {
   return {
     title: "Maestro",
-    description: "Share music across a number of streaming services."
+    description: "Share music across a variety of streaming services."
   };
 };
 
@@ -37,7 +37,7 @@ export default function Index() {
             <h1 className={"text-4xl text-align-center"}>Welcome to Maestro!</h1>
             {!isLoading && (
                 <>
-                    <div className={"text-align-center"}>Paste a link to an Artist, Album or Track here:</div>
+                    <div className={"text-align-center"}>Paste a link to an Artist, Album or Track:</div>
                     <Form method={"post"} className={"w-full flex flex-row gap-2"}>
                         <input
                             className={"w-full rounded-lg border-2 border-blue-100 dark:border-blue-900 dark:bg-black px-1 focus-within:border-blue-500 outline-none"}

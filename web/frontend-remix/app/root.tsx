@@ -118,9 +118,12 @@ function Layout({ children }: { children: React.ReactNode }) {
       <div className={"flex-grow rounded-lg bg-gray-100 dark:bg-gray-900 shadow-2xl p-4 w-full max-w-md"}>
         {children}
       </div>
-      <footer>
+      <footer className={"flex flex-col items-center"}>
+        <a href="https://www.buymeacoffee.com/yukitsune256" target="_blank">
+          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" className={"w-40 pb-2"} />
+        </a>
         <div>
-          <p>&copy; <a className={"underline text-blue-400"} href={"https://github.com/YuKitsune"}>YuKitsune</a></p>
+          <p><a className={"underline text-blue-400"} href={"https://github.com/YuKitsune/Maestro"}>GitHub</a></p>
         </div>
       </footer>
     </div>
