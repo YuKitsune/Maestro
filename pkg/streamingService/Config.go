@@ -1,7 +1,7 @@
 package streamingService
 
 import (
-	"maestro/pkg/model"
+	"github.com/yukitsune/maestro/pkg/model"
 )
 
 type Config map[model.StreamingServiceKey]ServiceConfig

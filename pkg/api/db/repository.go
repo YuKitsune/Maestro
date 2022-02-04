@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"maestro/pkg/model"
+	"github.com/yukitsune/maestro/pkg/model"
 )
 
 type Repository interface {

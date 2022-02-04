@@ -2,7 +2,7 @@ package streamingService
 
 import (
 	"fmt"
-	"maestro/pkg/model"
+	"github.com/yukitsune/maestro/pkg/model"
 )
 
 type StreamingService interface {

@@ -1,6 +1,6 @@
 package spotify
 
-import "maestro/pkg/model"
+import "github.com/yukitsune/maestro/pkg/model"
 
 const Key model.StreamingServiceKey = "spotify"
 

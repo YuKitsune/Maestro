@@ -2,9 +2,9 @@ package appleMusic
 
 import (
 	"fmt"
-	"maestro/pkg/metrics"
-	"maestro/pkg/model"
-	"maestro/pkg/streamingService"
+	"github.com/yukitsune/maestro/pkg/metrics"
+	"github.com/yukitsune/maestro/pkg/model"
+	"github.com/yukitsune/maestro/pkg/streamingService"
 	"regexp"
 	"strings"
 )
@@ -296,7 +296,7 @@ func (s *appleMusicStreamingService) getSongArtwork(song *Song, market model.Mar
 		data := song.Relationships.Albums.Data[0]
 
 		go s.metricsRecorder.CountAppleMusicRequest()
-		
+
 		album, err := s.client.GetAlbum(data.Id, market)
 		if err != nil {
 			return artworkLink, err

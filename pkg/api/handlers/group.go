@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 	"github.com/gorilla/mux"
+	mcontext "github.com/yukitsune/maestro/pkg/api/context"
+	"github.com/yukitsune/maestro/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	mcontext "maestro/pkg/api/context"
-	"maestro/pkg/model"
 	"net/http"
 )
 

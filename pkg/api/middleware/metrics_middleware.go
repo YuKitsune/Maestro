@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"maestro/pkg/api/context"
-	"maestro/pkg/api/handlers"
-	"maestro/pkg/metrics"
+	"github.com/yukitsune/maestro/pkg/api/context"
+	"github.com/yukitsune/maestro/pkg/api/handlers"
+	"github.com/yukitsune/maestro/pkg/metrics"
 	"net/http"
 )
 

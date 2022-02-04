@@ -3,8 +3,8 @@ package middleware
 import (
 	"context"
 	"github.com/yukitsune/camogo"
-	maestroContext "maestro/pkg/api/context"
-	"maestro/pkg/api/handlers"
+	maestroContext "github.com/yukitsune/maestro/pkg/api/context"
+	"github.com/yukitsune/maestro/pkg/api/handlers"
 	"net/http"
 )
 

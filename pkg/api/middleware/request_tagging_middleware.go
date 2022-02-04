@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/google/uuid"
-	"maestro/pkg/api/context"
+	"github.com/yukitsune/maestro/pkg/api/context"
 	"net/http"
 )
 

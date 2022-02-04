@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"github.com/sirupsen/logrus"
-	"maestro/pkg/api/context"
-	"maestro/pkg/api/handlers"
-	"maestro/pkg/log"
+	"github.com/yukitsune/maestro/pkg/api/context"
+	"github.com/yukitsune/maestro/pkg/api/handlers"
+	"github.com/yukitsune/maestro/pkg/log"
 	"net/http"
 	"time"
 )

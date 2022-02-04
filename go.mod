@@ -1,4 +1,4 @@
-module maestro
+module github.com/yukitsune/maestro
 
 go 1.16
 

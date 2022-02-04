@@ -2,9 +2,9 @@ package deezer
 
 import (
 	"fmt"
-	"maestro/pkg/metrics"
-	"maestro/pkg/model"
-	"maestro/pkg/streamingService"
+	"github.com/yukitsune/maestro/pkg/metrics"
+	"github.com/yukitsune/maestro/pkg/model"
+	"github.com/yukitsune/maestro/pkg/streamingService"
 	"net/http"
 	"regexp"
 )

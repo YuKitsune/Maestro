@@ -2,10 +2,10 @@ package db
 
 import (
 	"context"
+	"github.com/yukitsune/maestro/pkg/metrics"
+	"github.com/yukitsune/maestro/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"maestro/pkg/metrics"
-	"maestro/pkg/model"
 )
 
 type mongoRepository struct {

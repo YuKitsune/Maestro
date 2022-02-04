@@ -3,9 +3,9 @@ package appleMusic
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/yukitsune/maestro/pkg/model"
+	"github.com/yukitsune/maestro/pkg/streamingService"
 	"io/ioutil"
-	"maestro/pkg/model"
-	"maestro/pkg/streamingService"
 	"net/http"
 	"strings"
 )
