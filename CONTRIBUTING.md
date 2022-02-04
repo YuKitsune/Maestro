@@ -14,7 +14,24 @@ In the `configs/` directory, there is a `maestro.example.yaml` file, copy this t
 From there, you can edit the configuration as required.
 
 ### Acquiring API keys
-🚧 Todo 🚧
+
+#### Apple Music
+Apple Music have a [guide](https://developer.apple.com/documentation/applemusicapi/getting_keys_and_creating_tokens) on acquiring the required keys.
+Once you have the keys, you can use a tool like [amjwt](https://github.com/YuKitsune/amjwt) to generate the token (disclaimer: I wrote it).
+Once you've created the token, copy it into config files mentioned above.
+
+#### Spotify
+You'll need to create a new application using your Spotify account. You can visit [this page](https://developer.spotify.com/dashboard/applications) to get started.
+Once you've created the application, make sure you copy the Client ID and Client Secret into config files mentioned above.
+
+#### Deezer
+Deezer doesn't require any API keys
+
+### Keeping your keys safe
+As long as you keep your keys in the `maestro.yaml` and/or `.env` files, or even somewhere outside the repository, they
+should be relatively safe.
+Don't add them to the example config files, or any other checked in files. Make sure you review your changes before
+accidentally committing your keys.
 
 ## Frontend
 The frontend (located in `web/frontend-remix`) also has an `example.env` file which just contains the API url.
@@ -47,3 +64,4 @@ over to the [Kubernetes readme](deployments/k8s/README.md).
 
 # Pull Requests
 If you have some changes you'd like to see merged into Maestro, consider forking and submitting a pull request!
+It's preferred to create a feature branch (E.g. `feature/my-awesome-feature`) and working from that before submitting a PR.
