@@ -37,3 +37,7 @@ Contributions are what make the open source community such an amazing place to b
 Any contributions you make are **greatly appreciated**!
 
 Head over to the [contributing guide](CONTRIBUTING.md) to get started!
+
+# Support
+If you wanna support this tiny sandbox project of mine, feel free to [buy me a coffee](https://www.buymeacoffee.com/yukitsune256)!
+If there is enough interest, I may consider dedicating more time to this.
