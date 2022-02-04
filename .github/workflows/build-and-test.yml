@@ -1,7 +1,6 @@
 name: Build and Test
 
 on:
-  push: # Temp
   pull_request:
 
 jobs:
