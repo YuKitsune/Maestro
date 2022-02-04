@@ -3,7 +3,6 @@ name: Build and push Docker images.
 on:
   release:
     status: [ published ]
-  workflow_dispatch: # temp
 
 jobs:
 
@@ -12,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: ghcr.io/yukitsune/maestro-api:v0.0.8 # ${{ github.event.release.tag_name }}
+      IMAGE_NAME: ghcr.io/yukitsune/maestro-api:${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
@@ -41,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: ghcr.io/yukitsune/maestro-frontend:v0.0.8 # ${{ github.event.release.tag_name }}
+      IMAGE_NAME: ghcr.io/yukitsune/maestro-frontend:${{ github.event.release.tag_name }}
 
     steps:
     - uses: actions/checkout@v2
