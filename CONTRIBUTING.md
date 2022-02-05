@@ -7,7 +7,7 @@ Before we can start, there are a few tools we need:
 - [Make](https://www.gnu.org/software/make/) _(Optional)_
 
 # Configuration
-Before Maestro can run in, there are a few configuration files we need to set up.
+Before Maestro can run, there are a few configuration files we need to set up.
 
 ## API
 In the `configs/` directory, there is a `maestro.example.yaml` file, copy this to `maestro.yaml`.
@@ -35,7 +35,7 @@ accidentally committing your keys.
 
 ## Frontend
 The frontend (located in `web/frontend-remix`) also has an `example.env` file which just contains the API url.
-Copy this to `.env` and edit it as required. (Note that these are overridden in docker compose)
+Copy this to `.env` and edit it as required. (Note that these are overridden when running in docker compose)
 
 ## Docker compose
 You may have noticed an `example.env` file in the `configs/` directory. This can be used by docker compose to inject

@@ -105,7 +105,7 @@ func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track
 	foundSong := searchRes[0]
 
 	// Load the song directly so we get the relationships
-	fullSong, err := s.client.GetSong(foundSong.Id, song.Market)
+	fullSong, err := s.client.GetSong(foundSong.ID, song.Market)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (s *appleMusicStreamingService) getAlbumArtistNames(album *Album, market mo
 
 		go s.metricsRecorder.CountAppleMusicRequest()
 
-		artist, err := s.client.GetArtist(data.Id, market)
+		artist, err := s.client.GetArtist(data.ID, market)
 		if err != nil {
 			return names, nil
 		}
@@ -277,7 +277,7 @@ func (s *appleMusicStreamingService) getSongArtistNames(song *Song, market model
 
 		go s.metricsRecorder.CountAppleMusicRequest()
 
-		artist, err := s.client.GetArtist(data.Id, market)
+		artist, err := s.client.GetArtist(data.ID, market)
 		if err != nil {
 			return names, nil
 		}
@@ -297,7 +297,7 @@ func (s *appleMusicStreamingService) getSongArtwork(song *Song, market model.Mar
 
 		go s.metricsRecorder.CountAppleMusicRequest()
 
-		album, err := s.client.GetAlbum(data.Id, market)
+		album, err := s.client.GetAlbum(data.ID, market)
 		if err != nil {
 			return artworkLink, err
 		}
