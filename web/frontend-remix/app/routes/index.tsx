@@ -19,7 +19,7 @@ export const action: ActionFunction = async ({request}) => {
     const things = await client.searchFromLink(link);
 
     if (things && things.length > 0) {
-        const groupId = things[0].GroupId;
+        const groupId = things[0].GroupID;
         return redirect(`/${groupId}`)
     } else {
         return redirect(`/nothing`)

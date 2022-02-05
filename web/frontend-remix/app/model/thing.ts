@@ -5,7 +5,7 @@ export type Thing = {
     Name: string
     ArtworkLink: string
     ThingType: ThingType
-    GroupId: string
+    GroupID: string
     Source: string
     Market: string
     Link: string

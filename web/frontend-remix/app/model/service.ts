@@ -2,6 +2,6 @@
 export type Service = {
     Name: string;
     Key: string;
-    LogoUrl: string;
+    LogoURL: string;
     Enabled: boolean;
 }

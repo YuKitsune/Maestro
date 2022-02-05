@@ -56,7 +56,7 @@ class MaestroApiClient {
         // Get artwork URLs
         for (const svc of services) {
             // Todo: Need a public URL here, the docker compose one isn't accessible publicly
-            svc.LogoUrl = `${this.publicBaseUrl}/services/${svc.Key}/logo`;
+            svc.LogoURL = `${this.publicBaseUrl}/services/${svc.Key}/logo`;
         }
 
         return services;
