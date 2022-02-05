@@ -36,12 +36,21 @@ export const meta: MetaFunction = ({data}) => {
 
     let title = getTitleForThing(bestThing);
     let image = bestThing.ArtworkLink;
+    let description = `Listen to ${title} on ${things.length} streaming service${things.length > 1 ? "s" : ""}!`;
     return {
+
+        // Opengraph
         title: title,
         "og:title": title,
         "og:image": image,
         "og:site_name": "Maestro",
-        "og:description": `Listen to ${title} on ${things.length} streaming service${things.length > 1 ? "s" : ""}!`,
+        "og:description": description,
+
+        // Twitter
+        "twitter:card": "summary",
+        "twitter:title": title,
+        "twitter:image": image,
+        "twitter:description": description,
     };
 };
 
