@@ -4,10 +4,10 @@ import (
 	"errors"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/maestro/pkg/api/apiConfig"
+	"github.com/yukitsune/maestro/pkg/api/apiconfig"
 	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingService"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -22,7 +22,7 @@ func ListServices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func(cfg streamingService.Config) ([]model.StreamingService, error) {
+	res, err := container.ResolveWithResult(func(cfg streamingservice.Config) ([]model.StreamingService, error) {
 
 		var res []model.StreamingService
 		for k, c := range cfg {
@@ -67,7 +67,7 @@ func GetLogo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func(scfg streamingService.Config, acfg *apiConfig.Config, logger *logrus.Entry) ([]byte, error) {
+	res, err := container.ResolveWithResult(func(scfg streamingservice.Config, acfg *apiconfig.Config, logger *logrus.Entry) ([]byte, error) {
 		for k, c := range scfg {
 			if k != model.StreamingServiceKey(serviceName) {
 				continue
@@ -85,9 +85,9 @@ func GetLogo(w http.ResponseWriter, r *http.Request) {
 				if !exists {
 					logger.Debugln("logo does not exist")
 					return []byte{}, nil
-				} else {
-					return nil, err
 				}
+
+				return nil, err
 			}
 
 			logo, err := ioutil.ReadFile(logoFilePath)

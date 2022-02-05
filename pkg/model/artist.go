@@ -4,7 +4,7 @@ type Artist struct {
 	Name        string
 	ArtworkLink string
 
-	GroupId   ThingGroupId
+	GroupID   ThingGroupID
 	Source    StreamingServiceKey
 	ThingType ThingType
 	Market    Market
@@ -30,12 +30,12 @@ func (a *Artist) GetArtworkLink() string {
 	return a.ArtworkLink
 }
 
-func (a *Artist) GetGroupId() ThingGroupId {
-	return a.GroupId
+func (a *Artist) GetGroupID() ThingGroupID {
+	return a.GroupID
 }
 
-func (a *Artist) SetGroupId(groupId ThingGroupId) {
-	a.GroupId = groupId
+func (a *Artist) SetGroupID(groupID ThingGroupID) {
+	a.GroupID = groupID
 }
 
 func (a *Artist) GetSource() StreamingServiceKey {

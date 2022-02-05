@@ -1,4 +1,4 @@
-package streamingService
+package streamingservice
 
 import (
 	"github.com/yukitsune/maestro/pkg/model"

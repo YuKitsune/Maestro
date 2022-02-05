@@ -8,28 +8,28 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/yukitsune/camogo"
-	"github.com/yukitsune/maestro/pkg/api/apiConfig"
+	"github.com/yukitsune/maestro/pkg/api/apiconfig"
 	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/api/handlers"
 	"github.com/yukitsune/maestro/pkg/api/middleware"
 	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/metrics"
-	"github.com/yukitsune/maestro/pkg/streamingService"
-	"github.com/yukitsune/maestro/pkg/streamingService/appleMusic"
-	"github.com/yukitsune/maestro/pkg/streamingService/deezer"
-	"github.com/yukitsune/maestro/pkg/streamingService/spotify"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
+	"github.com/yukitsune/maestro/pkg/streamingservice/applemusic"
+	"github.com/yukitsune/maestro/pkg/streamingservice/deezer"
+	"github.com/yukitsune/maestro/pkg/streamingservice/spotify"
 	"net/http"
 	"time"
 )
 
-type MaestroApi struct {
-	cfg    *apiConfig.Config
+type MaestroAPI struct {
+	cfg    *apiconfig.Config
 	logger *logrus.Entry
 	svr    *http.Server
 }
 
-func NewMaestroApi(apiCfg *apiConfig.Config, lCfg *log.Config, dbCfg *db.Config, scfg streamingService.Config) (*MaestroApi, error) {
+func NewMaestroAPI(apiCfg *apiconfig.Config, lCfg *log.Config, dbCfg *db.Config, scfg streamingservice.Config) (*MaestroAPI, error) {
 
 	logger, err := configureLogger(context.Background(), lCfg)
 	if err != nil {
@@ -57,10 +57,10 @@ func NewMaestroApi(apiCfg *apiConfig.Config, lCfg *log.Config, dbCfg *db.Config,
 		Handler: r,
 	}
 
-	return &MaestroApi{apiCfg, logger, svr}, nil
+	return &MaestroAPI{apiCfg, logger, svr}, nil
 }
 
-func (api *MaestroApi) Start() error {
+func (api *MaestroAPI) Start() error {
 	api.logger.Infoln("starting maestro API")
 	api.logger.Debugf("config: %+v\n", viper.AllSettings())
 
@@ -69,7 +69,7 @@ func (api *MaestroApi) Start() error {
 	return api.svr.ListenAndServe()
 }
 
-func (api *MaestroApi) StartTLS() error {
+func (api *MaestroAPI) StartTLS() error {
 	api.logger.Infoln("starting maestro API")
 	api.logger.Debugf("config: %+v\n", viper.AllSettings())
 
@@ -77,12 +77,12 @@ func (api *MaestroApi) StartTLS() error {
 	return api.svr.ListenAndServeTLS(api.cfg.CertFile, api.cfg.KeyFile)
 }
 
-func (api *MaestroApi) Shutdown(ctx context.Context) error {
+func (api *MaestroAPI) Shutdown(ctx context.Context) error {
 	api.logger.Infof("shutting down")
 	return api.svr.Shutdown(ctx)
 }
 
-func setupContainer(cb camogo.ContainerBuilder, aCfg *apiConfig.Config, lCfg *log.Config, dbCfg *db.Config, sCfg streamingService.Config) error {
+func setupContainer(cb camogo.ContainerBuilder, aCfg *apiconfig.Config, lCfg *log.Config, dbCfg *db.Config, sCfg streamingservice.Config) error {
 
 	// Todo: Context timeout here
 	if err := cb.RegisterFactory(func() context.Context {
@@ -144,33 +144,33 @@ func configureLogger(ctx context.Context, cfg *log.Config) (*logrus.Entry, error
 
 	entry := logger.WithContext(ctx)
 
-	reqId, err := mcontext.RequestId(ctx)
+	reqID, err := mcontext.RequestID(ctx)
 	if err == nil {
-		entry = entry.WithField(log.RequestIdField, reqId)
+		entry = entry.WithField(log.RequestIDField, reqID)
 	}
 
 	return entry, nil
 }
 
-func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingService.Config) error {
+func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingservice.Config) error {
 
 	if err := cb.RegisterInstance(scfg); err != nil {
 		return err
 	}
 
 	// Todo: Camogo needs slice support
-	factory := func(c streamingService.Config, mr metrics.Recorder) ([]streamingService.StreamingService, error) {
+	factory := func(c streamingservice.Config, mr metrics.Recorder) ([]streamingservice.StreamingService, error) {
 
-		var services []streamingService.StreamingService
+		var services []streamingservice.StreamingService
 		for key, config := range c {
 			if !config.Enabled() {
 				continue
 			}
 
 			switch key {
-			case appleMusic.Key:
-				cfg := config.(*appleMusic.Config)
-				s := appleMusic.NewAppleMusicStreamingService(cfg, mr)
+			case applemusic.Key:
+				cfg := config.(*applemusic.Config)
+				s := applemusic.NewAppleMusicStreamingService(cfg, mr)
 				services = append(services, s)
 				break
 

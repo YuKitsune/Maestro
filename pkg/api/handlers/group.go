@@ -13,9 +13,9 @@ import (
 func HandleGroup(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	groupId, ok := vars["groupId"]
+	groupID, ok := vars["groupID"]
 	if !ok {
-		BadRequest(w, "missing parameter \"groupId\"")
+		BadRequest(w, "missing parameter \"groupID\"")
 		return
 	}
 
@@ -31,7 +31,7 @@ func HandleGroup(w http.ResponseWriter, r *http.Request) {
 
 		// Search the database for an existing thing with the given link
 		coll := db.Collection(model.ThingsCollectionName)
-		cur, err := coll.Find(ctx, bson.D{{"groupid", groupId}})
+		cur, err := coll.Find(ctx, bson.D{{"groupid", groupID}})
 
 		if err != nil {
 			return nil, err
@@ -52,7 +52,7 @@ func HandleGroup(w http.ResponseWriter, r *http.Request) {
 
 	things := res.([]model.Thing)
 	if things == nil || len(things) == 0 {
-		NotFoundf(w, "could not find group with id %s", groupId)
+		NotFoundf(w, "could not find group with id %s", groupID)
 		return
 	}
 

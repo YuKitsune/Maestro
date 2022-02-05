@@ -1,4 +1,4 @@
-package appleMusic
+package applemusic
 
 import "github.com/yukitsune/maestro/pkg/model"
 

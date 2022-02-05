@@ -10,7 +10,7 @@ import (
 	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingService"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -69,7 +69,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func findForLink(link string, container camogo.Container) (interface{}, error) {
-	res, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository, ss []streamingService.StreamingService, logger *logrus.Entry) (interface{}, error) {
+	res, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository, ss []streamingservice.StreamingService, logger *logrus.Entry) (interface{}, error) {
 
 		// Trim service-specific stuff from the link
 		for _, service := range ss {
@@ -90,10 +90,10 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		if foundThing != nil {
 
 			// Link found
-			logger = logger.WithField("group_id", foundThing.GetGroupId())
+			logger = logger.WithField("group_id", foundThing.GetGroupID())
 			logger.Debugln("found a thing")
 
-			allThings, err := repo.GetThingsByGroupId(ctx, foundThing.GetGroupId())
+			allThings, err := repo.GetThingsByGroupID(ctx, foundThing.GetGroupID())
 			if err != nil {
 				return nil, err
 			}
@@ -118,12 +118,12 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 					}
 
 					logger.Debugf("fetching thing from %s\n", service.Key())
-					thing, err := streamingService.SearchThing(service, foundThing)
+					thing, err := streamingservice.SearchThing(service, foundThing)
 					if err != nil {
 						return nil, err
 					}
 
-					thing.SetGroupId(foundThing.GetGroupId())
+					thing.SetGroupID(foundThing.GetGroupID())
 					newThings = append(newThings, thing)
 				}
 
@@ -144,11 +144,11 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		logger.Debugln("looks like this is a new thing")
 
 		// No links found, query the streaming service and find the same entry on other services
-		var targetService streamingService.StreamingService
-		var otherServices []streamingService.StreamingService
+		var targetService streamingservice.StreamingService
+		var otherServices []streamingservice.StreamingService
 
 		// Figure out which streaming service the link belongs to
-		err = streamingService.ForEachStreamingService(ss, func(service streamingService.StreamingService) error {
+		err = streamingservice.ForEachStreamingService(ss, func(service streamingservice.StreamingService) error {
 			if service.LinkBelongsToService(link) {
 				targetService = service
 			} else {
@@ -166,8 +166,8 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		}
 
 		// Query the target streaming service
-		groupId := model.ThingGroupId(uuid.New().String())
-		logger = logger.WithField("group_id", groupId)
+		groupID := model.ThingGroupID(uuid.New().String())
+		logger = logger.WithField("group_id", groupID)
 		logger.Debugln("using new group id")
 
 		logger.Debugf("searching %s\n", targetService.Key())
@@ -176,16 +176,16 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 			return nil, fmt.Errorf("%s: %s", targetService.Key(), err.Error())
 		}
 
-		thing.SetGroupId(groupId)
+		thing.SetGroupID(groupID)
 
 		var things []model.Thing
 		things = append(things, thing)
 
 		// Query the other streaming services using what we found from the target streaming service
-		err = streamingService.ForEachStreamingService(otherServices, func(service streamingService.StreamingService) error {
+		err = streamingservice.ForEachStreamingService(otherServices, func(service streamingservice.StreamingService) error {
 
 			logger.Debugf("searching %s for %s with name %s\n", service.Key(), thing.Type(), thing.GetLabel())
-			foundThing, err := streamingService.SearchThing(service, thing)
+			foundThing, err := streamingservice.SearchThing(service, thing)
 			if err != nil {
 				return fmt.Errorf("%s: %s", service.Key(), err.Error())
 			}
@@ -194,7 +194,7 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 				return nil
 			}
 
-			foundThing.SetGroupId(groupId)
+			foundThing.SetGroupID(groupID)
 			things = append(things, foundThing)
 			return nil
 		})

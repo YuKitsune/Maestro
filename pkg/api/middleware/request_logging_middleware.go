@@ -12,7 +12,7 @@ import (
 func RequestLogging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		reqId, err := context.RequestId(r.Context())
+		reqID, err := context.RequestID(r.Context())
 		if err != nil {
 			handlers.Error(w, err)
 			return
@@ -35,7 +35,7 @@ func RequestLogging(next http.Handler) http.Handler {
 		duration := time.Since(start)
 
 		_ = ctr.Resolve(func(logger *logrus.Entry) {
-			reqLogger := logger.WithField(log.RequestIdField, reqId).
+			reqLogger := logger.WithField(log.RequestIDField, reqID).
 				WithField("method", r.Method).
 				WithField("path", r.URL.Path).
 				WithField("status", rwd.StatusCode).

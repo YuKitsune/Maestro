@@ -1,10 +1,10 @@
-package appleMusic
+package applemusic
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingService"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -23,18 +23,18 @@ type SongResult struct {
 }
 
 type Artist struct {
-	Id         string
+	ID         string            `json:"Id"`
 	Attributes *ArtistAttributes //The attributes for the artist.
 }
 
 type ArtistAttributes struct {
 	GenreNames []string //(Required) The names of the genres associated with this artist.
 	Name       string   //(Required) The localized name of the artist.
-	Url        string   //(Required) The URL for sharing an artist in the iTunes Store.
+	URL        string   `json:"Url"` //(Required) The URL for sharing an artist in the iTunes Store.
 }
 
 type Song struct {
-	Id            string
+	ID            string          `json:"Id"`
 	Attributes    *SongAttributes //The attributes for the song.
 	Relationships *Relationships
 }
@@ -45,7 +45,7 @@ type SongAttributes struct {
 	ArtistName  string //(Required) The artist’s name.
 	TrackNumber int    //(Required) The track number.
 	Name        string //(Required) The localized name of the song.
-	Url         string //(Required) The URL for sharing a song in the iTunes Store.
+	URL         string `json:"Url"` //(Required) The URL for sharing a song in the iTunes Store.
 }
 
 type Artwork struct {
@@ -56,11 +56,11 @@ type Artwork struct {
 	TextColor2 string
 	TextColor3 string
 	TextColor4 string
-	Url        string
+	URL        string `json:"URl"`
 }
 
 type Album struct {
-	Id            string
+	ID            string           `json:"Id"`
 	Attributes    *AlbumAttributes //The attributes for the album.
 	Relationships *Relationships
 }
@@ -70,7 +70,7 @@ type AlbumAttributes struct {
 	ArtistName string  //(Required) The artist’s name.
 	Artwork    Artwork //The album artwork.
 	Name       string  //(Required) The localized name of the album.
-	Url        string
+	URL        string  `json:"Url"`
 	IsSingle   bool
 }
 
@@ -100,24 +100,24 @@ type Relationships struct {
 
 type Relationship struct {
 	Href string
-	Id   string
+	ID   string `json:"Id"`
 	Type string
 }
 
-const baseUrl = "https://api.music.apple.com"
+const baseURL = "https://api.music.apple.com"
 
-type AppleMusicClient struct {
+type client struct {
 	client *http.Client
 }
 
-func NewAppleMusicClient(token string) *AppleMusicClient {
-	return &AppleMusicClient{client: streamingService.NewClientWithBearerAuth(token)}
+func NewAppleMusicClient(token string) *client {
+	return &client{client: streamingservice.NewClientWithBearerAuth(token)}
 }
 
-func (a *AppleMusicClient) SearchArtist(term string, storefront model.Market) ([]Artist, error) {
+func (a *client) SearchArtist(term string, storefront model.Market) ([]Artist, error) {
 
 	querySafeTerm := strings.ReplaceAll(term, " ", "+")
-	url := fmt.Sprintf("%s/v1/catalog/%s/search?term=%s&types=artists", baseUrl, storefront, querySafeTerm)
+	url := fmt.Sprintf("%s/v1/catalog/%s/search?term=%s&types=artists", baseURL, storefront, querySafeTerm)
 
 	httpRes, err := a.client.Get(url)
 	defer httpRes.Body.Close()
@@ -143,10 +143,10 @@ func (a *AppleMusicClient) SearchArtist(term string, storefront model.Market) ([
 	return artists, nil
 }
 
-func (a *AppleMusicClient) SearchAlbum(term string, storefront model.Market) ([]Album, error) {
+func (a *client) SearchAlbum(term string, storefront model.Market) ([]Album, error) {
 
 	querySafeTerm := strings.ReplaceAll(term, " ", "+")
-	url := fmt.Sprintf("%s/v1/catalog/%s/search?term=%s&types=albums", baseUrl, storefront, querySafeTerm)
+	url := fmt.Sprintf("%s/v1/catalog/%s/search?term=%s&types=albums", baseURL, storefront, querySafeTerm)
 
 	httpRes, err := a.client.Get(url)
 	defer httpRes.Body.Close()
@@ -172,10 +172,10 @@ func (a *AppleMusicClient) SearchAlbum(term string, storefront model.Market) ([]
 	return albums, nil
 }
 
-func (a *AppleMusicClient) SearchSong(term string, storefront model.Market) ([]Song, error) {
+func (a *client) SearchSong(term string, storefront model.Market) ([]Song, error) {
 
 	querySafeTerm := strings.ReplaceAll(term, " ", "+")
-	url := fmt.Sprintf("%s/v1/catalog/%s/search?term=%s&types=songs", baseUrl, storefront, querySafeTerm)
+	url := fmt.Sprintf("%s/v1/catalog/%s/search?term=%s&types=songs", baseURL, storefront, querySafeTerm)
 
 	httpRes, err := a.client.Get(url)
 	defer httpRes.Body.Close()
@@ -201,9 +201,9 @@ func (a *AppleMusicClient) SearchSong(term string, storefront model.Market) ([]S
 	return songs, nil
 }
 
-func (a *AppleMusicClient) GetArtist(id string, storefront model.Market) (*Artist, error) {
+func (a *client) GetArtist(id string, storefront model.Market) (*Artist, error) {
 
-	url := fmt.Sprintf("%s/v1/catalog/%s/artists/%s", baseUrl, storefront, id)
+	url := fmt.Sprintf("%s/v1/catalog/%s/artists/%s", baseURL, storefront, id)
 
 	httpRes, err := a.client.Get(url)
 	defer httpRes.Body.Close()
@@ -235,9 +235,9 @@ func (a *AppleMusicClient) GetArtist(id string, storefront model.Market) (*Artis
 	return artist, nil
 }
 
-func (a *AppleMusicClient) GetAlbum(id string, storefront model.Market) (*Album, error) {
+func (a *client) GetAlbum(id string, storefront model.Market) (*Album, error) {
 
-	url := fmt.Sprintf("%s/v1/catalog/%s/albums/%s?include=artists", baseUrl, storefront, id)
+	url := fmt.Sprintf("%s/v1/catalog/%s/albums/%s?include=artists", baseURL, storefront, id)
 
 	httpRes, err := a.client.Get(url)
 	defer httpRes.Body.Close()
@@ -269,9 +269,9 @@ func (a *AppleMusicClient) GetAlbum(id string, storefront model.Market) (*Album,
 	return album, nil
 }
 
-func (a *AppleMusicClient) GetSong(id string, storefront model.Market) (*Song, error) {
+func (a *client) GetSong(id string, storefront model.Market) (*Song, error) {
 
-	url := fmt.Sprintf("%s/v1/catalog/%s/songs/%s?include=artists,albums", baseUrl, storefront, id)
+	url := fmt.Sprintf("%s/v1/catalog/%s/songs/%s?include=artists,albums", baseURL, storefront, id)
 
 	httpRes, err := a.client.Get(url)
 	defer httpRes.Body.Close()
@@ -303,9 +303,9 @@ func (a *AppleMusicClient) GetSong(id string, storefront model.Market) (*Song, e
 	return song, nil
 }
 
-func (a *AppleMusicClient) GetSongByIsrc(isrc string, storefront model.Market) ([]Song, error) {
+func (a *client) GetSongByIsrc(isrc string, storefront model.Market) ([]Song, error) {
 
-	url := fmt.Sprintf("%s/v1/catalog/%s/songs?filter[isrc]=%s", baseUrl, storefront, isrc)
+	url := fmt.Sprintf("%s/v1/catalog/%s/songs?filter[isrc]=%s", baseURL, storefront, isrc)
 
 	httpRes, err := a.client.Get(url)
 	defer httpRes.Body.Close()

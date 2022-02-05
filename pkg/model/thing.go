@@ -8,7 +8,7 @@ import (
 )
 
 type ThingType string
-type ThingGroupId string
+type ThingGroupID string
 
 const ThingsCollectionName = "things"
 
@@ -21,8 +21,8 @@ const (
 type Thing interface {
 	Type() ThingType
 	GetArtworkLink() string
-	GetGroupId() ThingGroupId
-	SetGroupId(ThingGroupId)
+	GetGroupID() ThingGroupID
+	SetGroupID(ThingGroupID)
 	GetSource() StreamingServiceKey
 	GetMarket() Market
 	GetLink() string

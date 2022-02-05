@@ -1,6 +1,6 @@
 package db
 
 type Config struct {
-	Uri      string `mapstructure:"uri"`
+	URI      string `mapstructure:"uri"`
 	Database string `mapstructure:"name"`
 }

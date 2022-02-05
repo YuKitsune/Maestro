@@ -21,7 +21,7 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 	// Database
 	err := cb.RegisterFactory(func(ctx context.Context, cfg *Config) (*mongo.Client, error) {
 
-		opts := options.Client().ApplyURI(cfg.Uri)
+		opts := options.Client().ApplyURI(cfg.URI)
 		client, err := mongo.NewClient(opts)
 		if err != nil {
 			return nil, err

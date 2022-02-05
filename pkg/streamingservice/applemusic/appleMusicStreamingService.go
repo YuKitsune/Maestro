@@ -1,21 +1,21 @@
-package appleMusic
+package applemusic
 
 import (
 	"fmt"
 	"github.com/yukitsune/maestro/pkg/metrics"
 	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingService"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"regexp"
 	"strings"
 )
 
 type appleMusicStreamingService struct {
-	client           *AppleMusicClient
+	client           *client
 	shareLinkPattern *regexp.Regexp
 	metricsRecorder  metrics.Recorder
 }
 
-func NewAppleMusicStreamingService(cfg *Config, mr metrics.Recorder) streamingService.StreamingService {
+func NewAppleMusicStreamingService(cfg *Config, mr metrics.Recorder) streamingservice.StreamingService {
 	shareLinkPatternRegex := regexp.MustCompile("(https?:\\/\\/)?music\\.apple\\.com\\/(?P<storefront>[A-Za-z0-9]+)\\/(?P<type>[A-Za-z]+)\\/(?:.+\\/)(?P<id>[0-9]+)(?:\\?i=(?P<song_id>[0-9]+))?")
 
 	amc := NewAppleMusicClient(cfg.Token)
@@ -70,7 +70,7 @@ func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Alb
 	foundAlbum := searchRes[0]
 
 	// Load the album directly so we get the relationships
-	fullAlbum, err := s.client.GetAlbum(foundAlbum.Id, album.Market)
+	fullAlbum, err := s.client.GetAlbum(foundAlbum.ID, album.Market)
 	if err != nil {
 		return nil, err
 	}
@@ -119,17 +119,17 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, e
 	// format: 	https://music.apple.com/<storefront>/<artist|album>/<name>/<album-id/artist-id>?i=<song-id>
 	// name is irrelevant here, we only need the storefront, type, and ids
 
-	matches := streamingService.FindStringSubmatchMap(s.shareLinkPattern, link)
+	matches := streamingservice.FindStringSubmatchMap(s.shareLinkPattern, link)
 
 	storefront := model.Market(matches["storefront"])
 	typ := matches["type"]
 	id := matches["id"]
-	songId := matches["song_id"]
+	songID := matches["song_id"]
 
 	// Hack but it works
-	if typ == "album" && len(songId) > 0 {
+	if typ == "album" && len(songID) > 0 {
 		typ = "song"
-		id = songId
+		id = songID
 	}
 
 	switch typ {
@@ -182,7 +182,7 @@ func (s *appleMusicStreamingService) newArtist(artist *Artist, market model.Mark
 		"",
 		s.Key(),
 		market,
-		artist.Attributes.Url)
+		artist.Attributes.URL)
 
 	return newArtist, nil
 }
@@ -209,10 +209,10 @@ func (s *appleMusicStreamingService) newAlbum(album *Album, market model.Market)
 	newAlbum := model.NewAlbum(
 		albumName,
 		artistNames,
-		getArtworkUrl(&album.Attributes.Artwork),
+		getArtworkURL(&album.Attributes.Artwork),
 		s.Key(),
 		market,
-		album.Attributes.Url)
+		album.Attributes.URL)
 
 	return newAlbum, nil
 }
@@ -239,13 +239,13 @@ func (s *appleMusicStreamingService) newTrack(song *Song, market model.Market) (
 		artworkLink,
 		s.Key(),
 		market,
-		song.Attributes.Url)
+		song.Attributes.URL)
 
 	return track, nil
 }
 
-func getArtworkUrl(art *Artwork) string {
-	url := art.Url
+func getArtworkURL(art *Artwork) string {
+	url := art.URL
 	url = strings.ReplaceAll(url, "{w}", fmt.Sprintf("%d", art.Width))
 	url = strings.ReplaceAll(url, "{h}", fmt.Sprintf("%d", art.Height))
 
@@ -302,7 +302,7 @@ func (s *appleMusicStreamingService) getSongArtwork(song *Song, market model.Mar
 			return artworkLink, err
 		}
 
-		artworkLink = getArtworkUrl(&album.Attributes.Artwork)
+		artworkLink = getArtworkURL(&album.Attributes.Artwork)
 	}
 
 	return artworkLink, nil

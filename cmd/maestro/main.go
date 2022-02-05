@@ -9,20 +9,20 @@ import (
 	"github.com/yukitsune/maestro"
 	"github.com/yukitsune/maestro/internal/grace"
 	"github.com/yukitsune/maestro/pkg/api"
-	"github.com/yukitsune/maestro/pkg/api/apiConfig"
+	"github.com/yukitsune/maestro/pkg/api/apiconfig"
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingService"
-	"github.com/yukitsune/maestro/pkg/streamingService/appleMusic"
-	"github.com/yukitsune/maestro/pkg/streamingService/deezer"
-	"github.com/yukitsune/maestro/pkg/streamingService/spotify"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
+	"github.com/yukitsune/maestro/pkg/streamingservice/applemusic"
+	"github.com/yukitsune/maestro/pkg/streamingservice/deezer"
+	"github.com/yukitsune/maestro/pkg/streamingservice/spotify"
 	"strings"
 	"time"
 )
 
 type Config struct {
-	Api      *apiConfig.Config `mapstructure:"api"`
+	API      *apiconfig.Config `mapstructure:"api"`
 	Log      *log.Config       `mapstructure:"logging"`
 	Db       *db.Config        `mapstructure:"database"`
 	Services map[string]interface {
@@ -99,7 +99,7 @@ func serve(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	maestroApi, err := api.NewMaestroApi(cfg.Api, cfg.Log, cfg.Db, scfg)
+	maestroAPI, err := api.NewMaestroAPI(cfg.API, cfg.Log, cfg.Db, scfg)
 	if err != nil {
 		grace.ExitFromError()
 	}
@@ -109,7 +109,7 @@ func serve(_ *cobra.Command, _ []string) error {
 	go func() {
 
 		// Todo: TLS
-		if err = maestroApi.Start(); err != nil {
+		if err = maestroAPI.Start(); err != nil {
 			errorChan <- err
 		}
 	}()
@@ -117,24 +117,24 @@ func serve(_ *cobra.Command, _ []string) error {
 	grace.WaitForShutdownSignalOrError(errorChan, func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		_ = maestroApi.Shutdown(ctx)
+		_ = maestroAPI.Shutdown(ctx)
 	})
 
 	return nil
 }
 
 // Todo: It'd be nice to not have this...
-func decodeServiceConfigs(c *Config) (streamingService.Config, error) {
+func decodeServiceConfigs(c *Config) (streamingservice.Config, error) {
 
-	m := make(streamingService.Config)
+	m := make(streamingservice.Config)
 	for k, v := range c.Services {
 
 		key := model.StreamingServiceKey(k)
-		var cfg streamingService.ServiceConfig
+		var cfg streamingservice.ServiceConfig
 
 		switch key {
-		case appleMusic.Key:
-			var amc *appleMusic.Config
+		case applemusic.Key:
+			var amc *applemusic.Config
 			if err := mapstructure.Decode(v, &amc); err != nil {
 				return nil, err
 			}

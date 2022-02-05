@@ -5,18 +5,18 @@ import (
 	"fmt"
 )
 
-const RequestIdKey = "maestro.requestId"
+const RequestIDKey = "maestro.requestId"
 
-func WithRequestId(ctx context.Context, reqId string) context.Context {
-	return context.WithValue(ctx, RequestIdKey, reqId)
+func WithRequestID(ctx context.Context, reqID string) context.Context {
+	return context.WithValue(ctx, RequestIDKey, reqID)
 }
 
-func RequestId(ctx context.Context) (string, error) {
-	val := ctx.Value(RequestIdKey)
-	reqId, ok := val.(string)
+func RequestID(ctx context.Context) (string, error) {
+	val := ctx.Value(RequestIDKey)
+	reqID, ok := val.(string)
 	if ok {
-		return reqId, nil
+		return reqID, nil
 	}
 
-	return "", fmt.Errorf("could not find request id with key \"%s\" in context", RequestIdKey)
+	return "", fmt.Errorf("could not find request id with key \"%s\" in context", RequestIDKey)
 }

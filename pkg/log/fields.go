@@ -1,3 +1,3 @@
 package log
 
-const RequestIdField = "request_id"
+const RequestIDField = "request_id"

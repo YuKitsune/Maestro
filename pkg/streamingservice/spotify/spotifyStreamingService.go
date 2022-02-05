@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/yukitsune/maestro/pkg/metrics"
 	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingService"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"github.com/zmb3/spotify"
 	"io/ioutil"
 	"net/url"
@@ -19,13 +19,13 @@ type spotifyStreamingService struct {
 	metricsRecorder  metrics.Recorder
 }
 
-func GetAccessToken(clientId string, secret string) (token string, error error) {
-	tokenUrl := "https://accounts.spotify.com/api/token"
+func GetAccessToken(clientID string, secret string) (token string, error error) {
+	tokenURL := "https://accounts.spotify.com/api/token"
 
-	reqToken := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientId, secret)))
-	client := streamingService.NewClientWithBasicAuth(reqToken)
+	reqToken := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientID, secret)))
+	client := streamingservice.NewClientWithBasicAuth(reqToken)
 
-	res, err := client.PostForm(tokenUrl, url.Values{
+	res, err := client.PostForm(tokenURL, url.Values{
 		"grant_type": {"client_credentials"},
 	})
 	defer res.Body.Close()
@@ -58,16 +58,16 @@ func GetAccessToken(clientId string, secret string) (token string, error error) 
 	return token, nil
 }
 
-func NewSpotifyStreamingService(cfg *Config, mr metrics.Recorder) (streamingService.StreamingService, error) {
+func NewSpotifyStreamingService(cfg *Config, mr metrics.Recorder) (streamingservice.StreamingService, error) {
 	shareLinkPatternRegex := regexp.MustCompile("(https?:\\/\\/)?open\\.spotify\\.com\\/(?P<type>[A-Za-z]+)\\/(?P<id>[A-Za-z0-9]+)")
 
 	go mr.CountSpotifyRequest()
-	token, err := GetAccessToken(cfg.ClientId, cfg.ClientSecret)
+	token, err := GetAccessToken(cfg.ClientID, cfg.ClientSecret)
 	if err != nil {
 		return nil, err
 	}
 
-	c := streamingService.NewClientWithBearerAuth(token)
+	c := streamingservice.NewClientWithBearerAuth(token)
 	sc := spotify.NewClient(c)
 	return &spotifyStreamingService{
 		&sc,
@@ -105,7 +105,7 @@ func (s *spotifyStreamingService) SearchArtist(artist *model.Artist) (*model.Art
 	spotifyArtist := searchRes.Artists.Artists[0]
 	res := model.NewArtist(
 		spotifyArtist.Name,
-		imageUrl(spotifyArtist.Images),
+		imageURL(spotifyArtist.Images),
 		s.Key(),
 		model.DefaultMarket,
 		spotifyArtist.ExternalURLs["spotify"])
@@ -144,7 +144,7 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 		res = model.NewAlbum(
 			spotifyAlbum.Name,
 			artistName(spotifyAlbum.Artists),
-			imageUrl(spotifyAlbum.Images),
+			imageURL(spotifyAlbum.Images),
 			s.Key(),
 			model.DefaultMarket,
 			spotifyAlbum.ExternalURLs["spotify"])
@@ -193,7 +193,7 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 			spotifyTrack.Name,
 			artistName(spotifyTrack.Artists),
 			spotifyTrack.Album.Name,
-			imageUrl(spotifyTrack.Album.Images),
+			imageURL(spotifyTrack.Album.Images),
 			s.Key(),
 			model.DefaultMarket,
 			spotifyTrack.ExternalURLs["spotify"])
@@ -225,7 +225,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 
 		artist := model.NewArtist(
 			foundArtist.Name,
-			imageUrl(foundArtist.Images),
+			imageURL(foundArtist.Images),
 			s.Key(),
 			model.DefaultMarket,
 			foundArtist.ExternalURLs["spotify"])
@@ -243,7 +243,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 		album := model.NewAlbum(
 			foundAlbum.Name,
 			artistName(foundAlbum.Artists),
-			imageUrl(foundAlbum.Images),
+			imageURL(foundAlbum.Images),
 			s.Key(),
 			model.DefaultMarket,
 			foundAlbum.ExternalURLs["spotify"])
@@ -263,7 +263,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			foundTrack.Name,
 			artistName(foundTrack.Artists),
 			foundTrack.Album.Name,
-			imageUrl(foundTrack.Album.Images),
+			imageURL(foundTrack.Album.Images),
 			s.Key(),
 			model.DefaultMarket,
 			foundTrack.ExternalURLs["spotify"])
@@ -297,7 +297,7 @@ func artistName(artists []spotify.SimpleArtist) []string {
 	return names
 }
 
-func imageUrl(imgs []spotify.Image) string {
+func imageURL(imgs []spotify.Image) string {
 	if len(imgs) > 0 {
 		return imgs[0].URL
 	}

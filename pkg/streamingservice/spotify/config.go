@@ -8,7 +8,7 @@ type Config struct {
 	ServiceName         string `mapstructure:"name"`
 	ServiceLogoFileName string `mapstructure:"logo_file_name"`
 	IsEnabled           bool   `mapstructure:"enabled"`
-	ClientId            string `mapstructure:"client_id"`
+	ClientID            string `mapstructure:"client_id"`
 	ClientSecret        string `mapstructure:"client_secret"`
 }
 

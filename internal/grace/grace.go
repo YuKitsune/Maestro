@@ -48,10 +48,10 @@ func handleShutdownSignal(sig os.Signal) {
 		}()
 		log.Println("Shutdown completed, exiting")
 		return
-	} else {
-		log.Printf("Shutdown, unknown signal caught: %s", sig.String())
-		return
 	}
+
+	log.Printf("Shutdown, unknown signal caught: %s", sig.String())
+	return
 }
 
 func handleError(err error) {

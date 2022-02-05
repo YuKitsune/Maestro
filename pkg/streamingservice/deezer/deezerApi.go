@@ -41,20 +41,20 @@ type Track struct {
 	Album  Album
 }
 
-const baseUrl = "https://api.deezer.com"
+const baseURL = "https://api.deezer.com"
 
-type DeezerClient struct {
+type client struct {
 	client *http.Client
 }
 
-func NewDeezerClient() *DeezerClient {
-	return &DeezerClient{client: &http.Client{}}
+func NewDeezerClient() *client {
+	return &client{client: &http.Client{}}
 }
 
-func (d *DeezerClient) SearchArtist(artistName string) ([]Artist, error) {
+func (d *client) SearchArtist(artistName string) ([]Artist, error) {
 
 	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\"", artistName))
-	url := fmt.Sprintf("%s/search/artist?q=%s", baseUrl, q)
+	url := fmt.Sprintf("%s/search/artist?q=%s", baseURL, q)
 
 	httpRes, err := d.client.Get(url)
 	defer httpRes.Body.Close()
@@ -80,12 +80,12 @@ func (d *DeezerClient) SearchArtist(artistName string) ([]Artist, error) {
 	return artists, nil
 }
 
-func (d *DeezerClient) SearchAlbum(artistName string, albumName string) ([]Album, error) {
+func (d *client) SearchAlbum(artistName string, albumName string) ([]Album, error) {
 
 	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\"", artistName, albumName))
-	apiUrl := fmt.Sprintf("%s/search/album?q=%s", baseUrl, q)
+	apiURL := fmt.Sprintf("%s/search/album?q=%s", baseURL, q)
 
-	httpRes, err := d.client.Get(apiUrl)
+	httpRes, err := d.client.Get(apiURL)
 	defer httpRes.Body.Close()
 	if err != nil {
 		return nil, err
@@ -109,12 +109,12 @@ func (d *DeezerClient) SearchAlbum(artistName string, albumName string) ([]Album
 	return albums, nil
 }
 
-func (d *DeezerClient) SearchTrack(artistName string, albumName string, trackName string) ([]Track, error) {
+func (d *client) SearchTrack(artistName string, albumName string, trackName string) ([]Track, error) {
 
 	q := url.QueryEscape(fmt.Sprintf("artist:\"%s\" album:\"%s\" track:\"%s\"", artistName, albumName, trackName))
-	apiUrl := fmt.Sprintf("%s/search/track?q=%s", baseUrl, q)
+	apiURL := fmt.Sprintf("%s/search/track?q=%s", baseURL, q)
 
-	httpRes, err := d.client.Get(apiUrl)
+	httpRes, err := d.client.Get(apiURL)
 	defer httpRes.Body.Close()
 	if err != nil {
 		return nil, err
@@ -138,9 +138,9 @@ func (d *DeezerClient) SearchTrack(artistName string, albumName string, trackNam
 	return tracks, nil
 }
 
-func (d *DeezerClient) GetArtist(id string) (*Artist, error) {
+func (d *client) GetArtist(id string) (*Artist, error) {
 
-	url := fmt.Sprintf("%s/artist/%s", baseUrl, id)
+	url := fmt.Sprintf("%s/artist/%s", baseURL, id)
 
 	httpRes, err := d.client.Get(url)
 	defer httpRes.Body.Close()
@@ -159,9 +159,9 @@ func (d *DeezerClient) GetArtist(id string) (*Artist, error) {
 	return res, nil
 }
 
-func (d *DeezerClient) GetAlbum(id string) (*Album, error) {
+func (d *client) GetAlbum(id string) (*Album, error) {
 
-	url := fmt.Sprintf("%s/album/%s", baseUrl, id)
+	url := fmt.Sprintf("%s/album/%s", baseURL, id)
 
 	httpRes, err := d.client.Get(url)
 	defer httpRes.Body.Close()
@@ -180,9 +180,9 @@ func (d *DeezerClient) GetAlbum(id string) (*Album, error) {
 	return res, nil
 }
 
-func (d *DeezerClient) GetTrack(id string) (*Track, error) {
+func (d *client) GetTrack(id string) (*Track, error) {
 
-	url := fmt.Sprintf("%s/track/%s", baseUrl, id)
+	url := fmt.Sprintf("%s/track/%s", baseURL, id)
 
 	httpRes, err := d.client.Get(url)
 	defer httpRes.Body.Close()
@@ -201,8 +201,8 @@ func (d *DeezerClient) GetTrack(id string) (*Track, error) {
 	return res, nil
 }
 
-func (d *DeezerClient) GetTrackByIsrc(isrc string) (*Track, error) {
-	url := fmt.Sprintf("%s/track/isrc:%s", baseUrl, isrc)
+func (d *client) GetTrackByIsrc(isrc string) (*Track, error) {
+	url := fmt.Sprintf("%s/track/isrc:%s", baseURL, isrc)
 
 	httpRes, err := d.client.Get(url)
 	defer httpRes.Body.Close()

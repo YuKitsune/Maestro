@@ -43,7 +43,7 @@ func (m mongoRepository) GetThingByLink(ctx context.Context, s string) (model.Th
 	return foundThing, nil
 }
 
-func (m mongoRepository) GetThingsByGroupId(ctx context.Context, id model.ThingGroupId) ([]model.Thing, error) {
+func (m mongoRepository) GetThingsByGroupID(ctx context.Context, id model.ThingGroupID) ([]model.Thing, error) {
 	go m.rec.CountDatabaseCall()
 
 	coll := m.db.Collection(model.ThingsCollectionName)

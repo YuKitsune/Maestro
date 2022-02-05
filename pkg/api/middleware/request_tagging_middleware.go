@@ -6,14 +6,14 @@ import (
 	"net/http"
 )
 
-const RequestIdHeaderKey = "X-Request-Id"
+const RequestIDHeaderKey = "X-Request-Id"
 
 func RequestTagging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqId := uuid.New().String()
+		reqID := uuid.New().String()
 
-		w.Header().Set(RequestIdHeaderKey, reqId)
-		ctx := context.WithRequestId(r.Context(), reqId)
+		w.Header().Set(RequestIDHeaderKey, reqID)
+		ctx := context.WithRequestID(r.Context(), reqID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/yukitsune/maestro/pkg/metrics"
 	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingService"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"net/http"
 	"regexp"
 )
 
 type deezerStreamingService struct {
-	client            *DeezerClient
+	client            *client
 	shareLinkPattern  *regexp.Regexp
 	actualLinkPattern *regexp.Regexp
 	metricsRecorder   metrics.Recorder
@@ -35,7 +35,7 @@ func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
 	return actualLink, err
 }
 
-func NewDeezerStreamingService(mr metrics.Recorder) streamingService.StreamingService {
+func NewDeezerStreamingService(mr metrics.Recorder) streamingservice.StreamingService {
 	shareLinkPattern := regexp.MustCompile("(https?:\\/\\/)?deezer\\.page\\.link\\/(?P<id>[A-Za-z0-9]+)")
 	actualLinkPattern := regexp.MustCompile("(https?:\\/\\/)?(www\\.)?deezer\\.com\\/(?P<lang>[A-Za-z]+\\/)?(?P<type>[A-Za-z]+)\\/(?P<id>[0-9]+)")
 	return &deezerStreamingService{
@@ -178,7 +178,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, error
 		return nil, err
 	}
 
-	matches := streamingService.FindStringSubmatchMap(s.actualLinkPattern, actualLink)
+	matches := streamingservice.FindStringSubmatchMap(s.actualLinkPattern, actualLink)
 
 	// store := matches["storefront"]
 	typ := matches["type"]

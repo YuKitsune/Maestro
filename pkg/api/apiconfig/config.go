@@ -1,4 +1,4 @@
-package apiConfig
+package apiconfig
 
 type Config struct {
 	Port            int    `mapstructure:"port"`
