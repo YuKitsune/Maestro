@@ -13,26 +13,6 @@ Before Maestro can run, there are a few configuration files we need to set up.
 In the `configs/` directory, there is a `maestro.example.yaml` file, copy this to `maestro.yaml`.
 From there, you can edit the configuration as required.
 
-### Acquiring API keys
-
-#### Apple Music
-Apple Music have a [guide](https://developer.apple.com/documentation/applemusicapi/getting_keys_and_creating_tokens) on acquiring the required keys.
-Once you have the keys, you can use a tool like [amjwt](https://github.com/YuKitsune/amjwt) to generate the token (disclaimer: I wrote it).
-Once you've created the token, copy it into config files mentioned above.
-
-#### Spotify
-You'll need to create a new application using your Spotify account. You can visit [this page](https://developer.spotify.com/dashboard/applications) to get started.
-Once you've created the application, make sure you copy the Client ID and Client Secret into config files mentioned above.
-
-#### Deezer
-Deezer doesn't require any API keys
-
-### Keeping your keys safe
-As long as you keep your keys in the `maestro.yaml` and/or `.env` files, or even somewhere outside the repository, they
-should be relatively safe.
-Don't add them to the example config files, or any other checked in files. Make sure you review your changes before
-accidentally committing your keys.
-
 ## Frontend
 The frontend (located in `web/frontend-remix`) also has an `example.env` file which just contains the API url.
 Copy this to `.env` and edit it as required. (Note that these are overridden when running in docker compose)
@@ -52,6 +32,26 @@ The `deployments/docker-compose.yaml` file provides a MongoDB container out of t
 Provided that the `.env` file has been filled out correctly, this should work out of the box.
 It's recommended to use this for development.
 
+## Acquiring API keys
+
+### Apple Music
+Apple Music have a [guide](https://developer.apple.com/documentation/applemusicapi/getting_keys_and_creating_tokens) on acquiring the required keys.
+Once you have the keys, you can use a tool like [amjwt](https://github.com/YuKitsune/amjwt) to generate the token (disclaimer: I wrote it).
+Once you've created the token, copy it into config files mentioned above.
+
+### Spotify
+You'll need to create a new application using your Spotify account. You can visit [this page](https://developer.spotify.com/dashboard/applications) to get started.
+Once you've created the application, make sure you copy the Client ID and Client Secret into config files mentioned above.
+
+### Deezer
+Deezer doesn't require any API keys
+
+### Keeping your keys safe
+As long as you keep your keys in the `maestro.yaml` and/or `.env` files, or even somewhere outside the repository, they
+should be relatively safe.
+Don't add them to the example config files, or any other checked in files. Make sure you review your changes before
+accidentally committing your keys.
+
 # Makefile
 A `Makefile` is available in the root directory with a handful of useful commands, such as `make compose-fresh`, which
 will automatically run `docker-compose` with the appropriate flags and arguments.
@@ -61,6 +61,8 @@ Run `make` or `make help` for a list of available commands and what they do.
 # Kubernetes
 Kubernetes is used to deploy Maestro to production. For a detailed guide on configuring Kubernetes and Maestro, head
 over to the [Kubernetes readme](deployments/k8s/README.md).
+
+Note that this will be converted to a Helm chart in the future.
 
 # Pull Requests
 If you have some changes you'd like to see merged into Maestro, consider forking and submitting a pull request!

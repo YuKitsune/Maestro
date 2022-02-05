@@ -40,8 +40,8 @@ You'll need to update `spec.routes[0].match` to use your own domain.
 There is a limitation within [spf13/viper](https://github.com/spf13/viper) (the package used to load in config data) which
 won't let us use environment variables unless the variable itself is specified in the `maestro.yaml` config file.
 
-You'll notice some empty fields in the Config Map that look like, these need to be there so that viper can correctly
-unmarshal both the config file and the environments together.
+You'll notice some empty fields in the Config Map, these need to be there so that viper can correctly unmarshal both the
+config file and the environments together.
 
 For some more context, check out this issue: https://github.com/spf13/viper/issues/212#issuecomment-240799071
 
