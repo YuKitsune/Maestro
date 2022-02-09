@@ -20,6 +20,10 @@ type deezerStreamingService struct {
 func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
 	var actualLink string
 
+	if linkRegexp.MatchString(link) {
+		return link, nil
+	}
+
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			urlString := req.URL.String()
@@ -48,7 +52,7 @@ func NewDeezerStreamingService(mr metrics.Recorder) streamingservice.StreamingSe
 }
 
 func (s *deezerStreamingService) LinkBelongsToService(link string) bool {
-	return s.shareLinkPattern.MatchString(link)
+	return s.shareLinkPattern.MatchString(link) || s.actualLinkPattern.MatchString(link)
 }
 
 func (s *deezerStreamingService) Key() model.StreamingServiceKey {
