@@ -7,6 +7,7 @@ import (
 	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"net/http"
 	"regexp"
+	"strconv"
 )
 
 type deezerStreamingService struct {
@@ -103,7 +104,8 @@ func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, 
 		}
 
 		// Todo: Narrow down results
-		deezerAlbum := searchRes[0]
+		deezerAlbum := &searchRes[0]
+
 		res = model.NewAlbum(
 			deezerAlbum.Title,
 			[]string{deezerAlbum.Artist.Name},
@@ -148,7 +150,15 @@ func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, b
 				continue
 			}
 
-			deezerTrack = &foundTracks[0]
+			// Todo: Narrow down results
+			foundTrack := foundTracks[0]
+
+			// Tracks in search results aren't fully enriched (namely, the ISRC code is excluded)
+			// Need to re-query the track directly to get the full details
+			deezerTrack, err = s.client.GetTrack(foundTrack.Id)
+			if err != nil {
+				return nil, false, err
+			}
 		}
 
 		res = model.NewTrack(
@@ -188,7 +198,12 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, bool,
 	case "artist":
 		go s.metricsRecorder.CountDeezerRequest()
 
-		foundArtist, err := s.client.GetArtist(id)
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			return nil, false, err
+		}
+
+		foundArtist, err := s.client.GetArtist(idInt)
 		if err != nil {
 			return nil, false, err
 		}
@@ -205,7 +220,12 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, bool,
 	case "album":
 		go s.metricsRecorder.CountDeezerRequest()
 
-		foundAlbum, err := s.client.GetAlbum(id)
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			return nil, false, err
+		}
+
+		foundAlbum, err := s.client.GetAlbum(idInt)
 		if err != nil {
 			return nil, false, err
 		}
@@ -223,7 +243,12 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, bool,
 	case "track":
 		go s.metricsRecorder.CountDeezerRequest()
 
-		foundTrack, err := s.client.GetTrack(id)
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			return nil, false, err
+		}
+
+		foundTrack, err := s.client.GetTrack(idInt)
 		if err != nil {
 			return nil, false, err
 		}
