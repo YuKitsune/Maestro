@@ -46,14 +46,3 @@ func SearchThing(ss StreamingService, thing model.Thing) (model.Thing, bool, err
 		return nil, false, fmt.Errorf("unknown type %T", thing)
 	}
 }
-
-func ForEachStreamingService(services []StreamingService, fn func(StreamingService) error) error {
-	for _, service := range services {
-		err := fn(service)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}

@@ -13,7 +13,6 @@ import (
 	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"net/http"
 	"net/url"
-	"reflect"
 )
 
 func HandleLink(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +57,6 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Todo: Improve this error message
 	if res == nil || len(res.([]model.Thing)) == 0 {
 		NotFound(w, "could not find anything")
 		return
@@ -83,63 +81,11 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 			return nil, err
 		}
 
-		// Todo: If we've found a track, then query the DB with the ISRC code
-		// 	Otherwise, use the group ID
-
 		if foundThing != nil {
 
 			// Link found
-			logger = logger.WithField("group_id", foundThing.GetGroupID())
-			logger.Debugln("found a thing")
-
-			allThings, err := repo.GetThingsByGroupID(ctx, foundThing.GetGroupID())
-			if err != nil {
-				return nil, err
-			}
-
-			// Check if we're missing any services from our results
-			// Todo: It'd be good to have a "Not-found thing" so we can tell if a thing wasn't found for a service,
-			// 	rather than assuming it's been newly added
-			if len(allThings) < len(ss) {
-				logger.Debugf("looks like we have some new services since we found this thing (found %d, looking for %d)\n", len(allThings), len(ss))
-
-				// Query the remaining streaming service
-				var newThings []model.Thing
-				for _, service := range ss {
-					if serviceIsInResults(allThings, service.Key()) {
-						continue
-					}
-
-					logger.Debugf("fetching thing from %s\n", service.Key())
-					thing, found, err := streamingservice.SearchThing(service, foundThing)
-					if err != nil {
-						return nil, err
-					}
-
-					if !found {
-						logger.Debugf("couldn't find anything for %s", service.Key())
-						continue
-					}
-
-					thing.SetGroupID(foundThing.GetGroupID())
-					newThings = append(newThings, thing)
-				}
-
-				// Add the new things to the database
-				if len(newThings) != 0 {
-
-					n, err := repo.AddThings(ctx, newThings)
-					if err != nil {
-						return nil, err
-					}
-
-					logger.Infof("%d new %ss added\n", n, foundThing.Type())
-				}
-
-				allThings = append(allThings, newThings...)
-			}
-
-			return allThings, nil
+			things, err := findForExistingThing(foundThing, container)
+			return things, err
 		}
 
 		logger.Debugln("looks like this is a new thing")
@@ -149,28 +95,24 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		var otherServices []streamingservice.StreamingService
 
 		// Figure out which streaming service the link belongs to
-		err = streamingservice.ForEachStreamingService(ss, func(service streamingservice.StreamingService) error {
+		for _, service := range ss {
 			if service.LinkBelongsToService(link) {
 				targetService = service
 			} else {
 				otherServices = append(otherServices, service)
 			}
-			return nil
-		})
-
-		if err != nil {
-			return nil, err
 		}
 
 		if targetService == nil {
 			return nil, fmt.Errorf("couldn't find a streaming service for the given link: %s", link)
 		}
 
-		// Query the target streaming service
+		// Since this is a new thing, we need a new ID
 		groupID := model.ThingGroupID(uuid.New().String())
 		logger = logger.WithField("group_id", groupID)
 		logger.Debugln("using new group id")
 
+		// Query the target streaming service
 		logger.Debugf("searching %s\n", targetService.Key())
 		thing, found, err := targetService.SearchFromLink(link)
 		if err != nil {
@@ -178,7 +120,6 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		}
 
 		if !found {
-			logger.Debugf("couldn't find anything for %s", targetService.Key())
 			return nil, fmt.Errorf("%s: couldn't find anything for the given link", targetService.Key())
 		}
 
@@ -188,29 +129,20 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		things = append(things, thing)
 
 		// Query the other streaming services using what we found from the target streaming service
-		err = streamingservice.ForEachStreamingService(otherServices, func(service streamingservice.StreamingService) error {
-
+		for _, service := range otherServices {
 			logger.Debugf("searching %s for %s with name %s\n", service.Key(), thing.Type(), thing.GetLabel())
 			foundThing, found, err := streamingservice.SearchThing(service, thing)
 			if err != nil {
-				return fmt.Errorf("%s: %s", service.Key(), err.Error())
+				return nil, fmt.Errorf("%s: %s", service.Key(), err.Error())
 			}
 
 			if !found {
 				logger.Debugf("couldn't find anything for %s", service.Key())
-				return nil
-			}
-
-			if foundThing == nil || reflect.ValueOf(foundThing).IsNil() {
-				return nil
+				continue
 			}
 
 			foundThing.SetGroupID(groupID)
 			things = append(things, foundThing)
-			return nil
-		})
-		if err != nil {
-			return nil, err
 		}
 
 		// Store the new thing in the database
@@ -220,14 +152,70 @@ func findForLink(link string, container camogo.Container) (interface{}, error) {
 		return things, nil
 	})
 
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
+	return res, err
 }
 
-func serviceIsInResults(things []model.Thing, service model.StreamingServiceKey) bool {
+func findForExistingThing(foundThing model.Thing, container camogo.Container) (interface{}, error) {
+	return container.ResolveWithResult(func(ctx context.Context, repo db.Repository, ss []streamingservice.StreamingService, logger *logrus.Entry) (interface{}, error) {
+
+		logger = logger.WithField("group_id", foundThing.GetGroupID())
+		logger.Debugln("found a thing")
+
+		// Find any related things based on the group ID
+		// Todo: If we've found a track, then query the DB with the ISRC code
+		// 	Otherwise, use the group ID
+		existingThings, err := repo.GetThingsByGroupID(ctx, foundThing.GetGroupID())
+		if err != nil {
+			return nil, err
+		}
+
+		// Check if we're missing any services from our results
+		// Todo: It'd be good to have a "Not-found thing" so we can tell if a thing wasn't found for a service,
+		// 	rather than assuming it's been newly added
+		if len(existingThings) >= len(ss) {
+			return existingThings, nil
+		}
+		logger.Debugf("looks like we have some new services since we found this thing (found %d, looking for %d)\n", len(existingThings), len(ss))
+
+		// Query the remaining streaming service
+		var newThings []model.Thing
+		for _, service := range ss {
+			if serviceIsInThings(existingThings, service.Key()) {
+				continue
+			}
+
+			logger.Debugf("fetching thing from %s\n", service.Key())
+			thing, found, err := streamingservice.SearchThing(service, foundThing)
+			if err != nil {
+				return nil, err
+			}
+
+			if !found {
+				logger.Debugf("couldn't find anything for %s", service.Key())
+				continue
+			}
+
+			thing.SetGroupID(foundThing.GetGroupID())
+			newThings = append(newThings, thing)
+		}
+
+		// Add the new things to the database
+		if len(newThings) != 0 {
+
+			n, err := repo.AddThings(ctx, newThings)
+			if err != nil {
+				return nil, err
+			}
+
+			logger.Infof("%d new %ss added\n", n, foundThing.Type())
+		}
+
+		allThings := append(existingThings, newThings...)
+		return allThings, nil
+	})
+}
+
+func serviceIsInThings(things []model.Thing, service model.StreamingServiceKey) bool {
 	for _, thing := range things {
 		if thing.GetSource() == service {
 			return true
