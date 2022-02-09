@@ -84,7 +84,7 @@ func (s *spotifyStreamingService) LinkBelongsToService(link string) bool {
 	return s.shareLinkPattern.MatchString(link)
 }
 
-func (s *spotifyStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, error) {
+func (s *spotifyStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, bool, error) {
 
 	country := artist.Market.String()
 
@@ -95,11 +95,11 @@ func (s *spotifyStreamingService) SearchArtist(artist *model.Artist) (*model.Art
 		Country: &country,
 	})
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if searchRes.Artists == nil || len(searchRes.Artists.Artists) == 0 {
-		return nil, nil
+		return nil, false, nil
 	}
 
 	spotifyArtist := searchRes.Artists.Artists[0]
@@ -110,10 +110,10 @@ func (s *spotifyStreamingService) SearchArtist(artist *model.Artist) (*model.Art
 		model.DefaultMarket,
 		spotifyArtist.ExternalURLs["spotify"])
 
-	return res, nil
+	return res, true, nil
 }
 
-func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album, error) {
+func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album, bool, error) {
 
 	country := album.Market.String()
 
@@ -131,7 +131,7 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 			Country: &country,
 		})
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		if searchRes.Albums == nil || len(searchRes.Albums.Albums) == 0 {
@@ -150,10 +150,10 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 			spotifyAlbum.ExternalURLs["spotify"])
 	}
 
-	return res, nil
+	return res, res != nil, nil
 }
 
-func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, error) {
+func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, bool, error) {
 
 	country := track.Market.String()
 
@@ -178,7 +178,7 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 			Country: &country,
 		})
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		if searchRes.Tracks == nil || len(searchRes.Tracks.Tracks) == 0 {
@@ -199,10 +199,10 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 			spotifyTrack.ExternalURLs["spotify"])
 	}
 
-	return res, nil
+	return res, res != nil, nil
 }
 
-func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, error) {
+func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, bool, error) {
 
 	// example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=10587ef152a8493f
 	// format: 	https://open.spotify.com/<artist|album|track>/<id>?si=<user specific token that i don't care about>
@@ -220,7 +220,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 
 		foundArtist, err := s.client.GetArtist(id)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		artist := model.NewArtist(
@@ -230,14 +230,14 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			model.DefaultMarket,
 			foundArtist.ExternalURLs["spotify"])
 
-		return artist, nil
+		return artist, true, nil
 
 	case "album":
 		go s.metricsRecorder.CountSpotifyRequest()
 
 		foundAlbum, err := s.client.GetAlbum(id)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		album := model.NewAlbum(
@@ -248,14 +248,14 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			model.DefaultMarket,
 			foundAlbum.ExternalURLs["spotify"])
 
-		return album, nil
+		return album, true, nil
 
 	case "track":
 		go s.metricsRecorder.CountSpotifyRequest()
 
 		foundTrack, err := s.client.GetTrack(id)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		track := model.NewTrack(
@@ -268,10 +268,10 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, erro
 			model.DefaultMarket,
 			foundTrack.ExternalURLs["spotify"])
 
-		return track, nil
+		return track, true, nil
 
 	default:
-		return nil, fmt.Errorf("unknown type %s", typ)
+		return nil, false, fmt.Errorf("unknown type %s", typ)
 	}
 }
 

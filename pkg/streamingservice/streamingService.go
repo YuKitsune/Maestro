@@ -8,14 +8,14 @@ import (
 type StreamingService interface {
 	Key() model.StreamingServiceKey
 	LinkBelongsToService(link string) bool
-	SearchArtist(artist *model.Artist) (*model.Artist, error)
-	SearchAlbum(album *model.Album) (*model.Album, error)
-	SearchSong(song *model.Track) (*model.Track, error)
-	SearchFromLink(link string) (model.Thing, error)
+	SearchArtist(artist *model.Artist) (*model.Artist, bool, error)
+	SearchAlbum(album *model.Album) (*model.Album, bool, error)
+	SearchSong(song *model.Track) (*model.Track, bool, error)
+	SearchFromLink(link string) (model.Thing, bool, error)
 	CleanLink(link string) string
 }
 
-func SearchThing(ss StreamingService, thing model.Thing) (model.Thing, error) {
+func SearchThing(ss StreamingService, thing model.Thing) (model.Thing, bool, error) {
 
 	// Todo: Name normalisation
 	// 	Some services name things differently, making searches much more difficult.
@@ -43,7 +43,7 @@ func SearchThing(ss StreamingService, thing model.Thing) (model.Thing, error) {
 		return ss.SearchSong(t)
 
 	default:
-		return nil, fmt.Errorf("unknown type %T", thing)
+		return nil, false, fmt.Errorf("unknown type %T", thing)
 	}
 }
 
