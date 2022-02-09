@@ -13,6 +13,7 @@ type searchArtistResponse struct {
 }
 
 type Artist struct {
+	Id      int
 	Name    string
 	Link    string
 	Picture string
@@ -23,6 +24,7 @@ type searchAlbumResponse struct {
 }
 
 type Album struct {
+	Id     int
 	Title  string
 	Link   string
 	Cover  string
@@ -34,6 +36,7 @@ type searchTrackResponse struct {
 }
 
 type Track struct {
+	Id     int
 	Isrc   string
 	Title  string
 	Link   string
@@ -138,9 +141,9 @@ func (d *client) SearchTrack(artistName string, albumName string, trackName stri
 	return tracks, nil
 }
 
-func (d *client) GetArtist(id string) (*Artist, error) {
+func (d *client) GetArtist(id int) (*Artist, error) {
 
-	url := fmt.Sprintf("%s/artist/%s", baseURL, id)
+	url := fmt.Sprintf("%s/artist/%d", baseURL, id)
 
 	httpRes, err := d.client.Get(url)
 	defer httpRes.Body.Close()
@@ -159,9 +162,9 @@ func (d *client) GetArtist(id string) (*Artist, error) {
 	return res, nil
 }
 
-func (d *client) GetAlbum(id string) (*Album, error) {
+func (d *client) GetAlbum(id int) (*Album, error) {
 
-	url := fmt.Sprintf("%s/album/%s", baseURL, id)
+	url := fmt.Sprintf("%s/album/%d", baseURL, id)
 
 	httpRes, err := d.client.Get(url)
 	defer httpRes.Body.Close()
@@ -180,9 +183,9 @@ func (d *client) GetAlbum(id string) (*Album, error) {
 	return res, nil
 }
 
-func (d *client) GetTrack(id string) (*Track, error) {
+func (d *client) GetTrack(id int) (*Track, error) {
 
-	url := fmt.Sprintf("%s/track/%s", baseURL, id)
+	url := fmt.Sprintf("%s/track/%d", baseURL, id)
 
 	httpRes, err := d.client.Get(url)
 	defer httpRes.Body.Close()

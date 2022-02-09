@@ -35,35 +35,38 @@ func (s *appleMusicStreamingService) LinkBelongsToService(link string) bool {
 	return s.shareLinkPattern.MatchString(link)
 }
 
-func (s *appleMusicStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, error) {
+func (s *appleMusicStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, bool, error) {
 
 	go s.metricsRecorder.CountAppleMusicRequest()
+
 	searchRes, err := s.client.SearchArtist(artist.Name, artist.GetMarket())
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if len(searchRes) == 0 {
-		return nil, nil
+		return nil, false, nil
 	}
 
 	// Todo: Narrow down results
 	foundArtist := searchRes[0]
 
-	return s.newArtist(&foundArtist, artist.Market)
+	artistRes, err := s.newArtist(&foundArtist, artist.Market)
+	return artistRes, true, err
 }
 
-func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Album, error) {
+func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Album, bool, error) {
 
 	go s.metricsRecorder.CountAppleMusicRequest()
+
 	term := fmt.Sprintf("%s %s", strings.Join(album.ArtistNames, " "), album.Name)
 	searchRes, err := s.client.SearchAlbum(term, album.GetMarket())
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if len(searchRes) == 0 {
-		return nil, nil
+		return nil, false, nil
 	}
 
 	// Todo: Narrow down results
@@ -72,13 +75,14 @@ func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Alb
 	// Load the album directly so we get the relationships
 	fullAlbum, err := s.client.GetAlbum(foundAlbum.ID, album.Market)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	return s.newAlbum(fullAlbum, album.Market)
+	resAlbum, err := s.newAlbum(fullAlbum, album.Market)
+	return resAlbum, true, err
 }
 
-func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track, error) {
+func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track, bool, error) {
 
 	go s.metricsRecorder.CountAppleMusicRequest()
 
@@ -87,18 +91,18 @@ func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track
 	if len(song.Isrc) > 0 {
 		searchRes, err = s.client.GetSongByIsrc(song.Isrc, song.Market)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	} else {
 		term := fmt.Sprintf("%s %s", strings.Join(song.ArtistNames, " "), song.Name)
 		searchRes, err = s.client.SearchSong(term, song.GetMarket())
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	}
 
 	if len(searchRes) == 0 {
-		return nil, nil
+		return nil, false, nil
 	}
 
 	// Todo: Narrow down results
@@ -107,13 +111,14 @@ func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track
 	// Load the song directly so we get the relationships
 	fullSong, err := s.client.GetSong(foundSong.ID, song.Market)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	return s.newTrack(fullSong, song.Market)
+	resTrack, err := s.newTrack(fullSong, song.Market)
+	return resTrack, true, err
 }
 
-func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, error) {
+func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, bool, error) {
 
 	// example: https://music.apple.com/au/album/surrender/1585865534?i=123123123
 	// format: 	https://music.apple.com/<storefront>/<artist|album>/<name>/<album-id/artist-id>?i=<song-id>
@@ -137,31 +142,34 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, e
 		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetArtist(id, storefront)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
-		return s.newArtist(res, storefront)
+		artist, err := s.newArtist(res, storefront)
+		return artist, true, err
 
 	case "album":
 		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetAlbum(id, storefront)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
-		return s.newAlbum(res, storefront)
+		album, err := s.newAlbum(res, storefront)
+		return album, true, err
 
 	case "song":
 		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetSong(id, storefront)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
-		return s.newTrack(res, storefront)
+		track, err := s.newTrack(res, storefront)
+		return track, true, err
 
 	default:
-		return nil, fmt.Errorf("unknown type %s", typ)
+		return nil, false, fmt.Errorf("unknown type %s", typ)
 	}
 }
 

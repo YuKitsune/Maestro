@@ -7,7 +7,7 @@ import (
 	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"io/ioutil"
 	"net/http"
-	"strings"
+	url2 "net/url"
 )
 
 type ArtistsResult struct {
@@ -116,7 +116,7 @@ func NewAppleMusicClient(token string) *client {
 
 func (a *client) SearchArtist(term string, storefront model.Market) ([]Artist, error) {
 
-	querySafeTerm := strings.ReplaceAll(term, " ", "+")
+	querySafeTerm := url2.QueryEscape(term)
 	url := fmt.Sprintf("%s/v1/catalog/%s/search?term=%s&types=artists", baseURL, storefront, querySafeTerm)
 
 	httpRes, err := a.client.Get(url)
@@ -145,8 +145,8 @@ func (a *client) SearchArtist(term string, storefront model.Market) ([]Artist, e
 
 func (a *client) SearchAlbum(term string, storefront model.Market) ([]Album, error) {
 
-	querySafeTerm := strings.ReplaceAll(term, " ", "+")
-	url := fmt.Sprintf("%s/v1/catalog/%s/search?term=%s&types=albums", baseURL, storefront, querySafeTerm)
+	querySafeTerm := url2.QueryEscape(term)
+	url := fmt.Sprintf("%s/v1/catalog/%s/search?term='%s'&types=albums", baseURL, storefront, querySafeTerm)
 
 	httpRes, err := a.client.Get(url)
 	defer httpRes.Body.Close()
@@ -174,7 +174,7 @@ func (a *client) SearchAlbum(term string, storefront model.Market) ([]Album, err
 
 func (a *client) SearchSong(term string, storefront model.Market) ([]Song, error) {
 
-	querySafeTerm := strings.ReplaceAll(term, " ", "+")
+	querySafeTerm := url2.QueryEscape(term)
 	url := fmt.Sprintf("%s/v1/catalog/%s/search?term=%s&types=songs", baseURL, storefront, querySafeTerm)
 
 	httpRes, err := a.client.Get(url)
@@ -315,17 +315,15 @@ func (a *client) GetSongByIsrc(isrc string, storefront model.Market) ([]Song, er
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
-	var res *SearchResponse
+	var res *SongResult
 	err = json.Unmarshal(resBytes, &res)
 	if err != nil {
 		return nil, err
 	}
 
 	var songs []Song
-	if res != nil && res.Results.Songs != nil {
-		for _, song := range res.Results.Songs.Data {
-			songs = append(songs, *song)
-		}
+	for _, song := range res.Data {
+		songs = append(songs, *song)
 	}
 
 	return songs, nil
