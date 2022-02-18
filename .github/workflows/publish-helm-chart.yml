@@ -29,6 +29,6 @@ jobs:
         uses: helm/chart-releaser-action@v1.3.0
         with:
           charts_dir: ./deployments/helm
-          charts_repo_url: https://github.com/YuKitsune/charts
+          charts_repo_url: https://yukitsune.github.io/charts/
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
