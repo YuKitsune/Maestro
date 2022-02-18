@@ -58,11 +58,9 @@ will automatically run `docker-compose` with the appropriate flags and arguments
 
 Run `make` or `make help` for a list of available commands and what they do.
 
-# Kubernetes
-Kubernetes is used to deploy Maestro to production. For a detailed guide on configuring Kubernetes and Maestro, head
-over to the [Kubernetes readme](deployments/k8s/README.md).
-
-Note that this will be converted to a Helm chart in the future.
+# Helm
+Maestro provides a helm chart for use in a Kubernetes cluster. This is used to deploy Maestro to production.
+For a more detailed guide on configuring the Maestro Helm chart, head over to the [Helm readme](deployments/helm/maestro/README.md).
 
 # Pull Requests
 If you have some changes you'd like to see merged into Maestro, consider forking and submitting a pull request!
