@@ -23,7 +23,7 @@ spec:
             - containerPort: 3000
           env:
             - name: API_URL
-              value: http://maestro-api
+              value: http://maestro-api-service
 
             - name: PUBLIC_API_URL
               value: {{ required "publicApiUrl is required" .Values.publicApiUrl }}
@@ -34,7 +34,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: maestro-frontend
+  name: maestro-frontend-service
 spec:
   type: ClusterIP
   selector:
