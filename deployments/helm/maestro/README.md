@@ -10,7 +10,7 @@ Before we can start, there are a few tools we need:
 
 Add Maestro's chart repository to Helm
 ```shell
-TODO
+helm repo add yukitsune https://charts.yukitsune.dev
 ```
 
 You can update the chart repository by running:
@@ -20,8 +20,7 @@ helm repo update
 
 ## Deploying
 ```shell
-TODO
-helm install maestro yukitsune/yukitsune --values ./values.yaml
+helm install maestro yukitsune/maestro --values ./values.yaml
 ```
 
 ### Specifying values
