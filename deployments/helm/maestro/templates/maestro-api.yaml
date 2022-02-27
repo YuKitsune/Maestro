@@ -22,10 +22,12 @@ spec:
           configMap:
             name: maestro-api-config
 
-        # (Optional) MongoDB TLS Certificate
+        {{/* (Optional) MongoDB TLS Certificate */}}
+        {{if .Values.database.mongoTlsCert}}
         - name: mongo-tls
           secret:
             secretName: maestro-secret-mongo-tls
+        {{end}}
 
       containers:
         - name: maestro-api
@@ -37,10 +39,12 @@ spec:
               mountPath: "/etc/maestro"
               readOnly: true
 
-            # (Optional) MongoDB TLS Certificate
+            {{/* (Optional) MongoDB TLS Certificate */}}
+            {{if .Values.database.mongoTlsCert}}
             - name: mongo-tls
               mountPath: "/etc/maestro/mongo"
               readOnly: true
+            {{end}}
           env:
 
             # Database
@@ -90,34 +94,3 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8182
-
----
-
-# Strip API prefix middleware
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: strip-api-prefix
-spec:
-  stripPrefix:
-    prefixes:
-      - /api
-
----
-
-# Maestro API ingress
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: maestro-api-ingress
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`maestro.yukitsune.dev`) && PathPrefix(`/api`) # Wish this could be put into a ConfigMap 😔
-      kind: Rule
-      services:
-        - name: maestro-api-service
-          port: 80
-      middlewares:
-        - name: strip-api-prefix

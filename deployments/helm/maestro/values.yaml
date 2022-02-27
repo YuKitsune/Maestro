@@ -1,0 +1,30 @@
+
+# The publicly accessible URL for the Maestro API
+# Example: "https://maestro.yukitsune.dev/api"
+publicApiUrl: 
+
+database:
+
+  # The URI for the MongoDB database
+  mongoUri:
+
+  # The name of the MongoDB databse to use
+  mongoDatabaseName:
+
+  # (Optional) The MongoDB server TLS certificate
+  mongoTlsCert:
+
+# TODO: Make these optional
+services:
+  appleMusic:
+
+    # The Apple Music JWT
+    token:
+
+  spotify:
+    
+    # The Spotify client ID
+    clientId:
+
+    # The Spotify client secret
+    clientSecret:

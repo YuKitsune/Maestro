@@ -26,10 +26,7 @@ spec:
               value: http://maestro-api-service
 
             - name: PUBLIC_API_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: host-config
-                  key: https-api-host
+              value: {{ required "publicApiUrl is required" .Values.publicApiUrl }}
 
 ---
 
@@ -46,20 +43,3 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3000
-
----
-
-# Maestro frontend ingress
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: maestro-frontend-ingress
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`maestro.yukitsune.dev`) # Wish this could be put into a ConfigMap 😔
-      kind: Rule
-      services:
-        - name: maestro-frontend-service
-          port: 80
