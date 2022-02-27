@@ -1,0 +1,29 @@
+name: Push Helm Chart
+
+on:
+  release:
+    types: [published]
+
+  workflow_dispatch:
+
+jobs:
+  push:
+    name: Push Helm Chart
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: azure/setup-helm@v1
+        name: Install Helm
+
+      - name: Configure Helm
+        run: |
+          helm repo add yukitsune https://charts.yukitsune.dev/
+          helm plugin install https://github.com/chartmuseum/helm-push
+
+      - uses: actions/checkout@v2
+
+      - name: Push Helm Chart
+        env:
+          HELM_REPO_USERNAME: ${{ secrets.CHART_REPO_USERNAME }} 
+          HELM_REPO_PASSWORD: ${{ secrets.CHART_REPO_PASSWORD }}
+        run: helm cm-push ./deployments/helm/maestro maestro
