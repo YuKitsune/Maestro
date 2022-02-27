@@ -23,4 +23,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Push Helm Chart
+        env:
+          HELM_REPO_USERNAME: ${{ secrets.CHART_REPO_USERNAME }} 
+          HELM_REPO_PASSWORD: ${{ secrets.CHART_REPO_PASSWORD }}
         run: helm cm-push ./deployments/helm/maestro maestro
