@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
+	"github.com/yukitsune/maestro/pkg/api/db/migrations"
 	"github.com/yukitsune/maestro/pkg/metrics"
 	"github.com/yukitsune/maestro/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -9,16 +11,18 @@ import (
 )
 
 type mongoRepository struct {
-	db  *mongo.Database
-	rec metrics.Recorder
+	db     *mongo.Database
+	rec    metrics.Recorder
+	logger *logrus.Entry
 }
 
-func NewMongoRepository(db *mongo.Database, rec metrics.Recorder) Repository {
-	return &mongoRepository{db, rec}
+func NewMongoRepository(db *mongo.Database, rec metrics.Recorder, log *logrus.Entry) Repository {
+	return &mongoRepository{db, rec, log}
 }
 
 func (m *mongoRepository) AddArtist(ctx context.Context, artists []model.Artist) (int, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 
 	coll := m.db.Collection(model.ArtistCollectionName)
 	insertRes, err := coll.InsertMany(ctx, artistsToInterfaces(artists))
@@ -31,6 +35,7 @@ func (m *mongoRepository) AddArtist(ctx context.Context, artists []model.Artist)
 
 func (m *mongoRepository) GetArtistsById(ctx context.Context, id string) ([]model.Artist, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 
 	coll := m.db.Collection(model.ArtistCollectionName)
 	cur, err := coll.Find(ctx, bson.D{
@@ -47,6 +52,7 @@ func (m *mongoRepository) GetArtistsById(ctx context.Context, id string) ([]mode
 
 func (m *mongoRepository) GetArtistByLink(ctx context.Context, link string) (*model.Artist, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 
 	// Find an artist with a matching link
 	var foundArtist *model.Artist
@@ -77,11 +83,13 @@ func (m *mongoRepository) GetArtistByLink(ctx context.Context, link string) (*mo
 
 func (m *mongoRepository) UpdateArtists(ctx context.Context, artists []model.Artist) (int, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 	panic("not implemented!")
 }
 
 func (m *mongoRepository) AddAlbum(ctx context.Context, albums []model.Album) (int, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 
 	coll := m.db.Collection(model.AlbumCollectionName)
 	insertRes, err := coll.InsertMany(ctx, albumsToInterfaces(albums))
@@ -94,6 +102,7 @@ func (m *mongoRepository) AddAlbum(ctx context.Context, albums []model.Album) (i
 
 func (m *mongoRepository) GetAlbumsById(ctx context.Context, id string) ([]model.Album, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 
 	coll := m.db.Collection(model.AlbumCollectionName)
 	cur, err := coll.Find(ctx, bson.D{
@@ -110,6 +119,7 @@ func (m *mongoRepository) GetAlbumsById(ctx context.Context, id string) ([]model
 
 func (m *mongoRepository) GetAlbumByLink(ctx context.Context, link string) (*model.Album, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 
 	// Find an album with a matching link
 	var foundAlbum *model.Album
@@ -140,11 +150,13 @@ func (m *mongoRepository) GetAlbumByLink(ctx context.Context, link string) (*mod
 
 func (m *mongoRepository) UpdateAlbums(ctx context.Context, albums []model.Album) (int, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 	panic("not implemented!")
 }
 
 func (m *mongoRepository) AddTracks(ctx context.Context, tracks []model.Track) (int, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 
 	coll := m.db.Collection(model.TrackCollectionName)
 	insertRes, err := coll.InsertMany(ctx, tracksToInterfaces(tracks))
@@ -157,6 +169,7 @@ func (m *mongoRepository) AddTracks(ctx context.Context, tracks []model.Track) (
 
 func (m *mongoRepository) GetTracksByIsrc(ctx context.Context, isrc string) ([]model.Track, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 
 	coll := m.db.Collection(model.TrackCollectionName)
 	cur, err := coll.Find(ctx, bson.D{
@@ -173,6 +186,7 @@ func (m *mongoRepository) GetTracksByIsrc(ctx context.Context, isrc string) ([]m
 
 func (m *mongoRepository) GetTrackByLink(ctx context.Context, link string) (*model.Track, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 
 	// Find a track with a matching link
 	var foundTrack *model.Track
@@ -203,6 +217,7 @@ func (m *mongoRepository) GetTrackByLink(ctx context.Context, link string) (*mod
 
 func (m *mongoRepository) UpdateTracks(ctx context.Context, tracks []model.Track) (int, error) {
 	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
 	panic("not implemented!")
 }
 
@@ -231,4 +246,15 @@ func tracksToInterfaces(tracks []model.Track) []interface{} {
 	}
 
 	return s
+}
+
+func (m *mongoRepository) ensureMigrationsHaveExecuted(ctx context.Context) {
+	provider := migrations.NewMongoMigrationProvider()
+	migrator := &migrations.Migrator{}
+
+	// Todo: If a migration fails, we're in deep trouble...
+	err := migrator.Execute(ctx, provider, m.db)
+	if err != nil {
+		m.logger.Fatalf("failed to execute migrations: %s", err)
+	}
 }
