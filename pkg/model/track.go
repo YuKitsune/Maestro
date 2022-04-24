@@ -1,9 +1,14 @@
 package model
 
 import (
+	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"strings"
 )
+
+const TrackCollectionName = "tracks"
 
 type Track struct {
 	Isrc        string
@@ -12,11 +17,9 @@ type Track struct {
 	AlbumName   string
 	ArtworkLink string
 
-	GroupID   ThingGroupID
-	Source    StreamingServiceKey
-	ThingType ThingType
-	Market    Market
-	Link      string
+	Source StreamingServiceKey
+	Market Market
+	Link   string
 }
 
 func NewTrack(isrc string, name string, artistNames []string, albumName string, artworkLink string, source StreamingServiceKey, market Market, link string) *Track {
@@ -27,26 +30,13 @@ func NewTrack(isrc string, name string, artistNames []string, albumName string, 
 		AlbumName:   albumName,
 		ArtworkLink: artworkLink,
 		Source:      source,
-		ThingType:   TrackThing,
 		Market:      market,
 		Link:        link,
 	}
 }
 
-func (t *Track) Type() ThingType {
-	return t.ThingType
-}
-
 func (t *Track) GetArtworkLink() string {
 	return t.ArtworkLink
-}
-
-func (t *Track) GetGroupID() ThingGroupID {
-	return t.GroupID
-}
-
-func (t *Track) SetGroupID(groupID ThingGroupID) {
-	t.GroupID = groupID
 }
 
 func (t *Track) GetSource() StreamingServiceKey {
@@ -63,4 +53,29 @@ func (t *Track) GetLink() string {
 
 func (t *Track) GetLabel() string {
 	return fmt.Sprintf("%s - %s", strings.Join(t.ArtistNames, ", "), t.Name)
+}
+
+func UnmarshalTrack(raw bson.Raw) (*Track, error) {
+	var track *Track
+	if err := bson.Unmarshal(raw, &track); err != nil {
+		return nil, err
+	}
+
+	return track, nil
+}
+
+func UnmarshalTracksFromCursor(ctx context.Context, cur *mongo.Cursor) ([]Track, error) {
+	var tracks []Track
+
+	defer cur.Close(ctx)
+	for cur.Next(ctx) {
+		track, err := UnmarshalTrack(cur.Current)
+		if err != nil {
+			return nil, err
+		}
+
+		tracks = append(tracks, *track)
+	}
+
+	return tracks, nil
 }

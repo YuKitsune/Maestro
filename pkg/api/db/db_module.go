@@ -18,7 +18,7 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 		return err
 	}
 
-	// Database
+	// Database Client
 	err := cb.RegisterFactory(func(ctx context.Context, cfg *Config) (*mongo.Client, error) {
 
 		opts := options.Client().ApplyURI(cfg.URI)
@@ -34,7 +34,7 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 
 		return client, nil
 	},
-		camogo.TransientLifetime)
+		camogo.ScopedLifetime)
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (m *DatabaseModule) Register(cb camogo.ContainerBuilder) error {
 		db := c.Database(cfg.Database)
 		return db, nil
 	},
-		camogo.TransientLifetime)
+		camogo.ScopedLifetime)
 	if err != nil {
 		return err
 	}
