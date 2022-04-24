@@ -131,7 +131,8 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, b
 	id := matches["id"]
 	songID := matches["song_id"]
 
-	// Hack but it works
+	// Tracks/Songs don't have their own links,
+	// they're links to albums with a songID attached
 	if typ == "album" && len(songID) > 0 {
 		typ = "song"
 		id = songID
