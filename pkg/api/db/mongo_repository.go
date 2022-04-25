@@ -20,7 +20,7 @@ func NewMongoRepository(db *mongo.Database, rec metrics.Recorder, log *logrus.En
 	return &mongoRepository{db, rec, log}
 }
 
-func (m *mongoRepository) AddArtist(ctx context.Context, artists []model.Artist) (int, error) {
+func (m *mongoRepository) AddArtist(ctx context.Context, artists []*model.Artist) (int, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
 
@@ -33,7 +33,7 @@ func (m *mongoRepository) AddArtist(ctx context.Context, artists []model.Artist)
 	return len(insertRes.InsertedIDs), nil
 }
 
-func (m *mongoRepository) GetArtistsById(ctx context.Context, id string) ([]model.Artist, error) {
+func (m *mongoRepository) GetArtistsById(ctx context.Context, id string) ([]*model.Artist, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
 
@@ -81,13 +81,13 @@ func (m *mongoRepository) GetArtistByLink(ctx context.Context, link string) (*mo
 	return foundArtist, nil
 }
 
-func (m *mongoRepository) UpdateArtists(ctx context.Context, artists []model.Artist) (int, error) {
+func (m *mongoRepository) UpdateArtists(ctx context.Context, artists []*model.Artist) (int, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
 	panic("not implemented!")
 }
 
-func (m *mongoRepository) AddAlbum(ctx context.Context, albums []model.Album) (int, error) {
+func (m *mongoRepository) AddAlbum(ctx context.Context, albums []*model.Album) (int, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
 
@@ -100,7 +100,7 @@ func (m *mongoRepository) AddAlbum(ctx context.Context, albums []model.Album) (i
 	return len(insertRes.InsertedIDs), nil
 }
 
-func (m *mongoRepository) GetAlbumsById(ctx context.Context, id string) ([]model.Album, error) {
+func (m *mongoRepository) GetAlbumsById(ctx context.Context, id string) ([]*model.Album, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
 
@@ -148,13 +148,13 @@ func (m *mongoRepository) GetAlbumByLink(ctx context.Context, link string) (*mod
 	return foundAlbum, nil
 }
 
-func (m *mongoRepository) UpdateAlbums(ctx context.Context, albums []model.Album) (int, error) {
+func (m *mongoRepository) UpdateAlbums(ctx context.Context, albums []*model.Album) (int, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
 	panic("not implemented!")
 }
 
-func (m *mongoRepository) AddTracks(ctx context.Context, tracks []model.Track) (int, error) {
+func (m *mongoRepository) AddTracks(ctx context.Context, tracks []*model.Track) (int, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
 
@@ -167,7 +167,7 @@ func (m *mongoRepository) AddTracks(ctx context.Context, tracks []model.Track) (
 	return len(insertRes.InsertedIDs), nil
 }
 
-func (m *mongoRepository) GetTracksByIsrc(ctx context.Context, isrc string) ([]model.Track, error) {
+func (m *mongoRepository) GetTracksByIsrc(ctx context.Context, isrc string) ([]*model.Track, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
 
@@ -215,13 +215,45 @@ func (m *mongoRepository) GetTrackByLink(ctx context.Context, link string) (*mod
 	return foundTrack, nil
 }
 
-func (m *mongoRepository) UpdateTracks(ctx context.Context, tracks []model.Track) (int, error) {
+func (m *mongoRepository) UpdateTracks(ctx context.Context, tracks []*model.Track) (int, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
 	panic("not implemented!")
 }
 
-func artistsToInterfaces(artists []model.Artist) []interface{} {
+func (m *mongoRepository) GetByLink(ctx context.Context, link string) (model.Type, interface{}, error) {
+
+	artist, err := m.GetArtistByLink(ctx, link)
+	if err != nil {
+		return model.UnknownType, nil, err
+	}
+
+	if artist != nil {
+		return model.ArtistType, artist, err
+	}
+
+	album, err := m.GetAlbumByLink(ctx, link)
+	if err != nil {
+		return model.UnknownType, nil, err
+	}
+
+	if album != nil {
+		return model.AlbumType, album, err
+	}
+
+	track, err := m.GetTrackByLink(ctx, link)
+	if err != nil {
+		return model.UnknownType, nil, err
+	}
+
+	if track != nil {
+		return model.TrackType, track, err
+	}
+
+	return model.UnknownType, nil, nil
+}
+
+func artistsToInterfaces(artists []*model.Artist) []interface{} {
 	var s []interface{}
 	for _, artist := range artists {
 		s = append(s, artist)
@@ -230,7 +262,7 @@ func artistsToInterfaces(artists []model.Artist) []interface{} {
 	return s
 }
 
-func albumsToInterfaces(albums []model.Album) []interface{} {
+func albumsToInterfaces(albums []*model.Album) []interface{} {
 	var s []interface{}
 	for _, album := range albums {
 		s = append(s, album)
@@ -239,7 +271,7 @@ func albumsToInterfaces(albums []model.Album) []interface{} {
 	return s
 }
 
-func tracksToInterfaces(tracks []model.Track) []interface{} {
+func tracksToInterfaces(tracks []*model.Track) []interface{} {
 	var s []interface{}
 	for _, track := range tracks {
 		s = append(s, track)

@@ -82,7 +82,25 @@ func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Alb
 	return resAlbum, true, err
 }
 
-func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track, bool, error) {
+func (s *appleMusicStreamingService) GetTrackByIsrc(isrc string) (*model.Track, bool, error) {
+
+	songsRes, err := s.client.GetSongByIsrc(isrc, model.DefaultMarket)
+	if err != nil {
+		return nil, false, err
+	}
+
+	// Todo: Narrow down results
+	foundSong := songsRes[0]
+
+	track, err := s.newTrack(&foundSong, model.DefaultMarket)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return track, true, nil
+}
+
+func (s *appleMusicStreamingService) SearchTrack(song *model.Track) (*model.Track, bool, error) {
 
 	go s.metricsRecorder.CountAppleMusicRequest()
 
@@ -118,7 +136,7 @@ func (s *appleMusicStreamingService) SearchSong(song *model.Track) (*model.Track
 	return resTrack, true, err
 }
 
-func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, bool, error) {
+func (s *appleMusicStreamingService) GetFromLink(link string) (model.Type, interface{}, error) {
 
 	// example: https://music.apple.com/au/album/surrender/1585865534?i=123123123
 	// format: 	https://music.apple.com/<storefront>/<artist|album>/<name>/<album-id/artist-id>?i=<song-id>
@@ -127,50 +145,63 @@ func (s *appleMusicStreamingService) SearchFromLink(link string) (model.Thing, b
 	matches := streamingservice.FindStringSubmatchMap(s.shareLinkPattern, link)
 
 	storefront := model.Market(matches["storefront"])
-	typ := matches["type"]
+	typStr := matches["type"]
 	id := matches["id"]
 	songID := matches["song_id"]
 
 	// Tracks/Songs don't have their own links,
 	// they're links to albums with a songID attached
-	if typ == "album" && len(songID) > 0 {
-		typ = "song"
+	if typStr == "album" && len(songID) > 0 {
+		typStr = "song"
 		id = songID
 	}
 
-	switch typ {
+	var typ model.Type
+	switch typStr {
 	case "artist":
+		typ = model.ArtistType
+		break
+	case "album":
+		typ = model.AlbumType
+		break
+	case "song":
+		typ = model.TrackType
+		break
+	}
+
+	switch typ {
+	case model.ArtistType:
 		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetArtist(id, storefront)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		artist, err := s.newArtist(res, storefront)
-		return artist, true, err
+		return typ, artist, err
 
-	case "album":
+	case model.AlbumType:
 		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetAlbum(id, storefront)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		album, err := s.newAlbum(res, storefront)
-		return album, true, err
+		return typ, album, err
 
-	case "song":
+	case model.TrackType:
 		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetSong(id, storefront)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		track, err := s.newTrack(res, storefront)
-		return track, true, err
+		return typ, track, err
 
 	default:
-		return nil, false, fmt.Errorf("unknown type %s", typ)
+		return model.UnknownType, nil, fmt.Errorf("unknown type %s", typ)
 	}
 }
 

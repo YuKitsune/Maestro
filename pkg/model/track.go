@@ -64,8 +64,8 @@ func UnmarshalTrack(raw bson.Raw) (*Track, error) {
 	return track, nil
 }
 
-func UnmarshalTracksFromCursor(ctx context.Context, cur *mongo.Cursor) ([]Track, error) {
-	var tracks []Track
+func UnmarshalTracksFromCursor(ctx context.Context, cur *mongo.Cursor) ([]*Track, error) {
+	var tracks []*Track
 
 	defer cur.Close(ctx)
 	for cur.Next(ctx) {
@@ -74,7 +74,7 @@ func UnmarshalTracksFromCursor(ctx context.Context, cur *mongo.Cursor) ([]Track,
 			return nil, err
 		}
 
-		tracks = append(tracks, *track)
+		tracks = append(tracks, track)
 	}
 
 	return tracks, nil

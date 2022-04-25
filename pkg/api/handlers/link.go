@@ -15,6 +15,61 @@ import (
 	"net/url"
 )
 
+type Result struct {
+	Type     model.Type
+	Services map[model.StreamingServiceKey]interface{}
+}
+
+func (r *Result) Add(v model.HasStreamingService) {
+	r.Services[v.GetSource()] = v
+}
+
+func (r *Result) AddAll(vs []model.HasStreamingService) {
+	for _, v := range vs {
+		r.Add(v)
+	}
+}
+
+func (r *Result) IsMissingResults() bool {
+	for _, v := range r.Services {
+		if v == nil {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (r *Result) HasResultFor(key model.StreamingServiceKey) bool {
+	for k := range r.Services {
+		if k == key {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (r *Result) HasResults() bool {
+	for _, v := range r.Services {
+		if v != nil {
+			return true
+		}
+	}
+
+	return false
+}
+
+func setupResponse(typ model.Type, s []streamingservice.StreamingService) *Result {
+
+	var svcMap map[model.StreamingServiceKey]interface{}
+	for _, svc := range s {
+		svcMap[svc.Key()] = nil
+	}
+
+	return &Result{typ, svcMap}
+}
+
 func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
@@ -57,7 +112,7 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if res == nil || len(res.([]model.Thing)) == 0 {
+	if res == nil || !res.(*Result).HasResults() {
 		NotFound(w, "could not find anything")
 		return
 	}
@@ -65,162 +120,425 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 	Response(w, res, http.StatusOK)
 }
 
-func findForLink(link string, container camogo.Container) (interface{}, error) {
-	res, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository, ss []streamingservice.StreamingService, logger *logrus.Entry) (interface{}, error) {
+func findForLink(link string, container camogo.Container) (*Result, error) {
+	res, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository, services []streamingservice.StreamingService, logger *logrus.Entry) (*Result, error) {
 
 		// Trim service-specific stuff from the link
-		for _, service := range ss {
+		for _, service := range services {
 			link = service.CleanLink(link)
 		}
 
 		logger = logger.WithField("link", link)
 
 		// Search the database for an existing thing with the given link
-		foundThing, err := repo.GetThingByLink(ctx, link)
+		typ, dbRes, err := repo.GetByLink(ctx, link)
 		if err != nil {
 			return nil, err
 		}
 
-		if foundThing != nil {
+		switch typ {
+		case model.ArtistType:
+			artist := dbRes.(*model.Artist)
+			res, err := findForExistingArtist(ctx, artist, services, repo, logger)
+			return res, err
 
-			// Link found
-			things, err := findForExistingThing(foundThing, container)
-			return things, err
+		case model.AlbumType:
+			album := dbRes.(*model.Album)
+			res, err := findForExistingAlbum(ctx, album, services, repo, logger)
+			return res, err
+
+		case model.TrackType:
+			track := dbRes.(*model.Track)
+			res, err := findForExistingTrack(ctx, track, services, repo, logger)
+			return res, err
+
+		case model.UnknownType:
+			res, err := findNewThing(ctx, link, services, repo, logger)
+			return res, err
+
+		default:
+			return nil, fmt.Errorf("unknown type %s", typ)
+		}
+	})
+
+	return res.(*Result), err
+}
+
+func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+
+	logger = logger.WithField("artist_id", foundArtist.ArtistId)
+	logger.Debugln("found an artist")
+
+	res := setupResponse(model.ArtistType, services)
+
+	// Find any related artists based on our artist ID
+	existingArtists, err := repo.GetArtistsById(ctx, foundArtist.ArtistId)
+	if err != nil {
+		return nil, err
+	}
+
+	res.AddAll(artistsToHasStreamingServiceSlice(existingArtists))
+
+	if !res.IsMissingResults() {
+		return res, nil
+	}
+
+	logger.Debugf("looks like we have some new services since we found this artist (found %d, looking for %d)\n", len(existingArtists), len(services))
+
+	// Query the remaining streaming service
+	var newArtists []*model.Artist
+	for _, service := range services {
+		if res.HasResultFor(service.Key()) {
+			continue
 		}
 
-		logger.Debugln("looks like this is a new thing")
-
-		// No links found, query the streaming service and find the same entry on other services
-		var targetService streamingservice.StreamingService
-		var otherServices []streamingservice.StreamingService
-
-		// Figure out which streaming service the link belongs to
-		for _, service := range ss {
-			if service.LinkBelongsToService(link) {
-				targetService = service
-			} else {
-				otherServices = append(otherServices, service)
-			}
-		}
-
-		if targetService == nil {
-			return nil, fmt.Errorf("couldn't find a streaming service for the given link: %s", link)
-		}
-
-		// Since this is a new thing, we need a new ID
-		groupID := model.ThingGroupID(uuid.New().String())
-		logger = logger.WithField("group_id", groupID)
-		logger.Debugln("using new group id")
-
-		// Query the target streaming service
-		logger.Debugf("searching %s\n", targetService.Key())
-		thing, found, err := targetService.SearchFromLink(link)
+		logger.Debugf("searching %s for artist\n", service.Key())
+		artist, found, err := service.SearchArtist(foundArtist)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %s", targetService.Key(), err.Error())
+			return nil, err
 		}
 
 		if !found {
-			return nil, fmt.Errorf("%s: couldn't find anything for the given link", targetService.Key())
+			logger.Debugf("couldn't find anything for %s", service.Key())
+			continue
 		}
 
-		thing.SetGroupID(groupID)
+		artist.ArtistId = foundArtist.ArtistId
+		newArtists = append(newArtists, artist)
+	}
 
-		var things []model.Thing
-		things = append(things, thing)
+	// Add the new artists to the database
+	if len(newArtists) != 0 {
 
-		// Query the other streaming services using what we found from the target streaming service
-		for _, service := range otherServices {
-			logger.Debugf("searching %s for %s with name %s\n", service.Key(), thing.Type(), thing.GetLabel())
-			foundThing, found, err := streamingservice.SearchThing(service, thing)
-			if err != nil {
-				return nil, fmt.Errorf("%s: %s", service.Key(), err.Error())
-			}
-
-			if !found {
-				logger.Debugf("couldn't find anything for %s", service.Key())
-				continue
-			}
-
-			foundThing.SetGroupID(groupID)
-			things = append(things, foundThing)
-		}
-
-		// Store the new thing in the database
-		n, err := repo.AddThings(ctx, things)
-
-		logger.Infof("%d new %ss added\n", n, thing.Type())
-		return things, nil
-	})
-
-	return res, err
-}
-
-func findForExistingThing(foundThing model.Thing, container camogo.Container) (interface{}, error) {
-	return container.ResolveWithResult(func(ctx context.Context, repo db.Repository, ss []streamingservice.StreamingService, logger *logrus.Entry) (interface{}, error) {
-
-		logger = logger.WithField("group_id", foundThing.GetGroupID())
-		logger.Debugln("found a thing")
-
-		// Find any related things based on the group ID
-		// Todo: If we've found a track, then query the DB with the ISRC code
-		// 	Otherwise, use the group ID
-		existingThings, err := repo.GetThingsByGroupID(ctx, foundThing.GetGroupID())
+		n, err := repo.AddArtist(ctx, newArtists)
 		if err != nil {
 			return nil, err
 		}
 
-		// Check if we're missing any services from our results
-		// Todo: It'd be good to have a "Not-found thing" so we can tell if a thing wasn't found for a service,
-		// 	rather than assuming it's been newly added
-		if len(existingThings) >= len(ss) {
-			return existingThings, nil
-		}
-		logger.Debugf("looks like we have some new services since we found this thing (found %d, looking for %d)\n", len(existingThings), len(ss))
+		logger.Infof("%d new artists added\n", n)
+	}
 
-		// Query the remaining streaming service
-		var newThings []model.Thing
-		for _, service := range ss {
-			if serviceIsInThings(existingThings, service.Key()) {
-				continue
-			}
-
-			logger.Debugf("fetching thing from %s\n", service.Key())
-			thing, found, err := streamingservice.SearchThing(service, foundThing)
-			if err != nil {
-				return nil, err
-			}
-
-			if !found {
-				logger.Debugf("couldn't find anything for %s", service.Key())
-				continue
-			}
-
-			thing.SetGroupID(foundThing.GetGroupID())
-			newThings = append(newThings, thing)
-		}
-
-		// Add the new things to the database
-		if len(newThings) != 0 {
-
-			n, err := repo.AddThings(ctx, newThings)
-			if err != nil {
-				return nil, err
-			}
-
-			logger.Infof("%d new %ss added\n", n, foundThing.Type())
-		}
-
-		allThings := append(existingThings, newThings...)
-		return allThings, nil
-	})
+	res.AddAll(artistsToHasStreamingServiceSlice(newArtists))
+	return res, nil
 }
 
-func serviceIsInThings(things []model.Thing, service model.StreamingServiceKey) bool {
-	for _, thing := range things {
-		if thing.GetSource() == service {
-			return true
+func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+
+	logger = logger.WithField("album_id", foundAlbum.AlbumId)
+	logger.Debugln("found an album")
+
+	res := setupResponse(model.AlbumType, services)
+
+	// Find any related albums based on our album ID
+	existingAlbums, err := repo.GetAlbumsById(ctx, foundAlbum.AlbumId)
+	if err != nil {
+		return nil, err
+	}
+
+	res.AddAll(albumToHasStreamingServiceSlice(existingAlbums))
+
+	if !res.IsMissingResults() {
+		return res, nil
+	}
+
+	logger.Debugf("looks like we have some new services since we found this album (found %d, looking for %d)\n", len(existingAlbums), len(services))
+
+	// Query the remaining streaming service
+	var newAlbums []*model.Album
+	for _, service := range services {
+		if res.HasResultFor(service.Key()) {
+			continue
+		}
+
+		logger.Debugf("searching %s for album\n", service.Key())
+		album, found, err := service.SearchAlbum(foundAlbum)
+		if err != nil {
+			return nil, err
+		}
+
+		if !found {
+			logger.Debugf("couldn't find anything for %s", service.Key())
+			continue
+		}
+
+		album.AlbumId = foundAlbum.AlbumId
+		newAlbums = append(newAlbums, album)
+	}
+
+	// Add the new albums to the database
+	if len(newAlbums) != 0 {
+
+		n, err := repo.AddAlbum(ctx, newAlbums)
+		if err != nil {
+			return nil, err
+		}
+
+		logger.Infof("%d new albums added\n", n)
+	}
+
+	res.AddAll(albumToHasStreamingServiceSlice(newAlbums))
+	return res, nil
+}
+
+func findForExistingTrack(ctx context.Context, foundTrack *model.Track, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+
+	logger = logger.WithField("isrc", foundTrack.Isrc)
+	logger.Debugln("found a track")
+
+	res := setupResponse(model.TrackType, services)
+
+	// Find any related track based on the ISRC
+	existingTracks, err := repo.GetTracksByIsrc(ctx, foundTrack.Isrc)
+	if err != nil {
+		return nil, err
+	}
+
+	res.AddAll(trackToHasStreamingServiceSlice(existingTracks))
+
+	if !res.IsMissingResults() {
+		return res, nil
+	}
+
+	logger.Debugf("looks like we have some new services since we found this track (found %d, looking for %d)\n", len(existingTracks), len(services))
+
+	// Query the remaining streaming service
+	var newTracks []*model.Track
+	for _, service := range services {
+		if res.HasResultFor(service.Key()) {
+			continue
+		}
+
+		logger.Debugf("searching %s for track\n", service.Key())
+		track, found, err := service.GetTrackByIsrc(foundTrack.Isrc)
+		if err != nil {
+			return nil, err
+		}
+
+		if !found {
+			logger.Debugf("couldn't find anything for %s", service.Key())
+			continue
+		}
+
+		newTracks = append(newTracks, track)
+	}
+
+	// Add the new tracks to the database
+	if len(newTracks) != 0 {
+
+		n, err := repo.AddTracks(ctx, newTracks)
+		if err != nil {
+			return nil, err
+		}
+
+		logger.Infof("%d new tracks added\n", n)
+	}
+
+	res.AddAll(trackToHasStreamingServiceSlice(newTracks))
+	return res, nil
+}
+
+func handleNewArtist(ctx context.Context, newArtist *model.Artist, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+
+	res := setupResponse(model.ArtistType, services)
+	res.Add(newArtist)
+
+	// Create our own ID for the artist
+	id := uuid.New().String()
+	logger = logger.WithField("artist_id", id)
+	logger.Debugln("using new artist id")
+
+	newArtists := []*model.Artist{
+		newArtist,
+	}
+
+	// Query the other streaming services using what we found from the target streaming service
+	for _, service := range services {
+		if res.HasResultFor(service.Key()) {
+			continue
+		}
+
+		logger.Debugf("searching %s for artist with name %s\n", service.Key(), newArtist.Name)
+		foundArtist, found, err := service.SearchArtist(newArtist)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %s", service.Key(), err.Error())
+		}
+
+		if !found {
+			logger.Debugf("couldn't find anything for %s", service.Key())
+			continue
+		}
+
+		foundArtist.ArtistId = id
+		res.Add(foundArtist)
+		newArtists = append(newArtists, foundArtist)
+	}
+
+	n, err := repo.AddArtist(ctx, newArtists)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Infof("%d new artists added", n)
+
+	return res, nil
+}
+
+func handleNewAlbum(ctx context.Context, newAlbum *model.Album, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+
+	res := setupResponse(model.TrackType, services)
+	res.Add(newAlbum)
+
+	// Create our own ID for the album
+	id := uuid.New().String()
+	logger = logger.WithField("album_id", id)
+	logger.Debugln("using new album id")
+
+	newAlbums := []*model.Album{
+		newAlbum,
+	}
+
+	// Query the other streaming services using what we found from the target streaming service
+	for _, service := range services {
+		if res.HasResultFor(service.Key()) {
+			continue
+		}
+
+		logger.Debugf("searching %s for album with name %s\n", service.Key(), newAlbum.Name)
+		foundAlbum, found, err := service.SearchAlbum(newAlbum)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %s", service.Key(), err.Error())
+		}
+
+		if !found {
+			logger.Debugf("couldn't find anything for %s", service.Key())
+			continue
+		}
+
+		foundAlbum.AlbumId = id
+		res.Add(foundAlbum)
+		newAlbums = append(newAlbums, foundAlbum)
+	}
+
+	n, err := repo.AddAlbum(ctx, newAlbums)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Infof("%d new albums added", n)
+
+	return res, nil
+}
+
+func handleNewTrack(ctx context.Context, newTrack *model.Track, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+
+	res := setupResponse(model.TrackType, services)
+	res.Add(newTrack)
+
+	logger = logger.WithField("isrc", newTrack.Isrc)
+
+	newTracks := []*model.Track{
+		newTrack,
+	}
+
+	// Query the other streaming services using what we found from the target streaming service
+	for _, service := range services {
+		logger.Debugf("searching %s for track with name %s\n", service.Key(), newTrack.Name)
+		foundTrack, found, err := service.GetTrackByIsrc(newTrack.Isrc)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %s", service.Key(), err.Error())
+		}
+
+		if !found {
+			logger.Debugf("couldn't find anything for %s", service.Key())
+			continue
+		}
+
+		res.Add(foundTrack)
+		newTracks = append(newTracks, foundTrack)
+	}
+
+	n, err := repo.AddTracks(ctx, newTracks)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Infof("%d new tracks added", n)
+
+	return res, nil
+}
+
+func findNewThing(ctx context.Context, link string, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+
+	logger.Debugln("looks like this is a new thing")
+
+	// No links found, query the streaming service and find the same entry on other services
+	var targetService streamingservice.StreamingService
+	var otherServices []streamingservice.StreamingService
+
+	// Figure out which streaming service the link belongs to
+	for _, service := range services {
+		if service.LinkBelongsToService(link) {
+			targetService = service
+		} else {
+			otherServices = append(otherServices, service)
 		}
 	}
 
-	return false
+	if targetService == nil {
+		return nil, fmt.Errorf("couldn't find a streaming service for the given link: %s", link)
+	}
+
+	// Query the target streaming service
+	logger.Debugf("searching %s\n", targetService.Key())
+	typ, res, err := targetService.GetFromLink(link)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %s", targetService.Key(), err.Error())
+	}
+
+	switch typ {
+	case model.ArtistType:
+		artist := res.(*model.Artist)
+		return handleNewArtist(ctx, artist, otherServices, repo, logger)
+
+	case model.AlbumType:
+		album := res.(*model.Album)
+		return handleNewAlbum(ctx, album, otherServices, repo, logger)
+
+	case model.TrackType:
+		track := res.(*model.Track)
+		return handleNewTrack(ctx, track, otherServices, repo, logger)
+
+	case model.UnknownType:
+		return nil, fmt.Errorf("could not find anything from %s", targetService.Key())
+
+	default:
+		return nil, fmt.Errorf("unknown type %s", typ)
+	}
+}
+
+func artistsToHasStreamingServiceSlice(artists []*model.Artist) []model.HasStreamingService {
+	var s []model.HasStreamingService
+	for _, artist := range artists {
+		s = append(s, artist)
+	}
+
+	return s
+}
+
+func albumToHasStreamingServiceSlice(albums []*model.Album) []model.HasStreamingService {
+	var s []model.HasStreamingService
+	for _, album := range albums {
+		s = append(s, album)
+	}
+
+	return s
+}
+
+func trackToHasStreamingServiceSlice(tracks []*model.Track) []model.HasStreamingService {
+	var s []model.HasStreamingService
+	for _, track := range tracks {
+		s = append(s, track)
+	}
+
+	return s
 }

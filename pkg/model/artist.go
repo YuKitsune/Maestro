@@ -9,6 +9,7 @@ import (
 const ArtistCollectionName = "artists"
 
 type Artist struct {
+	ArtistId    string
 	Name        string
 	ArtworkLink string
 
@@ -56,8 +57,8 @@ func UnmarshalArtist(raw bson.Raw) (*Artist, error) {
 	return artist, nil
 }
 
-func UnmarshalArtistFromCursor(ctx context.Context, cur *mongo.Cursor) ([]Artist, error) {
-	var artists []Artist
+func UnmarshalArtistFromCursor(ctx context.Context, cur *mongo.Cursor) ([]*Artist, error) {
+	var artists []*Artist
 
 	defer cur.Close(ctx)
 	for cur.Next(ctx) {
@@ -66,7 +67,7 @@ func UnmarshalArtistFromCursor(ctx context.Context, cur *mongo.Cursor) ([]Artist
 			return nil, err
 		}
 
-		artists = append(artists, *artist)
+		artists = append(artists, artist)
 	}
 
 	return artists, nil

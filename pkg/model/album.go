@@ -11,6 +11,7 @@ import (
 const AlbumCollectionName = "albums"
 
 type Album struct {
+	AlbumId     string
 	Name        string
 	ArtistNames []string
 	ArtworkLink string
@@ -60,8 +61,8 @@ func UnmarshalAlbum(raw bson.Raw) (*Album, error) {
 	return album, nil
 }
 
-func UnmarshalAlbumFromCursor(ctx context.Context, cur *mongo.Cursor) ([]Album, error) {
-	var albums []Album
+func UnmarshalAlbumFromCursor(ctx context.Context, cur *mongo.Cursor) ([]*Album, error) {
+	var albums []*Album
 
 	defer cur.Close(ctx)
 	for cur.Next(ctx) {
@@ -70,7 +71,7 @@ func UnmarshalAlbumFromCursor(ctx context.Context, cur *mongo.Cursor) ([]Album, 
 			return nil, err
 		}
 
-		albums = append(albums, *album)
+		albums = append(albums, album)
 	}
 
 	return albums, nil

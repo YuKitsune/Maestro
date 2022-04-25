@@ -153,7 +153,36 @@ func (s *spotifyStreamingService) SearchAlbum(album *model.Album) (*model.Album,
 	return res, res != nil, nil
 }
 
-func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, bool, error) {
+func (s *spotifyStreamingService) GetTrackByIsrc(isrc string) (*model.Track, bool, error) {
+
+	q := fmt.Sprintf("isrc:\"%s\"", isrc)
+
+	searchRes, err := s.client.SearchOpt(q, spotify.SearchTypeTrack, &spotify.Options{})
+	if err != nil {
+		return nil, false, err
+	}
+
+	if err != nil {
+		return nil, false, err
+	}
+
+	// Todo: Narrow down results
+	spotifyTrack := searchRes.Tracks.Tracks[0]
+
+	res := model.NewTrack(
+		spotifyTrack.ExternalIDs["isrc"],
+		spotifyTrack.Name,
+		artistName(spotifyTrack.Artists),
+		spotifyTrack.Album.Name,
+		imageURL(spotifyTrack.Album.Images),
+		s.Key(),
+		model.DefaultMarket,
+		spotifyTrack.ExternalURLs["spotify"])
+
+	return res, true, nil
+}
+
+func (s *spotifyStreamingService) SearchTrack(track *model.Track) (*model.Track, bool, error) {
 
 	country := track.Market.String()
 
@@ -202,7 +231,7 @@ func (s *spotifyStreamingService) SearchSong(track *model.Track) (*model.Track, 
 	return res, res != nil, nil
 }
 
-func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, bool, error) {
+func (s *spotifyStreamingService) GetFromLink(link string) (model.Type, interface{}, error) {
 
 	// example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=10587ef152a8493f
 	// format: 	https://open.spotify.com/<artist|album|track>/<id>?si=<user specific token that i don't care about>
@@ -220,7 +249,7 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, bool
 
 		foundArtist, err := s.client.GetArtist(id)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, false, err
 		}
 
 		artist := model.NewArtist(
@@ -230,14 +259,14 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, bool
 			model.DefaultMarket,
 			foundArtist.ExternalURLs["spotify"])
 
-		return artist, true, nil
+		return model.ArtistType, artist, nil
 
 	case "album":
 		go s.metricsRecorder.CountSpotifyRequest()
 
 		foundAlbum, err := s.client.GetAlbum(id)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		album := model.NewAlbum(
@@ -248,14 +277,14 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, bool
 			model.DefaultMarket,
 			foundAlbum.ExternalURLs["spotify"])
 
-		return album, true, nil
+		return model.AlbumType, album, nil
 
 	case "track":
 		go s.metricsRecorder.CountSpotifyRequest()
 
 		foundTrack, err := s.client.GetTrack(id)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		track := model.NewTrack(
@@ -268,10 +297,10 @@ func (s *spotifyStreamingService) SearchFromLink(link string) (model.Thing, bool
 			model.DefaultMarket,
 			foundTrack.ExternalURLs["spotify"])
 
-		return track, true, nil
+		return model.TrackType, track, nil
 
 	default:
-		return nil, false, fmt.Errorf("unknown type %s", typ)
+		return model.UnknownType, nil, fmt.Errorf("unknown type %s", typ)
 	}
 }
 

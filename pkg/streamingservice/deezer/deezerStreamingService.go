@@ -122,7 +122,27 @@ func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, 
 	return res, res != nil, nil
 }
 
-func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, bool, error) {
+func (s *deezerStreamingService) GetTrackByIsrc(isrc string) (*model.Track, bool, error) {
+
+	deezerTrack, err := s.client.GetTrackByIsrc(isrc)
+	if err != nil {
+		return nil, false, err
+	}
+
+	res := model.NewTrack(
+		deezerTrack.Isrc,
+		deezerTrack.Title,
+		[]string{deezerTrack.Artist.Name},
+		deezerTrack.Album.Title,
+		deezerTrack.Album.Cover,
+		s.Key(),
+		model.DefaultMarket,
+		deezerTrack.Link)
+
+	return res, true, nil
+}
+
+func (s *deezerStreamingService) SearchTrack(track *model.Track) (*model.Track, bool, error) {
 
 	var res *model.Track
 	for _, artistName := range track.ArtistNames {
@@ -179,7 +199,7 @@ func (s *deezerStreamingService) SearchSong(track *model.Track) (*model.Track, b
 	return res, res != nil, nil
 }
 
-func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, bool, error) {
+func (s *deezerStreamingService) GetFromLink(link string) (model.Type, interface{}, error) {
 
 	// Share link: https://deezer.page.link/szbWkX6rKbfJ8XCD6
 	// This goes through some redirects until we get to here:
@@ -189,7 +209,7 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, bool,
 
 	actualLink, err := getActualLink(link, s.actualLinkPattern)
 	if err != nil {
-		return nil, false, err
+		return model.UnknownType, nil, err
 	}
 
 	matches := streamingservice.FindStringSubmatchMap(s.actualLinkPattern, actualLink)
@@ -204,12 +224,12 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, bool,
 
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		foundArtist, err := s.client.GetArtist(idInt)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		artist := model.NewArtist(
@@ -219,19 +239,19 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, bool,
 			model.DefaultMarket,
 			foundArtist.Link)
 
-		return artist, true, nil
+		return model.ArtistType, artist, nil
 
 	case "album":
 		go s.metricsRecorder.CountDeezerRequest()
 
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		foundAlbum, err := s.client.GetAlbum(idInt)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		album := model.NewAlbum(
@@ -242,19 +262,19 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, bool,
 			model.DefaultMarket,
 			foundAlbum.Link)
 
-		return album, true, nil
+		return model.AlbumType, album, nil
 
 	case "track":
 		go s.metricsRecorder.CountDeezerRequest()
 
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		foundTrack, err := s.client.GetTrack(idInt)
 		if err != nil {
-			return nil, false, err
+			return model.UnknownType, nil, err
 		}
 
 		track := model.NewTrack(
@@ -267,10 +287,10 @@ func (s *deezerStreamingService) SearchFromLink(link string) (model.Thing, bool,
 			model.DefaultMarket,
 			foundTrack.Link)
 
-		return track, true, nil
+		return model.TrackType, track, nil
 
 	default:
-		return nil, false, fmt.Errorf("unknown type %s", typ)
+		return model.UnknownType, nil, fmt.Errorf("unknown type %s", typ)
 	}
 }
 
