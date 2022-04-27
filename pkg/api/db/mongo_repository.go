@@ -39,7 +39,7 @@ func (m *mongoRepository) GetArtistsById(ctx context.Context, id string) ([]*mod
 
 	coll := m.db.Collection(model.ArtistCollectionName)
 	cur, err := coll.Find(ctx, bson.D{
-		{"id", id}, // Todo: Mongo ID?
+		{"artistid", id},
 	})
 
 	artists, err := model.UnmarshalArtistFromCursor(ctx, cur)
@@ -81,12 +81,6 @@ func (m *mongoRepository) GetArtistByLink(ctx context.Context, link string) (*mo
 	return foundArtist, nil
 }
 
-func (m *mongoRepository) UpdateArtists(ctx context.Context, artists []*model.Artist) (int, error) {
-	go m.rec.CountDatabaseCall()
-	m.ensureMigrationsHaveExecuted(ctx)
-	panic("not implemented!")
-}
-
 func (m *mongoRepository) AddAlbum(ctx context.Context, albums []*model.Album) (int, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
@@ -106,7 +100,7 @@ func (m *mongoRepository) GetAlbumsById(ctx context.Context, id string) ([]*mode
 
 	coll := m.db.Collection(model.AlbumCollectionName)
 	cur, err := coll.Find(ctx, bson.D{
-		{"id", id}, // Todo: Mongo ID?
+		{"albumid", id},
 	})
 
 	albums, err := model.UnmarshalAlbumFromCursor(ctx, cur)
@@ -146,12 +140,6 @@ func (m *mongoRepository) GetAlbumByLink(ctx context.Context, link string) (*mod
 	}
 
 	return foundAlbum, nil
-}
-
-func (m *mongoRepository) UpdateAlbums(ctx context.Context, albums []*model.Album) (int, error) {
-	go m.rec.CountDatabaseCall()
-	m.ensureMigrationsHaveExecuted(ctx)
-	panic("not implemented!")
 }
 
 func (m *mongoRepository) AddTracks(ctx context.Context, tracks []*model.Track) (int, error) {
@@ -213,12 +201,6 @@ func (m *mongoRepository) GetTrackByLink(ctx context.Context, link string) (*mod
 	}
 
 	return foundTrack, nil
-}
-
-func (m *mongoRepository) UpdateTracks(ctx context.Context, tracks []*model.Track) (int, error) {
-	go m.rec.CountDatabaseCall()
-	m.ensureMigrationsHaveExecuted(ctx)
-	panic("not implemented!")
 }
 
 func (m *mongoRepository) GetByLink(ctx context.Context, link string) (model.Type, interface{}, error) {
