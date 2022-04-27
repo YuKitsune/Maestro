@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// Kill the container after a while
-	err = resource.Expire(uint(5 * time.Minute))
+	err = resource.Expire(uint((5 * time.Minute) / time.Second))
 	if err != nil {
 		log.Fatalf("Could not set resource expiry: %s", err)
 	}
@@ -124,7 +124,7 @@ func withTestDb(t *testing.T, fn func(db *mongo.Database)) {
 	defer func() {
 		err := db.Drop(context.Background())
 		if err != nil {
-			log.Fatalf("Failed to drop database %s: %s", db.Name(), err)
+			log.Printf("Error: failed to drop database %s: %s", db.Name(), err)
 		}
 	}()
 
