@@ -79,3 +79,12 @@ func UnmarshalTracksFromCursor(ctx context.Context, cur *mongo.Cursor) ([]*Track
 
 	return tracks, nil
 }
+
+func TrackToHasStreamingServiceSlice(tracks []*Track) []HasStreamingService {
+	var s []HasStreamingService
+	for _, track := range tracks {
+		s = append(s, track)
+	}
+
+	return s
+}

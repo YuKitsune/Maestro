@@ -24,7 +24,7 @@ func HandleGetTrackByIsrc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository) (interface{}, error) {
+	t, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository) (interface{}, error) {
 		foundTracks, err := repo.GetTracksByIsrc(ctx, isrc)
 		if err != nil {
 			return nil, err
@@ -38,11 +38,14 @@ func HandleGetTrackByIsrc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tracks := res.([]model.Track)
+	tracks := t.([]*model.Track)
 	if tracks == nil || len(tracks) == 0 {
 		NotFoundf(w, "could not find any tracks with ISRC code %s", isrc)
 		return
 	}
+
+	res := &Result{}
+	res.AddAll(model.TrackToHasStreamingServiceSlice(tracks))
 
 	Response(w, res, http.StatusOK)
 }

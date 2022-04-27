@@ -132,7 +132,7 @@ func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, servi
 		return nil, err
 	}
 
-	res.AddAll(artistsToHasStreamingServiceSlice(existingArtists))
+	res.AddAll(model.ArtistsToHasStreamingServiceSlice(existingArtists))
 
 	if !res.IsMissingResults() {
 		return res, nil
@@ -173,7 +173,7 @@ func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, servi
 		logger.Infof("%d new artists added\n", n)
 	}
 
-	res.AddAll(artistsToHasStreamingServiceSlice(newArtists))
+	res.AddAll(model.ArtistsToHasStreamingServiceSlice(newArtists))
 	return res, nil
 }
 
@@ -190,7 +190,7 @@ func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, services
 		return nil, err
 	}
 
-	res.AddAll(albumToHasStreamingServiceSlice(existingAlbums))
+	res.AddAll(model.AlbumToHasStreamingServiceSlice(existingAlbums))
 
 	if !res.IsMissingResults() {
 		return res, nil
@@ -231,7 +231,7 @@ func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, services
 		logger.Infof("%d new albums added\n", n)
 	}
 
-	res.AddAll(albumToHasStreamingServiceSlice(newAlbums))
+	res.AddAll(model.AlbumToHasStreamingServiceSlice(newAlbums))
 	return res, nil
 }
 
@@ -248,7 +248,7 @@ func findForExistingTrack(ctx context.Context, foundTrack *model.Track, services
 		return nil, err
 	}
 
-	res.AddAll(trackToHasStreamingServiceSlice(existingTracks))
+	res.AddAll(model.TrackToHasStreamingServiceSlice(existingTracks))
 
 	if !res.IsMissingResults() {
 		return res, nil
@@ -288,7 +288,7 @@ func findForExistingTrack(ctx context.Context, foundTrack *model.Track, services
 		logger.Infof("%d new tracks added\n", n)
 	}
 
-	res.AddAll(trackToHasStreamingServiceSlice(newTracks))
+	res.AddAll(model.TrackToHasStreamingServiceSlice(newTracks))
 	return res, nil
 }
 
@@ -469,31 +469,4 @@ func findNewThing(ctx context.Context, link string, services []streamingservice.
 	default:
 		return nil, fmt.Errorf("unknown type %s", typ)
 	}
-}
-
-func artistsToHasStreamingServiceSlice(artists []*model.Artist) []model.HasStreamingService {
-	var s []model.HasStreamingService
-	for _, artist := range artists {
-		s = append(s, artist)
-	}
-
-	return s
-}
-
-func albumToHasStreamingServiceSlice(albums []*model.Album) []model.HasStreamingService {
-	var s []model.HasStreamingService
-	for _, album := range albums {
-		s = append(s, album)
-	}
-
-	return s
-}
-
-func trackToHasStreamingServiceSlice(tracks []*model.Track) []model.HasStreamingService {
-	var s []model.HasStreamingService
-	for _, track := range tracks {
-		s = append(s, track)
-	}
-
-	return s
 }

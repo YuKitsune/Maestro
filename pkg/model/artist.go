@@ -72,3 +72,12 @@ func UnmarshalArtistFromCursor(ctx context.Context, cur *mongo.Cursor) ([]*Artis
 
 	return artists, nil
 }
+
+func ArtistsToHasStreamingServiceSlice(artists []*Artist) []HasStreamingService {
+	var s []HasStreamingService
+	for _, artist := range artists {
+		s = append(s, artist)
+	}
+
+	return s
+}

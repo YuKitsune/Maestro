@@ -24,7 +24,7 @@ func HandleGetAlbumById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository) (interface{}, error) {
+	a, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository) (interface{}, error) {
 		foundAlbums, err := repo.GetAlbumsById(ctx, id)
 		if err != nil {
 			return nil, err
@@ -38,11 +38,14 @@ func HandleGetAlbumById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	albums := res.([]model.Album)
+	albums := a.([]*model.Album)
 	if albums == nil || len(albums) == 0 {
 		NotFoundf(w, "could not find any albums with ID %s", id)
 		return
 	}
+
+	res := &Result{}
+	res.AddAll(model.AlbumToHasStreamingServiceSlice(albums))
 
 	Response(w, res, http.StatusOK)
 }

@@ -76,3 +76,12 @@ func UnmarshalAlbumFromCursor(ctx context.Context, cur *mongo.Cursor) ([]*Album,
 
 	return albums, nil
 }
+
+func AlbumToHasStreamingServiceSlice(albums []*Album) []HasStreamingService {
+	var s []HasStreamingService
+	for _, album := range albums {
+		s = append(s, album)
+	}
+
+	return s
+}
