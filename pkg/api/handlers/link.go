@@ -15,51 +15,6 @@ import (
 	"net/url"
 )
 
-type Result struct {
-	Type     model.Type
-	Services map[model.StreamingServiceKey]interface{}
-}
-
-func (r *Result) Add(v model.HasStreamingService) {
-	r.Services[v.GetSource()] = v
-}
-
-func (r *Result) AddAll(vs []model.HasStreamingService) {
-	for _, v := range vs {
-		r.Add(v)
-	}
-}
-
-func (r *Result) IsMissingResults() bool {
-	for _, v := range r.Services {
-		if v == nil {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (r *Result) HasResultFor(key model.StreamingServiceKey) bool {
-	for k := range r.Services {
-		if k == key {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (r *Result) HasResults() bool {
-	for _, v := range r.Services {
-		if v != nil {
-			return true
-		}
-	}
-
-	return false
-}
-
 func setupResponse(typ model.Type, s []streamingservice.StreamingService) *Result {
 
 	var svcMap map[model.StreamingServiceKey]interface{}
