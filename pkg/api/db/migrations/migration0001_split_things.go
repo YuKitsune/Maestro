@@ -71,10 +71,10 @@ func (m *Migration0001SplitThings) Execute(ctx context.Context, db *mongo.Databa
 	}
 
 	// Delete things
-	err = thingsColl.Drop(ctx)
-	if err != nil {
-		return err
-	}
+	//err = thingsColl.Drop(ctx)
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }
