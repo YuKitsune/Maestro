@@ -44,7 +44,7 @@ func HandleGetArtistById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := &Result{}
+	res := NewResult(model.ArtistType)
 	res.AddAll(model.ArtistsToHasStreamingServiceSlice(artists))
 
 	Response(w, res, http.StatusOK)

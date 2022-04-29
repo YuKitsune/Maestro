@@ -1,10 +1,17 @@
 package handlers
 
-import "github.com/yukitsune/maestro/pkg/model"
+import (
+	"github.com/yukitsune/maestro/pkg/model"
+)
 
 type Result struct {
 	Type     model.Type
 	Services map[model.StreamingServiceKey]interface{}
+}
+
+func NewResult(typ model.Type) *Result {
+	svcMap := make(map[model.StreamingServiceKey]interface{})
+	return &Result{typ, svcMap}
 }
 
 func (r *Result) Add(v model.HasStreamingService) {

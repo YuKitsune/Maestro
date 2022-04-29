@@ -44,7 +44,7 @@ func HandleGetAlbumById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := &Result{}
+	res := NewResult(model.AlbumType)
 	res.AddAll(model.AlbumToHasStreamingServiceSlice(albums))
 
 	Response(w, res, http.StatusOK)

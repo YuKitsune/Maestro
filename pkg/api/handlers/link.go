@@ -15,16 +15,6 @@ import (
 	"net/url"
 )
 
-func setupResponse(typ model.Type, s []streamingservice.StreamingService) *Result {
-
-	var svcMap map[model.StreamingServiceKey]interface{}
-	for _, svc := range s {
-		svcMap[svc.Key()] = nil
-	}
-
-	return &Result{typ, svcMap}
-}
-
 func HandleLink(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
@@ -124,7 +114,7 @@ func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, servi
 	logger = logger.WithField("artist_id", foundArtist.ArtistId)
 	logger.Debugln("found an artist")
 
-	res := setupResponse(model.ArtistType, services)
+	res := NewResult(model.ArtistType)
 
 	// Find any related artists based on our artist ID
 	existingArtists, err := repo.GetArtistsById(ctx, foundArtist.ArtistId)
@@ -182,7 +172,7 @@ func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, services
 	logger = logger.WithField("album_id", foundAlbum.AlbumId)
 	logger.Debugln("found an album")
 
-	res := setupResponse(model.AlbumType, services)
+	res := NewResult(model.AlbumType)
 
 	// Find any related albums based on our album ID
 	existingAlbums, err := repo.GetAlbumsById(ctx, foundAlbum.AlbumId)
@@ -240,7 +230,7 @@ func findForExistingTrack(ctx context.Context, foundTrack *model.Track, services
 	logger = logger.WithField("isrc", foundTrack.Isrc)
 	logger.Debugln("found a track")
 
-	res := setupResponse(model.TrackType, services)
+	res := NewResult(model.TrackType)
 
 	// Find any related track based on the ISRC
 	existingTracks, err := repo.GetTracksByIsrc(ctx, foundTrack.Isrc)
@@ -294,11 +284,13 @@ func findForExistingTrack(ctx context.Context, foundTrack *model.Track, services
 
 func handleNewArtist(ctx context.Context, newArtist *model.Artist, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
 
-	res := setupResponse(model.ArtistType, services)
+	res := NewResult(model.ArtistType)
 	res.Add(newArtist)
 
 	// Create our own ID for the artist
 	id := uuid.New().String()
+	newArtist.ArtistId = id
+
 	logger = logger.WithField("artist_id", id)
 	logger.Debugln("using new artist id")
 
@@ -340,11 +332,13 @@ func handleNewArtist(ctx context.Context, newArtist *model.Artist, services []st
 
 func handleNewAlbum(ctx context.Context, newAlbum *model.Album, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
 
-	res := setupResponse(model.TrackType, services)
+	res := NewResult(model.AlbumType)
 	res.Add(newAlbum)
 
 	// Create our own ID for the album
 	id := uuid.New().String()
+	newAlbum.AlbumId = id
+
 	logger = logger.WithField("album_id", id)
 	logger.Debugln("using new album id")
 
@@ -386,7 +380,7 @@ func handleNewAlbum(ctx context.Context, newAlbum *model.Album, services []strea
 
 func handleNewTrack(ctx context.Context, newTrack *model.Track, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {
 
-	res := setupResponse(model.TrackType, services)
+	res := NewResult(model.TrackType)
 	res.Add(newTrack)
 
 	logger = logger.WithField("isrc", newTrack.Isrc)

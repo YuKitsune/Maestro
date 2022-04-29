@@ -44,7 +44,7 @@ func HandleGetTrackByIsrc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := &Result{}
+	res := NewResult(model.TrackType)
 	res.AddAll(model.TrackToHasStreamingServiceSlice(tracks))
 
 	Response(w, res, http.StatusOK)
