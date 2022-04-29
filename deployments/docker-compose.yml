@@ -14,7 +14,12 @@ services:
       MONGODB_DATABASE: ${MONGO_MAESTRO_DATABASE}
 
       # ReplicaSet stuff
-      MONGODB_ADVERTISED_HOSTNAME: database
+      # Use this when accessing from docker compose or k8s
+      # MONGODB_ADVERTISED_HOSTNAME: database
+
+      # Use this when accessing from outside of docker compose or k8s
+      MONGODB_ADVERTISED_HOSTNAME: localhost
+
       MONGODB_REPLICA_SET_NAME: rs0
       MONGODB_REPLICA_SET_MODE: primary
       MONGODB_REPLICA_SET_KEY: rs0key
