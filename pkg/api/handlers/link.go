@@ -124,7 +124,8 @@ func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, servi
 
 	res.AddAll(model.ArtistsToHasStreamingServiceSlice(existingArtists))
 
-	if !res.IsMissingResults() {
+	// If we have results for all known services, then we're good to go
+	if len(res.Items) == len(services) {
 		return res, nil
 	}
 
@@ -182,7 +183,8 @@ func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, services
 
 	res.AddAll(model.AlbumToHasStreamingServiceSlice(existingAlbums))
 
-	if !res.IsMissingResults() {
+	// If we have results for all known services, then we're good to go
+	if len(res.Items) == len(services) {
 		return res, nil
 	}
 
@@ -240,7 +242,8 @@ func findForExistingTrack(ctx context.Context, foundTrack *model.Track, services
 
 	res.AddAll(model.TrackToHasStreamingServiceSlice(existingTracks))
 
-	if !res.IsMissingResults() {
+	// If we have results for all known services, then we're good to go
+	if len(res.Items) == len(services) {
 		return res, nil
 	}
 

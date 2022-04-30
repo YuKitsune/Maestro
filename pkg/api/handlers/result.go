@@ -5,17 +5,24 @@ import (
 )
 
 type Result struct {
-	Type     model.Type
-	Services map[model.StreamingServiceKey]interface{}
+	Type  model.Type
+	Items []model.HasStreamingService
 }
 
 func NewResult(typ model.Type) *Result {
-	svcMap := make(map[model.StreamingServiceKey]interface{})
-	return &Result{typ, svcMap}
+	return &Result{typ, []model.HasStreamingService{}}
 }
 
 func (r *Result) Add(v model.HasStreamingService) {
-	r.Services[v.GetSource()] = v
+	if r.HasResultFor(v.GetSource()) {
+		for i, item := range r.Items {
+			if item.GetSource() == v.GetSource() {
+				r.Items[i] = v
+			}
+		}
+	} else {
+		r.Items = append(r.Items, v)
+	}
 }
 
 func (r *Result) AddAll(vs []model.HasStreamingService) {
@@ -24,19 +31,9 @@ func (r *Result) AddAll(vs []model.HasStreamingService) {
 	}
 }
 
-func (r *Result) IsMissingResults() bool {
-	for _, v := range r.Services {
-		if v == nil {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (r *Result) HasResultFor(key model.StreamingServiceKey) bool {
-	for k := range r.Services {
-		if k == key {
+	for _, v := range r.Items {
+		if v.GetSource() == key {
 			return true
 		}
 	}
@@ -45,11 +42,5 @@ func (r *Result) HasResultFor(key model.StreamingServiceKey) bool {
 }
 
 func (r *Result) HasResults() bool {
-	for _, v := range r.Services {
-		if v != nil {
-			return true
-		}
-	}
-
-	return false
+	return len(r.Items) > 0
 }
