@@ -1,5 +1,5 @@
 import {Artist} from "~/model/artist";
-import CatalogueItemPreview from "~/components/catalogueItemPreview";
+import Preview from "~/components/Preview";
 
 type ArtistProps = {
     artist: Artist;
@@ -8,9 +8,9 @@ type ArtistProps = {
 const ArtistPreview = (props: ArtistProps) => {
     const artist = props.artist;
 
-    return <CatalogueItemPreview artworkLink={artist.ArtworkLink} artworkAlt={artist.Name}>
+    return <Preview artworkLink={artist.ArtworkLink} artworkAlt={artist.Name}>
         <div className={"text-xl font-bold"}>{artist.Name}</div>
-    </CatalogueItemPreview>
+    </Preview>
 }
 
 export default ArtistPreview;

@@ -1,18 +1,13 @@
 
-export type ThingType = "artist" | "album" | "track";
-
-export type Thing = {
-    Name: string
-    ArtworkLink: string
-    ThingType: ThingType
-    GroupID: string
+export default interface Thing {
+    Name: string;
+    Link: string;
+    ArtworkLink: string;
     Source: string
-    Market: string
-    Link: string
 }
 
 // Todo: Fix API so we don't need this, all results should be solid
-export function findBestThing(things: Thing[]): Thing {
+export function findBestThing<T extends Thing>(things: T[]): T {
     return things.find(t => t.ArtworkLink && t.ArtworkLink.length > 0)!;
 }
 

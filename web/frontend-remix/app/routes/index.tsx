@@ -1,7 +1,10 @@
 import type {ActionFunction, MetaFunction} from "remix";
 import {Form, redirect, useTransition} from "remix";
-import Spinner from "~/components/spinner";
+import Spinner from "~/components/Spinner";
 import MaestroApiClient from "~/maestroApiClient";
+import {Artist} from "~/model/artist";
+import {Album} from "~/model/album";
+import {Track} from "~/model/track";
 
 // https://remix.run/api/conventions#meta
 export let meta: MetaFunction = () => {
@@ -16,13 +19,23 @@ export const action: ActionFunction = async ({request}) => {
 
     const formData = await request.formData();
     const link = formData.get("link") as string;
-    const things = await client.searchFromLink(link);
+    const response = await client.searchFromLink(link);
 
-    if (things && things.length > 0) {
-        const groupId = things[0].GroupID;
-        return redirect(`/${groupId}`)
-    } else {
-        return redirect(`/nothing`)
+    switch (response.Type) {
+        case "artist":
+            const artists = response.Items as Artist[];
+            return redirect(`/artist/${artists[0].ArtistId}`)
+
+        case "album":
+            const albums = response.Items as Album[];
+            return redirect(`/album/${albums[0].AlbumId}`)
+
+        case "track":
+            const tracks = response.Items as Track[];
+            return redirect(`/track/${tracks[0].Isrc}`)
+
+        default:
+            return redirect(`/nothing`);
     }
 }
 
