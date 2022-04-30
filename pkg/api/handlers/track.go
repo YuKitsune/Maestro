@@ -32,6 +32,15 @@ func HandleGetTrackByIsrc(w http.ResponseWriter, r *http.Request) {
 			return nil, err
 		}
 
+		legacyTracks, err := repo.GetTracksByLegacyId(ctx, isrc)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, legacyTrack := range legacyTracks {
+			foundTracks = append(foundTracks, legacyTrack)
+		}
+
 		if len(foundTracks) != len(svcs) {
 			newTracks, err := getNewTrackByIsrc(isrc, foundTracks, svcs)
 			if err != nil {

@@ -15,6 +15,7 @@ type Repository interface {
 	GetAlbumByLink(ctx context.Context, link string) (*model.Album, error)
 
 	AddTracks(ctx context.Context, tracks []*model.Track) (int, error)
+	GetTracksByLegacyId(ctx context.Context, id string) ([]*model.Track, error)
 	GetTracksByIsrc(ctx context.Context, isrc string) ([]*model.Track, error)
 	GetTrackByLink(ctx context.Context, link string) (*model.Track, error)
 

@@ -155,6 +155,23 @@ func (m *mongoRepository) AddTracks(ctx context.Context, tracks []*model.Track) 
 	return len(insertRes.InsertedIDs), nil
 }
 
+func (m *mongoRepository) GetTracksByLegacyId(ctx context.Context, id string) ([]*model.Track, error) {
+	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
+
+	coll := m.db.Collection(model.TrackCollectionName)
+	cur, err := coll.Find(ctx, bson.D{
+		{"groupid", id},
+	})
+
+	tracks, err := model.UnmarshalTracksFromCursor(ctx, cur)
+	if err != nil {
+		return nil, err
+	}
+
+	return tracks, nil
+}
+
 func (m *mongoRepository) GetTracksByIsrc(ctx context.Context, isrc string) ([]*model.Track, error) {
 	go m.rec.CountDatabaseCall()
 	m.ensureMigrationsHaveExecuted(ctx)
