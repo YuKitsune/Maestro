@@ -118,10 +118,6 @@ func (p prometheusMetricsRecorder) CountServerError() {
 	p.serverErrorCounter.Inc()
 }
 
-func (p prometheusMetricsRecorder) CountClientError() {
-	p.clientErrorCounter.Inc()
-}
-
 func (p prometheusMetricsRecorder) ReportRequestDuration(fn func()) {
 	timer := prometheus.NewTimer(p.requestDurationHistogram)
 	fn()
