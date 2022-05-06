@@ -158,7 +158,6 @@ func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingservice
 		return err
 	}
 
-	// Todo: Camogo needs slice support
 	factory := func(c streamingservice.Config, mr metrics.Recorder) ([]streamingservice.StreamingService, error) {
 
 		var services []streamingservice.StreamingService

@@ -283,7 +283,7 @@ func (m *mongoRepository) ensureMigrationsHaveExecuted(ctx context.Context) {
 	provider := migrations.NewMongoMigrationProvider()
 	migrator := &migrations.Migrator{}
 
-	// Todo: If a migration fails, we're in deep trouble...
+	// If a migration fails, we're in deep trouble...
 	err := migrator.Execute(ctx, provider, m.db)
 	if err != nil {
 		m.logger.Fatalf("failed to execute migrations: %s", err)

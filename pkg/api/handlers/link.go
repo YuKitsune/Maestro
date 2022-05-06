@@ -41,7 +41,6 @@ func HandleLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Todo: Add interceptor / middleware support to camogo
 	res, err := container.ResolveWithResult(func(logger *logrus.Entry) (interface{}, error) {
 
 		res, err := findForLink(reqLink, container)
