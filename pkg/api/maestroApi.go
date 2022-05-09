@@ -158,7 +158,6 @@ func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingservice
 		return err
 	}
 
-	// Todo: Camogo needs slice support
 	factory := func(c streamingservice.Config, mr metrics.Recorder) ([]streamingservice.StreamingService, error) {
 
 		var services []streamingservice.StreamingService
@@ -229,7 +228,9 @@ func setupHandlers(container camogo.Container) *mux.Router {
 
 	// Links
 	r.HandleFunc("/link", handlers.HandleLink).Methods("GET").Queries("link", "{link}")
-	r.HandleFunc("/{groupID}", handlers.HandleGroup).Methods("GET")
+	r.HandleFunc("/artist/{id}", handlers.HandleGetArtistById).Methods("GET")
+	r.HandleFunc("/album/{id}", handlers.HandleGetAlbumById).Methods("GET")
+	r.HandleFunc("/track/{isrc}", handlers.HandleGetTrackByIsrc).Methods("GET")
 
 	return r
 }

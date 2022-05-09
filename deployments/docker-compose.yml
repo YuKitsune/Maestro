@@ -1,17 +1,31 @@
 version: "3.9"
 services:
   database:
-    image: 'mongo:5.0.5'
+    image: 'bitnami/mongodb:5.0.8'
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_MAESTRO_USERNAME: ${MAESTRO_USERNAME}
-      MONGO_MAESTRO_PASSWORD: ${MAESTRO_PASSWORD}
-      MONGO_MAESTRO_DATABASE: ${MAESTRO_DATABASE}
+
+      # Root user
+      MONGODB_ROOT_USER: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGODB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+
+      # Maestro user
+      MONGODB_USERNAME: ${MONGO_MAESTRO_USERNAME}
+      MONGODB_PASSWORD: ${MONGO_MAESTRO_PASSWORD}
+      MONGODB_DATABASE: ${MONGO_MAESTRO_DATABASE}
+
+      # ReplicaSet stuff
+      # Use this when accessing from docker compose or k8s
+      # MONGODB_ADVERTISED_HOSTNAME: database
+
+      # Use this when accessing from outside of docker compose or k8s
+      MONGODB_ADVERTISED_HOSTNAME: localhost
+
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_REPLICA_SET_MODE: primary
+      MONGODB_REPLICA_SET_KEY: rs0key
     ports:
       - "27017:27017"
     volumes:
-      - ../configs/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
       # - mongo-data:/data/db # (Optional) Use this if you want the data to persist between runs
       - /data/db
 

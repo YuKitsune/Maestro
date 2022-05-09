@@ -1,5 +1,5 @@
 import type {Album} from "~/model/album"
-import CatalogueItemPreview from "~/components/catalogueItemPreview";
+import Preview from "~/components/Preview";
 import {formatArtistNames} from "~/model/thing";
 
 type AlbumProps = {
@@ -10,10 +10,10 @@ const AlbumPreview = (props: AlbumProps) => {
     const album = props.album;
     const artistNames = formatArtistNames(album.ArtistNames);
 
-    return <CatalogueItemPreview artworkLink={album.ArtworkLink} artworkAlt={album.Name}>
+    return <Preview artworkLink={album.ArtworkLink} artworkAlt={album.Name}>
         <div className={"text-xl font-bold"}>{album.Name}</div>
         <div>{artistNames}</div>
-    </CatalogueItemPreview>
+    </Preview>
 }
 
 export default AlbumPreview;

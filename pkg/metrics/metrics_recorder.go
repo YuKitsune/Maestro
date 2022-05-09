@@ -5,7 +5,6 @@ type Recorder interface {
 	ReportRequestDuration(func())
 
 	CountServerError()
-	CountClientError()
 
 	CountDatabaseCall()
 

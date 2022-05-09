@@ -10,7 +10,7 @@ import type { LinksFunction } from "remix";
 
 import tailwindStylesUrl from "./tailwind.css"
 import spinnerStylesUrl from "./components/spinner.css"
-import HomeButton from "~/components/homeButton";
+import HomeButton from "~/components/HomeButton";
 
 // https://remix.run/api/app#links
 export let links: LinksFunction = () => {
@@ -98,6 +98,7 @@ function Document({
         {/* Emoji favicon because I can't do graphic design */}
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>" />
 
+        {/* Plausible Analytics */}
         {process.env.NODE_ENV !== "development" && <script defer data-domain="maestro.yukitsune.dev" src="https://plausible.io/js/plausible.js" />}
 
         {title ? <title>{title}</title> : null}
