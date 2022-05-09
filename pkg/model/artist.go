@@ -1,14 +1,21 @@
 package model
 
+import (
+	"context"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+const ArtistCollectionName = "artists"
+
 type Artist struct {
+	ArtistId    string
 	Name        string
 	ArtworkLink string
 
-	GroupID   ThingGroupID
-	Source    StreamingServiceKey
-	ThingType ThingType
-	Market    Market
-	Link      string
+	Source StreamingServiceKey
+	Market Market
+	Link   string
 }
 
 func NewArtist(name string, artworkLink string, source StreamingServiceKey, market Market, link string) *Artist {
@@ -16,26 +23,13 @@ func NewArtist(name string, artworkLink string, source StreamingServiceKey, mark
 		Name:        name,
 		ArtworkLink: artworkLink,
 		Source:      source,
-		ThingType:   ArtistThing,
 		Market:      market,
 		Link:        link,
 	}
 }
 
-func (a *Artist) Type() ThingType {
-	return a.ThingType
-}
-
 func (a *Artist) GetArtworkLink() string {
 	return a.ArtworkLink
-}
-
-func (a *Artist) GetGroupID() ThingGroupID {
-	return a.GroupID
-}
-
-func (a *Artist) SetGroupID(groupID ThingGroupID) {
-	a.GroupID = groupID
 }
 
 func (a *Artist) GetSource() StreamingServiceKey {
@@ -52,4 +46,38 @@ func (a *Artist) GetLink() string {
 
 func (a *Artist) GetLabel() string {
 	return a.Name
+}
+
+func UnmarshalArtist(raw bson.Raw) (*Artist, error) {
+	var artist *Artist
+	if err := bson.Unmarshal(raw, &artist); err != nil {
+		return nil, err
+	}
+
+	return artist, nil
+}
+
+func UnmarshalArtistFromCursor(ctx context.Context, cur *mongo.Cursor) ([]*Artist, error) {
+	var artists []*Artist
+
+	defer cur.Close(ctx)
+	for cur.Next(ctx) {
+		artist, err := UnmarshalArtist(cur.Current)
+		if err != nil {
+			return nil, err
+		}
+
+		artists = append(artists, artist)
+	}
+
+	return artists, nil
+}
+
+func ArtistsToHasStreamingServiceSlice(artists []*Artist) []HasStreamingService {
+	var s []HasStreamingService
+	for _, artist := range artists {
+		s = append(s, artist)
+	}
+
+	return s
 }

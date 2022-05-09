@@ -20,7 +20,3 @@ func (r *responseWriterDecorator) WriteHeader(statusCode int) {
 func isServerErrorCode(code int) bool {
 	return code >= 500 && code <= 599
 }
-
-func isClientErrorCode(code int) bool {
-	return code >= 400 && code <= 499
-}

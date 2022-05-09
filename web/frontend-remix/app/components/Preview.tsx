@@ -6,7 +6,7 @@ type CatalogueItemPreviewProps = PropsWithChildren<{}> & {
     artworkAlt: string;
 }
 
-const CatalogueItemPreview = (props: CatalogueItemPreviewProps) => {
+const Preview = (props: CatalogueItemPreviewProps) => {
     return (
         <div className={"flex flex-row gap-1"}>
             <img src={props.artworkLink} alt={props.artworkAlt} className={"h-40 rounded-lg mr-2"}/>
@@ -17,4 +17,4 @@ const CatalogueItemPreview = (props: CatalogueItemPreviewProps) => {
     );
 }
 
-export default CatalogueItemPreview;
+export default Preview;

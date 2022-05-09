@@ -1,42 +1,48 @@
-import {LoaderFunction, MetaFunction, useLoaderData} from "remix";
-import type {Thing} from "~/model/thing";
-import {findBestThing, formatArtistNames} from "~/model/thing";
-import CatalogueItem from "~/components/catalogueItem";
-import HomeButton from "~/components/homeButton";
-import {Service} from "~/model/service";
+import {LoaderFunction, MetaFunction, redirect} from "remix";
+import Thing, {findBestThing, formatArtistNames} from "~/model/thing";
 import MaestroApiClient from "~/maestroApiClient";
 import {Artist} from "~/model/artist";
 import {Album} from "~/model/album";
 import {Track} from "~/model/track";
-
-type GroupData = {
-    things: Thing[];
-    services: Service[];
-}
+import Spinner from "~/components/Spinner";
 
 export let loader: LoaderFunction = async ({ params }) => {
     if (params.group === undefined) {
-        throw new Error("Huston, we have a problem...")
+        throw new Error("Missing group ID")
     }
 
     const client = new MaestroApiClient(process.env.API_URL as string, process.env.PUBLIC_API_URL as string)
 
-    const things = await client.getGroup(params.group)
-    const services = await client.getServices()
+    const id = params.group;
 
-    return {
-        things,
-        services
-    };
-};
+    const artistsRes = await client.tryGetArtists(id)
+    const artists = artistsRes as Artist[];
+    if (artists !== undefined && artists.length > 0) {
+        return redirect(`/artist/${id}`)
+    }
+
+    const albumsRes = await client.tryGetAlbums(id)
+    const albums = albumsRes as Album[];
+    if (albums !== undefined && albums.length > 0) {
+        return redirect(`/album/${id}`)
+    }
+
+    const tracksRes = await client.tryGetTracks(id)
+    const tracks = tracksRes as Track[];
+    if (tracks !== undefined && tracks.length > 0) {
+        return redirect(`/track/${id}`)
+    }
+
+    throw new Error("Not sure what this ID is for...")
+}
 
 export const meta: MetaFunction = ({data}) => {
-    const things = data.things;
-    let bestThing = findBestThing(things)
+    const {type, things} = data;
+    let bestThing = findBestThing(things);
 
-    let title = getTitleForThing(bestThing);
+    let title = getTitle(type, bestThing);
     let image = bestThing.ArtworkLink;
-    let description = `Listen to ${title} on ${things.length} streaming service${things.length > 1 ? "s" : ""}!`;
+    let description = `Find ${title} on ${things.length} streaming service${things.length > 1 ? "s" : ""}!`;
     return {
 
         // Opengraph
@@ -54,8 +60,8 @@ export const meta: MetaFunction = ({data}) => {
     };
 };
 
-function getTitleForThing(thing: Thing) : any {
-    switch (thing.ThingType) {
+function getTitle(type: string, thing: Thing) : any {
+    switch (type) {
         case "artist":
         {
             return (thing as Artist).Name
@@ -78,12 +84,8 @@ function getTitleForThing(thing: Thing) : any {
 }
 
 export default function Group() {
-    let {things, services} = useLoaderData<GroupData>();
-
-    return (
-        <div className={"flex flex-col gap-2"}>
-            <HomeButton />
-            <CatalogueItem things={things} services={services} />
-        </div>
-    );
+    return <>
+        <div className={"text-align-center"}>Looks like you've found an old link! Redirecting...</div>
+        <Spinner />
+    </>
 }

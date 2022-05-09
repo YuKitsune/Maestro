@@ -107,8 +107,6 @@ func serve(_ *cobra.Command, _ []string) error {
 	// Run our server in a goroutine so that it doesn't block.
 	errorChan := make(chan error, 1)
 	go func() {
-
-		// Todo: TLS
 		if err = maestroAPI.Start(); err != nil {
 			errorChan <- err
 		}

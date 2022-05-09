@@ -43,8 +43,8 @@ build: ## Builds all programs and places their binaries in the bin/ directory
 	go build -ldflags="$(LD_FLAGS)" -o ./bin/  ./cmd/...
 
 .PHONY: test
-test: compose-fresh-detach ## Runs all tests
-	go test ./...
+test: ## Runs all tests
+	go test -v ./...
 
 .PHONY: clean
 clean: ## Removes the bin/ directory

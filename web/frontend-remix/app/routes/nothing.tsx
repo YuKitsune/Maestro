@@ -1,4 +1,4 @@
-import HomeButton from "~/components/homeButton";
+import HomeButton from "~/components/HomeButton";
 import {MetaFunction} from "remix";
 
 // @ts-ignore
