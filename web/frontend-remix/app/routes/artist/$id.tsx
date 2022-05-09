@@ -2,10 +2,10 @@ import {LoaderFunction, MetaFunction, useLoaderData} from "remix";
 import MaestroApiClient from "~/maestroApiClient";
 import {findBestThing} from "~/model/thing";
 import {Artist} from "~/model/artist";
-import HomeButton from "~/components/HomeButton";
+import HomeButton from "~/components/homeButton";
 import React from "react";
-import ArtistPreview from "~/components/ArtistPreview";
-import Card from "~/components/Card";
+import ArtistPreview from "~/components/artistPreview";
+import Card from "~/components/card";
 
 export let loader: LoaderFunction = async ({ params }) => {
     if (params.id === undefined) {

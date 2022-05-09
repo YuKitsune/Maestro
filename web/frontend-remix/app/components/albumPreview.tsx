@@ -1,5 +1,5 @@
 import type {Album} from "~/model/album"
-import Preview from "~/components/Preview";
+import Preview from "~/components/preview";
 import {formatArtistNames} from "~/model/thing";
 
 type AlbumProps = {

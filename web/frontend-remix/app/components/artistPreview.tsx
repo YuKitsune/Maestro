@@ -1,5 +1,5 @@
 import {Artist} from "~/model/artist";
-import Preview from "~/components/Preview";
+import Preview from "~/components/preview";
 
 type ArtistProps = {
     artist: Artist;

@@ -4,7 +4,7 @@ import MaestroApiClient from "~/maestroApiClient";
 import {Artist} from "~/model/artist";
 import {Album} from "~/model/album";
 import {Track} from "~/model/track";
-import Spinner from "~/components/Spinner";
+import Spinner from "~/components/spinner";
 
 export let loader: LoaderFunction = async ({ params }) => {
     if (params.group === undefined) {

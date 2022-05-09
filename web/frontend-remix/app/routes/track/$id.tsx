@@ -1,11 +1,11 @@
 import {LoaderFunction, MetaFunction, useLoaderData} from "remix";
 import MaestroApiClient from "~/maestroApiClient";
 import {findBestThing, formatArtistNames} from "~/model/thing";
-import HomeButton from "~/components/HomeButton";
+import HomeButton from "~/components/homeButton";
 import React from "react";
-import Card from "~/components/Card";
+import Card from "~/components/card";
 import {Track} from "~/model/track";
-import TrackPreview from "~/components/TrackPreview";
+import TrackPreview from "~/components/trackPreview";
 
 export let loader: LoaderFunction = async ({ params }) => {
     if (params.id === undefined) {

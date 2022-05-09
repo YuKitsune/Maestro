@@ -1,6 +1,6 @@
 import type {ActionFunction, MetaFunction} from "remix";
 import {Form, redirect, useTransition} from "remix";
-import Spinner from "~/components/Spinner";
+import Spinner from "~/components/spinner";
 import MaestroApiClient from "~/maestroApiClient";
 import {Artist} from "~/model/artist";
 import {Album} from "~/model/album";

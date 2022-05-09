@@ -10,7 +10,7 @@ import type { LinksFunction } from "remix";
 
 import tailwindStylesUrl from "./tailwind.css"
 import spinnerStylesUrl from "./components/spinner.css"
-import HomeButton from "~/components/HomeButton";
+import HomeButton from "~/components/homeButton";
 
 // https://remix.run/api/app#links
 export let links: LinksFunction = () => {

@@ -1,5 +1,5 @@
 import type {Track} from "~/model/track"
-import Preview from "~/components/Preview";
+import Preview from "~/components/preview";
 import {formatArtistNames} from "~/model/thing";
 
 type TrackProps = {

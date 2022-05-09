@@ -1,6 +1,6 @@
 import React from "react";
 import Thing from "~/model/thing";
-import CardLink from "~/components/CardLink";
+import CardLink from "~/components/cardLink";
 import {Service} from "~/model/service";
 
 export type CardProps = {
