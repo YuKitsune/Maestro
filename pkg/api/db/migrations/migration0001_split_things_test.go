@@ -13,7 +13,7 @@ func Test_Migration0001ExecutesCorrectly(t *testing.T) {
 	withTestDb(t, func(db *mongo.Database) {
 
 		// Seed the database with some data
-		err := setupData(db)
+		err := setupDataForMigration0001(db)
 		assert.NoError(t, err)
 
 		// Execute the migration
@@ -22,12 +22,12 @@ func Test_Migration0001ExecutesCorrectly(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Ensure the database is in the expected state
-		err = assertStateIsCorrect(t, db)
+		err = assertStateIsCorrectForMigration0001(t, db)
 		assert.NoError(t, err)
 	})
 }
 
-func setupData(db *mongo.Database) error {
+func setupDataForMigration0001(db *mongo.Database) error {
 	thingsColl := db.Collection("things")
 	_, err := thingsColl.InsertOne(context.Background(), bson.D{{"name", "my_artist"}, {"thingtype", "artist"}})
 	if err != nil {
@@ -47,7 +47,7 @@ func setupData(db *mongo.Database) error {
 	return nil
 }
 
-func assertStateIsCorrect(t *testing.T, db *mongo.Database) error {
+func assertStateIsCorrectForMigration0001(t *testing.T, db *mongo.Database) error {
 
 	artistColl := db.Collection("artists")
 	c, err := artistColl.CountDocuments(context.Background(), bson.D{{"name", "my_artist"}})
@@ -64,20 +64,5 @@ func assertStateIsCorrect(t *testing.T, db *mongo.Database) error {
 	assert.NoError(t, err)
 	assert.Equalf(t, int64(1), c, "tracks be moved to their own collection")
 
-	colls, err := db.ListCollectionNames(context.Background(), bson.D{{"options.capped", true}})
-	assert.NoError(t, err)
-
-	assert.Falsef(t, contains(colls, "things"), "things collection should be removed")
-
 	return nil
-}
-
-func contains(strSlice []string, str string) bool {
-	for _, s := range strSlice {
-		if s == str {
-			return true
-		}
-	}
-
-	return false
 }
