@@ -1,28 +1,20 @@
 package middleware
 
 import (
-	"github.com/yukitsune/maestro/pkg/api/context"
-	"github.com/yukitsune/maestro/pkg/api/handlers"
+	"github.com/gorilla/mux"
 	"github.com/yukitsune/maestro/pkg/metrics"
 	"net/http"
 )
 
-func Metrics(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func Metrics(rec metrics.Recorder) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Don't want metric requests messing with our actual metrics
-		if r.URL.Path == "/metrics" {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		ctr, err := context.Container(r.Context())
-		if err != nil {
-			handlers.Error(w, err)
-			return
-		}
-
-		err = ctr.Resolve(func(rec metrics.Recorder) error {
+			// Don't want metric requests messing with our actual metrics
+			if r.URL.Path == "/metrics" {
+				next.ServeHTTP(w, r)
+				return
+			}
 
 			// wrap original http.ResponseWriter
 			rwd := responseWriterDecorator{
@@ -39,13 +31,6 @@ func Metrics(next http.Handler) http.Handler {
 			if isServerErrorCode(rwd.StatusCode) {
 				go rec.CountServerError()
 			}
-
-			return nil
 		})
-
-		if err != nil {
-			handlers.Error(w, err)
-			return
-		}
-	})
+	}
 }

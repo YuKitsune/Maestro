@@ -7,7 +7,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/yukitsune/camogo"
 	"github.com/yukitsune/maestro/pkg/api/apiconfig"
 	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/api/db"
@@ -19,6 +18,9 @@ import (
 	"github.com/yukitsune/maestro/pkg/streamingservice/applemusic"
 	"github.com/yukitsune/maestro/pkg/streamingservice/deezer"
 	"github.com/yukitsune/maestro/pkg/streamingservice/spotify"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"net/http"
 	"time"
 )
@@ -29,21 +31,29 @@ type MaestroAPI struct {
 	svr    *http.Server
 }
 
-func NewMaestroAPI(apiCfg *apiconfig.Config, lCfg *log.Config, dbCfg *db.Config, scfg streamingservice.Config) (*MaestroAPI, error) {
+func NewMaestroAPI(apiCfg *apiconfig.Config, lCfg *log.Config, dbCfg *db.Config, svcCfg streamingservice.Config) (*MaestroAPI, error) {
 
 	logger, err := configureLogger(context.Background(), lCfg)
 	if err != nil {
 		return nil, err
 	}
 
-	cb := camogo.NewBuilder()
-	if err := setupContainer(cb, apiCfg, lCfg, dbCfg, scfg); err != nil {
+	rec, err := configureMetrics()
+	if err != nil {
 		return nil, err
 	}
 
-	container := cb.Build()
+	repo, err := configureRepository(context.Background(), dbCfg, rec, logger)
+	if err != nil {
+		return nil, err
+	}
 
-	r := setupHandlers(container)
+	services, err := configureServices(svcCfg, rec)
+	if err != nil {
+		return nil, err
+	}
+
+	router := configureHandlers(svcCfg, apiCfg, services, repo, rec, logger)
 
 	addr := fmt.Sprintf(":%d", apiCfg.Port)
 	svr := &http.Server{
@@ -54,7 +64,7 @@ func NewMaestroAPI(apiCfg *apiconfig.Config, lCfg *log.Config, dbCfg *db.Config,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
 
-		Handler: r,
+		Handler: router,
 	}
 
 	return &MaestroAPI{apiCfg, logger, svr}, nil
@@ -80,49 +90,6 @@ func (api *MaestroAPI) StartTLS() error {
 func (api *MaestroAPI) Shutdown(ctx context.Context) error {
 	api.logger.Infof("shutting down")
 	return api.svr.Shutdown(ctx)
-}
-
-func setupContainer(cb camogo.ContainerBuilder, aCfg *apiconfig.Config, lCfg *log.Config, dbCfg *db.Config, sCfg streamingservice.Config) error {
-
-	// Todo: Context timeout here
-	if err := cb.RegisterFactory(func() context.Context {
-		return context.TODO()
-	}, camogo.SingletonLifetime); err != nil {
-		return nil
-	}
-
-	// Log Config
-	if err := cb.RegisterInstance(lCfg); err != nil {
-		return err
-	}
-
-	// API Config
-	if err := cb.RegisterInstance(aCfg); err != nil {
-		return err
-	}
-
-	// Logger
-	if err := cb.RegisterFactory(configureLogger, camogo.ScopedLifetime); err != nil {
-		return err
-	}
-
-	// Metrics
-	if err := cb.RegisterFactory(metrics.NewPrometheusMetricsRecorder, camogo.SingletonLifetime); err != nil {
-		return err
-	}
-
-	// Database
-	dbMod := &db.DatabaseModule{Config: dbCfg}
-	if err := cb.RegisterModule(dbMod); err != nil {
-		return err
-	}
-
-	// Streaming services
-	if err := registerStreamingServices(cb, sCfg); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func configureLogger(ctx context.Context, cfg *log.Config) (*logrus.Entry, error) {
@@ -152,68 +119,77 @@ func configureLogger(ctx context.Context, cfg *log.Config) (*logrus.Entry, error
 	return entry, nil
 }
 
-func registerStreamingServices(cb camogo.ContainerBuilder, scfg streamingservice.Config) error {
-
-	if err := cb.RegisterInstance(scfg); err != nil {
-		return err
-	}
-
-	factory := func(c streamingservice.Config, mr metrics.Recorder) ([]streamingservice.StreamingService, error) {
-
-		var services []streamingservice.StreamingService
-		for key, config := range c {
-			if !config.Enabled() {
-				continue
-			}
-
-			switch key {
-			case applemusic.Key:
-				cfg := config.(*applemusic.Config)
-				s := applemusic.NewAppleMusicStreamingService(cfg, mr)
-				services = append(services, s)
-				break
-
-			case deezer.Key:
-				s := deezer.NewDeezerStreamingService(mr)
-				services = append(services, s)
-				break
-
-			case spotify.Key:
-				cfg := config.(*spotify.Config)
-				s, err := spotify.NewSpotifyStreamingService(cfg, mr)
-				if err != nil {
-					return services, fmt.Errorf("failed to initialize spotify streaming service: %s", err.Error())
-				}
-
-				services = append(services, s)
-				break
-			}
-		}
-
-		return services, nil
-	}
-
-	// Need to register these as transient (scoped) because Spotify doesn't provide refresh tokens for client credentials
-	if err := cb.RegisterFactory(factory, camogo.ScopedLifetime); err != nil {
-		return err
-	}
-
-	return nil
+func configureMetrics() (metrics.Recorder, error) {
+	return metrics.NewPrometheusMetricsRecorder()
 }
 
-func setupHandlers(container camogo.Container) *mux.Router {
+func configureRepository(ctx context.Context, cfg *db.Config, rec metrics.Recorder, logger *logrus.Entry) (db.Repository, error) {
+	opts := options.Client().ApplyURI(cfg.URI)
+	client, err := mongo.NewClient(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	err = client.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		return nil, err
+	}
+
+	mdb := client.Database(cfg.Database)
+	repo := db.NewMongoRepository(mdb, rec, logger)
+	return repo, nil
+}
+
+func configureServices(svcCfg streamingservice.Config, rec metrics.Recorder) (streamingservice.StreamingServices, error) {
+
+	var services []streamingservice.StreamingService
+	for key, config := range svcCfg {
+		if !config.Enabled() {
+			continue
+		}
+
+		switch key {
+		case applemusic.Key:
+			cfg := config.(*applemusic.Config)
+			s := applemusic.NewAppleMusicStreamingService(cfg, rec)
+			services = append(services, s)
+			break
+
+		case deezer.Key:
+			s := deezer.NewDeezerStreamingService(rec)
+			services = append(services, s)
+			break
+
+		case spotify.Key:
+			cfg := config.(*spotify.Config)
+			s, err := spotify.NewSpotifyStreamingService(cfg, rec)
+			if err != nil {
+				return services, fmt.Errorf("failed to initialize spotify streaming service: %s", err.Error())
+			}
+
+			services = append(services, s)
+			break
+		}
+	}
+
+	return services, nil
+}
+
+func configureHandlers(scfg streamingservice.Config, acfg *apiconfig.Config, services streamingservice.StreamingServices, repo db.Repository, rec metrics.Recorder, logger *logrus.Entry) *mux.Router {
 
 	r := mux.NewRouter()
 
 	// Middleware
 	r.Use(middleware.RequestTagging)
 
-	containerInjectionMiddleware := middleware.NewContainerInjectionMiddleware(container)
-	r.Use(containerInjectionMiddleware.Middleware)
-
-	r.Use(middleware.Metrics)
-	r.Use(middleware.RequestLogging)
-	r.Use(middleware.PanicRecovery)
+	r.Use(middleware.Metrics(rec))
+	r.Use(middleware.RequestLogging(logger))
+	r.Use(middleware.PanicRecovery(logger))
 	r.Use(middleware.Cors)
 
 	// Routes
@@ -223,14 +199,14 @@ func setupHandlers(container camogo.Container) *mux.Router {
 	r.Handle("/metrics", promhttp.Handler())
 
 	// Services
-	r.HandleFunc("/services/{serviceName}/logo", handlers.GetLogo).Methods("GET")
-	r.HandleFunc("/services", handlers.ListServices).Methods("GET")
+	r.HandleFunc("/services/{serviceName}/logo", handlers.GetServiceLogoHandler(scfg, acfg, logger)).Methods("GET")
+	r.HandleFunc("/services", handlers.GetListServicesHandler(scfg)).Methods("GET")
 
 	// Links
-	r.HandleFunc("/link", handlers.HandleLink).Methods("GET").Queries("link", "{link}")
-	r.HandleFunc("/artist/{id}", handlers.HandleGetArtistById).Methods("GET")
-	r.HandleFunc("/album/{id}", handlers.HandleGetAlbumById).Methods("GET")
-	r.HandleFunc("/track/{isrc}", handlers.HandleGetTrackByIsrc).Methods("GET")
+	r.HandleFunc("/link", handlers.GetLinkHandler(services, repo, logger)).Methods("GET").Queries("link", "{link}")
+	r.HandleFunc("/artist/{id}", handlers.GetArtistByIdHandler(repo)).Methods("GET")
+	r.HandleFunc("/album/{id}", handlers.GetAlbumByIdHandler(repo)).Methods("GET")
+	r.HandleFunc("/track/{isrc}", handlers.GetTrackByIsrcHandler(repo, services, logger)).Methods("GET")
 
 	return r
 }

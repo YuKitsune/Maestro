@@ -1,55 +1,50 @@
 package handlers
 
 import (
-	"context"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"net/http"
 )
 
-func HandleGetTrackByIsrc(w http.ResponseWriter, r *http.Request) {
-
-	vars := mux.Vars(r)
-	isrc, ok := vars["isrc"]
-	if !ok {
-		BadRequest(w, "missing parameter \"isrc\"")
-		return
-	}
-
-	container, err := mcontext.Container(r.Context())
-	if err != nil {
-		Error(w, err)
-		return
-	}
-
-	t, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository, svcs []streamingservice.StreamingService, logger *logrus.Entry) (interface{}, error) {
-		foundTracks, err := repo.GetTracksByIsrc(ctx, isrc)
-		if err != nil {
-			return nil, err
+func GetTrackByIsrcHandler(repo db.Repository, services streamingservice.StreamingServices, logger *logrus.Entry) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		isrc, ok := vars["isrc"]
+		if !ok {
+			BadRequest(w, "missing parameter \"isrc\"")
+			return
 		}
 
-		legacyTracks, err := repo.GetTracksByLegacyId(ctx, isrc)
+		foundTracks, err := repo.GetTracksByIsrc(r.Context(), isrc)
 		if err != nil {
-			return nil, err
+			Error(w, err)
+			return
+		}
+
+		legacyTracks, err := repo.GetTracksByLegacyId(r.Context(), isrc)
+		if err != nil {
+			Error(w, err)
+			return
 		}
 
 		for _, legacyTrack := range legacyTracks {
 			foundTracks = append(foundTracks, legacyTrack)
 		}
 
-		if len(foundTracks) != len(svcs) {
-			newTracks, err := getNewTrackByIsrc(isrc, foundTracks, svcs)
+		if len(foundTracks) != len(services) {
+			newTracks, err := getNewTrackByIsrc(isrc, foundTracks, services)
 			if err != nil {
-				return nil, err
+				Error(w, err)
+				return
 			}
 
-			n, err := repo.AddTracks(ctx, newTracks)
+			n, err := repo.AddTracks(r.Context(), newTracks)
 			if err != nil {
-				return nil, err
+				Error(w, err)
+				return
 			}
 
 			logger.Infof("%d new tracks added", n)
@@ -59,24 +54,16 @@ func HandleGetTrackByIsrc(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		return foundTracks, nil
-	})
+		if len(foundTracks) == 0 {
+			NotFoundf(w, "could not find any tracks with ISRC code %s", isrc)
+			return
+		}
 
-	if err != nil {
-		Error(w, err)
-		return
+		res := NewResult(model.TrackType)
+		res.AddAll(model.TrackToHasStreamingServiceSlice(foundTracks))
+
+		Response(w, res, http.StatusOK)
 	}
-
-	tracks := t.([]*model.Track)
-	if tracks == nil || len(tracks) == 0 {
-		NotFoundf(w, "could not find any tracks with ISRC code %s", isrc)
-		return
-	}
-
-	res := NewResult(model.TrackType)
-	res.AddAll(model.TrackToHasStreamingServiceSlice(tracks))
-
-	Response(w, res, http.StatusOK)
 }
 
 func getNewTrackByIsrc(isrc string, knownTracks []*model.Track, svcs []streamingservice.StreamingService) ([]*model.Track, error) {

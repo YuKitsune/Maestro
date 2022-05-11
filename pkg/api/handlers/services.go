@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/maestro/pkg/api/apiconfig"
-	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"io/ioutil"
@@ -14,17 +13,9 @@ import (
 	"path/filepath"
 )
 
-func ListServices(w http.ResponseWriter, r *http.Request) {
-
-	container, err := mcontext.Container(r.Context())
-	if err != nil {
-		Error(w, err)
-		return
-	}
-
-	res, err := container.ResolveWithResult(func(cfg streamingservice.Config) ([]model.StreamingService, error) {
-
-		var res []model.StreamingService
+func GetListServicesHandler(cfg streamingservice.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var services []model.StreamingService
 		for k, c := range cfg {
 			sr := model.StreamingService{
 				Name:    c.Name(),
@@ -32,42 +23,27 @@ func ListServices(w http.ResponseWriter, r *http.Request) {
 				Enabled: c.Enabled(),
 			}
 
-			res = append(res, sr)
+			services = append(services, sr)
 		}
 
-		return res, nil
-	})
+		if len(services) == 0 {
+			NotFound(w, "could not find any services")
+			return
+		}
 
-	if err != nil {
-		Error(w, err)
-		return
+		Response(w, services, http.StatusOK)
 	}
-
-	services := res.([]model.StreamingService)
-	if res == nil || len(services) == 0 {
-		NotFound(w, "could not find any services")
-		return
-	}
-
-	Response(w, res, http.StatusOK)
 }
 
-func GetLogo(w http.ResponseWriter, r *http.Request) {
+func GetServiceLogoHandler(scfg streamingservice.Config, acfg *apiconfig.Config, logger *logrus.Entry) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		serviceName, ok := vars["serviceName"]
+		if !ok {
+			BadRequest(w, "missing parameter \"serviceName\"")
+			return
+		}
 
-	container, err := mcontext.Container(r.Context())
-	if err != nil {
-		Error(w, err)
-		return
-	}
-
-	vars := mux.Vars(r)
-	serviceName, ok := vars["serviceName"]
-	if !ok {
-		BadRequest(w, "missing parameter \"serviceName\"")
-		return
-	}
-
-	res, err := container.ResolveWithResult(func(scfg streamingservice.Config, acfg *apiconfig.Config, logger *logrus.Entry) ([]byte, error) {
 		for k, c := range scfg {
 			if k != model.StreamingServiceKey(serviceName) {
 				continue
@@ -84,34 +60,24 @@ func GetLogo(w http.ResponseWriter, r *http.Request) {
 				exists := !errors.Is(err, os.ErrNotExist)
 				if !exists {
 					logger.Debugln("logo does not exist")
-					return []byte{}, nil
+					NotFoundf(w, "couldn't find logo for %s", serviceName)
+					return
 				}
 
-				return nil, err
+				Error(w, err)
+				return
 			}
 
 			logo, err := ioutil.ReadFile(logoFilePath)
-			return logo, err
+			if err != nil {
+				Error(w, err)
+				return
+			}
+
+			Image(w, logo)
+			return
 		}
 
-		return nil, nil
-	})
-
-	if err != nil {
-		Error(w, err)
-		return
+		NotFoundf(w, "couldn't find logo for %s", serviceName)
 	}
-
-	if res == nil {
-		NotFoundf(w, "could not find service with name %s", serviceName)
-		return
-	}
-
-	bytes := res.([]byte)
-	if len(bytes) <= 0 {
-		NotFoundf(w, "could not find logo for service %s", serviceName)
-		return
-	}
-
-	Image(w, bytes)
 }

@@ -6,8 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/camogo"
-	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
@@ -15,97 +13,80 @@ import (
 	"net/url"
 )
 
-func HandleLink(w http.ResponseWriter, r *http.Request) {
+func GetLinkHandler(services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-	vars := mux.Vars(r)
-	reqLink, ok := vars["link"]
-	if !ok {
-		BadRequest(w, "missing parameter \"link\"")
-		return
-	}
-
-	u, err := url.Parse(reqLink)
-	if err != nil || u == nil {
-		BadRequestf(w, "couldn't parse the given link: %s", reqLink)
-		return
-	}
-
-	if !u.IsAbs() {
-		BadRequest(w, "given link must be absolute")
-		return
-	}
-
-	container, err := mcontext.Container(r.Context())
-	if err != nil {
-		Error(w, err)
-		return
-	}
-
-	res, err := container.ResolveWithResult(func(logger *logrus.Entry) (interface{}, error) {
-
-		res, err := findForLink(reqLink, container)
-		if err != nil {
-			logger.Errorf("failed to find things for link %s: %s", reqLink, err.Error())
+		vars := mux.Vars(r)
+		reqLink, ok := vars["link"]
+		if !ok {
+			BadRequest(w, "missing parameter \"link\"")
+			return
 		}
 
-		return res, err
-	})
+		u, err := url.Parse(reqLink)
+		if err != nil || u == nil {
+			BadRequestf(w, "couldn't parse the given link: %s", reqLink)
+			return
+		}
 
-	if err != nil {
-		Error(w, err)
-		return
+		if !u.IsAbs() {
+			BadRequest(w, "given link must be absolute")
+			return
+		}
+
+		res, err := findForLink(r.Context(), reqLink, services, repo, logger)
+		if err != nil {
+			Error(w, err)
+			return
+		}
+
+		if res == nil || !res.HasResults() {
+			NotFound(w, "could not find anything")
+			return
+		}
+
+		Response(w, res, http.StatusOK)
 	}
-
-	if res == nil || !res.(*Result).HasResults() {
-		NotFound(w, "could not find anything")
-		return
-	}
-
-	Response(w, res, http.StatusOK)
 }
 
-func findForLink(link string, container camogo.Container) (*Result, error) {
-	res, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository, services []streamingservice.StreamingService, logger *logrus.Entry) (*Result, error) {
+func findForLink(ctx context.Context, link string, services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
 
-		// Trim service-specific stuff from the link
-		for _, service := range services {
-			link = service.CleanLink(link)
-		}
+	// Trim service-specific stuff from the link
+	for _, service := range services {
+		link = service.CleanLink(link)
+	}
 
-		logger = logger.WithField("link", link)
+	logger = logger.WithField("link", link)
 
-		// Search the database for an existing thing with the given link
-		typ, dbRes, err := repo.GetByLink(ctx, link)
-		if err != nil {
-			return nil, err
-		}
+	// Search the database for an existing thing with the given link
+	typ, dbRes, err := repo.GetByLink(ctx, link)
+	if err != nil {
+		return nil, err
+	}
 
-		switch typ {
-		case model.ArtistType:
-			artist := dbRes.(*model.Artist)
-			res, err := findForExistingArtist(ctx, artist, services, repo, logger)
-			return res, err
+	switch typ {
+	case model.ArtistType:
+		artist := dbRes.(*model.Artist)
+		res, err := findForExistingArtist(ctx, artist, services, repo, logger)
+		return res, err
 
-		case model.AlbumType:
-			album := dbRes.(*model.Album)
-			res, err := findForExistingAlbum(ctx, album, services, repo, logger)
-			return res, err
+	case model.AlbumType:
+		album := dbRes.(*model.Album)
+		res, err := findForExistingAlbum(ctx, album, services, repo, logger)
+		return res, err
 
-		case model.TrackType:
-			track := dbRes.(*model.Track)
-			res, err := findForExistingTrack(ctx, track, services, repo, logger)
-			return res, err
+	case model.TrackType:
+		track := dbRes.(*model.Track)
+		res, err := findForExistingTrack(ctx, track, services, repo, logger)
+		return res, err
 
-		case model.UnknownType:
-			res, err := findNewThing(ctx, link, services, repo, logger)
-			return res, err
+	case model.UnknownType:
+		res, err := findNewThing(ctx, link, services, repo, logger)
+		return res, err
 
-		default:
-			return nil, fmt.Errorf("unknown type %s", typ)
-		}
-	})
-
-	return res.(*Result), err
+	default:
+		return nil, fmt.Errorf("unknown type %s", typ)
+	}
 }
 
 func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, services []streamingservice.StreamingService, repo db.Repository, logger *logrus.Entry) (*Result, error) {

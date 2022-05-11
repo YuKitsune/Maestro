@@ -1,51 +1,35 @@
 package handlers
 
 import (
-	"context"
 	"github.com/gorilla/mux"
-	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/model"
 	"net/http"
 )
 
-func HandleGetArtistById(w http.ResponseWriter, r *http.Request) {
-
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-	if !ok {
-		BadRequest(w, "missing parameter \"id\"")
-		return
-	}
-
-	container, err := mcontext.Container(r.Context())
-	if err != nil {
-		Error(w, err)
-		return
-	}
-
-	a, err := container.ResolveWithResult(func(ctx context.Context, repo db.Repository) (interface{}, error) {
-		foundArtists, err := repo.GetArtistsById(ctx, id)
-		if err != nil {
-			return nil, err
+func GetArtistByIdHandler(repo db.Repository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, ok := vars["id"]
+		if !ok {
+			BadRequest(w, "missing parameter \"id\"")
+			return
 		}
 
-		return foundArtists, nil
-	})
+		foundArtists, err := repo.GetArtistsById(r.Context(), id)
+		if err != nil {
+			Error(w, err)
+			return
+		}
 
-	if err != nil {
-		Error(w, err)
-		return
+		if foundArtists == nil || len(foundArtists) == 0 {
+			NotFoundf(w, "could not find any artists with ID %s", id)
+			return
+		}
+
+		res := NewResult(model.ArtistType)
+		res.AddAll(model.ArtistsToHasStreamingServiceSlice(foundArtists))
+
+		Response(w, res, http.StatusOK)
 	}
-
-	artists := a.([]*model.Artist)
-	if artists == nil || len(artists) == 0 {
-		NotFoundf(w, "could not find any artists with ID %s", id)
-		return
-	}
-
-	res := NewResult(model.ArtistType)
-	res.AddAll(model.ArtistsToHasStreamingServiceSlice(artists))
-
-	Response(w, res, http.StatusOK)
 }

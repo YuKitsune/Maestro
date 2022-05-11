@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/api/handlers"
@@ -9,32 +10,26 @@ import (
 	"time"
 )
 
-func RequestLogging(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func RequestLogging(logger *logrus.Entry) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		reqID, err := context.RequestID(r.Context())
-		if err != nil {
-			handlers.Error(w, err)
-			return
-		}
+			reqID, err := context.RequestID(r.Context())
+			if err != nil {
+				handlers.Error(w, err)
+				return
+			}
 
-		ctr, err := context.Container(r.Context())
-		if err != nil {
-			handlers.Error(w, err)
-			return
-		}
+			// wrap original http.ResponseWriter
+			rwd := responseWriterDecorator{
+				ResponseWriter: w,
+				StatusCode:     0,
+			}
 
-		// wrap original http.ResponseWriter
-		rwd := responseWriterDecorator{
-			ResponseWriter: w,
-			StatusCode:     0,
-		}
+			start := time.Now()
+			next.ServeHTTP(&rwd, r)
+			duration := time.Since(start)
 
-		start := time.Now()
-		next.ServeHTTP(&rwd, r)
-		duration := time.Since(start)
-
-		_ = ctr.Resolve(func(logger *logrus.Entry) {
 			reqLogger := logger.WithField(log.RequestIDField, reqID).
 				WithField("method", r.Method).
 				WithField("path", r.URL.Path).
@@ -53,5 +48,5 @@ func RequestLogging(next http.Handler) http.Handler {
 
 			reqLogger.Logln(level)
 		})
-	})
+	}
 }
