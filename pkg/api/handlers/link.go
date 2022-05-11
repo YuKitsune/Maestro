@@ -13,7 +13,7 @@ import (
 	"net/url"
 )
 
-func GetLinkHandler(services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) http.HandlerFunc {
+func GetLinkHandler(serviceProvider streamingservice.ServiceProvider, repo db.Repository, logger *logrus.Entry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
@@ -34,7 +34,7 @@ func GetLinkHandler(services streamingservice.StreamingServices, repo db.Reposit
 			return
 		}
 
-		res, err := findForLink(r.Context(), reqLink, services, repo, logger)
+		res, err := findForLink(r.Context(), reqLink, serviceProvider, repo, logger)
 		if err != nil {
 			Error(w, err)
 			return
@@ -49,9 +49,10 @@ func GetLinkHandler(services streamingservice.StreamingServices, repo db.Reposit
 	}
 }
 
-func findForLink(ctx context.Context, link string, services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+func findForLink(ctx context.Context, link string, serviceProvider streamingservice.ServiceProvider, repo db.Repository, logger *logrus.Entry) (*Result, error) {
 
 	// Trim service-specific stuff from the link
+	services := serviceProvider.ListServices()
 	for _, service := range services {
 		link = service.CleanLink(link)
 	}

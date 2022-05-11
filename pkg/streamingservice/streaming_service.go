@@ -4,8 +4,6 @@ import (
 	"github.com/yukitsune/maestro/pkg/model"
 )
 
-type StreamingServices []StreamingService
-
 type StreamingService interface {
 	Key() model.StreamingServiceKey
 	LinkBelongsToService(link string) bool

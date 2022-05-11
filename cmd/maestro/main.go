@@ -4,19 +4,26 @@ import (
 	"context"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/yukitsune/maestro"
 	"github.com/yukitsune/maestro/internal/grace"
 	"github.com/yukitsune/maestro/pkg/api"
 	"github.com/yukitsune/maestro/pkg/api/apiconfig"
+	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/log"
+	"github.com/yukitsune/maestro/pkg/metrics"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"github.com/yukitsune/maestro/pkg/streamingservice/applemusic"
 	"github.com/yukitsune/maestro/pkg/streamingservice/deezer"
+	"github.com/yukitsune/maestro/pkg/streamingservice/provider"
 	"github.com/yukitsune/maestro/pkg/streamingservice/spotify"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"strings"
 	"time"
 )
@@ -62,44 +69,37 @@ func main() {
 
 func serve(_ *cobra.Command, _ []string) error {
 
-	// Environment variables
-	viper.SetEnvPrefix("MAESTRO")
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
-
-	// Config file
-	viper.SetConfigName("maestro")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/etc/maestro")
-	viper.AddConfigPath("../configs")
-	viper.AddConfigPath("./configs")
-	viper.AddConfigPath(".")
-
-	// Load in the configuration
-	err := viper.ReadInConfig()
-	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found; ignore error
-			fmt.Println("Config file not found")
-		} else {
-			return err
-		}
-	}
-
-	viper.AutomaticEnv()
-
-	// Unmarshal
-	var cfg *Config
-	err = viper.Unmarshal(&cfg)
+	cfg, err := loadConfig()
 	if err != nil {
 		return err
 	}
 
-	scfg, err := decodeServiceConfigs(cfg)
+	svcCfg, err := decodeServiceConfigs(cfg)
 	if err != nil {
 		return err
 	}
 
-	maestroAPI, err := api.NewMaestroAPI(cfg.API, cfg.Log, cfg.Db, scfg)
+	logger, err := configureLogger(context.Background(), cfg.Log)
+	if err != nil {
+		return err
+	}
+
+	rec, err := configureMetrics()
+	if err != nil {
+		return err
+	}
+
+	repo, err := configureRepository(context.Background(), cfg.Db, rec, logger)
+	if err != nil {
+		return err
+	}
+
+	serviceProvider, err := configureServices(svcCfg, rec)
+	if err != nil {
+		return err
+	}
+
+	maestroAPI, err := api.NewMaestroAPI(cfg.API, serviceProvider, repo, rec, logger)
 	if err != nil {
 		grace.ExitFromError()
 	}
@@ -119,6 +119,100 @@ func serve(_ *cobra.Command, _ []string) error {
 	})
 
 	return nil
+}
+
+func loadConfig() (*Config, error) {
+
+	// Environment variables
+	viper.SetEnvPrefix("MAESTRO")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
+
+	// Config file
+	viper.SetConfigName("maestro")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("/etc/maestro")
+	viper.AddConfigPath("../configs")
+	viper.AddConfigPath("./configs")
+	viper.AddConfigPath(".")
+
+	// Load in the configuration
+	err := viper.ReadInConfig()
+	if err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found; ignore error
+			fmt.Println("Config file not found")
+		} else {
+			return nil, err
+		}
+	}
+
+	viper.AutomaticEnv()
+
+	// Unmarshal
+	var cfg *Config
+	err = viper.Unmarshal(&cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func configureLogger(ctx context.Context, cfg *log.Config) (*logrus.Entry, error) {
+
+	logger := logrus.New()
+
+	lvl, err := logrus.ParseLevel(cfg.Level)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.SetLevel(lvl)
+
+	logger.SetFormatter(&logrus.TextFormatter{
+		ForceColors:   true,
+		PadLevelText:  true,
+		FullTimestamp: true,
+	})
+
+	entry := logger.WithContext(ctx)
+
+	reqID, err := mcontext.RequestID(ctx)
+	if err == nil {
+		entry = entry.WithField(log.RequestIDField, reqID)
+	}
+
+	return entry, nil
+}
+
+func configureMetrics() (metrics.Recorder, error) {
+	return metrics.NewPrometheusMetricsRecorder()
+}
+
+func configureRepository(ctx context.Context, cfg *db.Config, rec metrics.Recorder, logger *logrus.Entry) (db.Repository, error) {
+	opts := options.Client().ApplyURI(cfg.URI)
+	client, err := mongo.NewClient(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	err = client.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		return nil, err
+	}
+
+	mdb := client.Database(cfg.Database)
+	repo := db.NewMongoRepository(mdb, rec, logger)
+	return repo, nil
+}
+
+func configureServices(svcCfg streamingservice.Config, rec metrics.Recorder) (streamingservice.ServiceProvider, error) {
+	return provider.NewDefaultProvider(svcCfg, rec)
 }
 
 // Todo: It'd be nice to not have this...

@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func GetTrackByIsrcHandler(repo db.Repository, services streamingservice.StreamingServices, logger *logrus.Entry) http.HandlerFunc {
+func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.ServiceProvider, logger *logrus.Entry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		isrc, ok := vars["isrc"]
@@ -34,6 +34,7 @@ func GetTrackByIsrcHandler(repo db.Repository, services streamingservice.Streami
 			foundTracks = append(foundTracks, legacyTrack)
 		}
 
+		services := serviceProvider.ListServices()
 		if len(foundTracks) != len(services) {
 			newTracks, err := getNewTrackByIsrc(isrc, foundTracks, services)
 			if err != nil {

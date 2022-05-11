@@ -13,14 +13,16 @@ import (
 	"path/filepath"
 )
 
-func GetListServicesHandler(cfg streamingservice.Config) http.HandlerFunc {
+func GetListServicesHandler(sp streamingservice.ServiceProvider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		svcs := sp.ListConfigs()
+
 		var services []model.StreamingService
-		for k, c := range cfg {
+		for k, cfg := range svcs {
 			sr := model.StreamingService{
-				Name:    c.Name(),
+				Name:    cfg.Name(),
 				Key:     k.String(),
-				Enabled: c.Enabled(),
+				Enabled: cfg.Enabled(),
 			}
 
 			services = append(services, sr)
@@ -35,7 +37,7 @@ func GetListServicesHandler(cfg streamingservice.Config) http.HandlerFunc {
 	}
 }
 
-func GetServiceLogoHandler(scfg streamingservice.Config, acfg *apiconfig.Config, logger *logrus.Entry) http.HandlerFunc {
+func GetServiceLogoHandler(apiCfg *apiconfig.Config, sp streamingservice.ServiceProvider, logger *logrus.Entry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		serviceName, ok := vars["serviceName"]
@@ -44,40 +46,37 @@ func GetServiceLogoHandler(scfg streamingservice.Config, acfg *apiconfig.Config,
 			return
 		}
 
-		for k, c := range scfg {
-			if k != model.StreamingServiceKey(serviceName) {
-				continue
-			}
-
-			logger.Debugf("logo file name: %s", c.LogoFileName())
-
-			logoFilePath := filepath.Join(acfg.AssetsDirectory, "logos", c.LogoFileName())
-			logger.Debugf("logo path: %s", logoFilePath)
-
-			// Ensure the file exists
-			_, err := os.Stat(logoFilePath)
-			if err != nil {
-				exists := !errors.Is(err, os.ErrNotExist)
-				if !exists {
-					logger.Debugln("logo does not exist")
-					NotFoundf(w, "couldn't find logo for %s", serviceName)
-					return
-				}
-
-				Error(w, err)
-				return
-			}
-
-			logo, err := ioutil.ReadFile(logoFilePath)
-			if err != nil {
-				Error(w, err)
-				return
-			}
-
-			Image(w, logo)
+		cfg := sp.GetConfig(model.StreamingServiceKey(serviceName))
+		if cfg == nil {
+			NotFoundf(w, "couldn't find streaming service with key %s", serviceName)
 			return
 		}
 
-		NotFoundf(w, "couldn't find logo for %s", serviceName)
+		logger.Debugf("logo file name: %s", cfg.LogoFileName())
+
+		logoFilePath := filepath.Join(apiCfg.AssetsDirectory, "logos", cfg.LogoFileName())
+		logger.Debugf("logo path: %s", logoFilePath)
+
+		// Ensure the file exists
+		_, err := os.Stat(logoFilePath)
+		if err != nil {
+			exists := !errors.Is(err, os.ErrNotExist)
+			if !exists {
+				logger.Debugln("logo does not exist")
+				NotFoundf(w, "couldn't find logo for %s", serviceName)
+				return
+			}
+
+			Error(w, err)
+			return
+		}
+
+		logo, err := ioutil.ReadFile(logoFilePath)
+		if err != nil {
+			Error(w, err)
+			return
+		}
+
+		Image(w, logo)
 	}
 }
