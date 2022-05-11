@@ -31,7 +31,7 @@ func waitForSignal(shutdownSignalChan chan os.Signal, errorChan chan error) {
 		break
 
 	case err := <-errorChan:
-		handleError(err)
+		ExitFromError(err)
 		break
 	}
 }
@@ -54,10 +54,6 @@ func handleShutdownSignal(sig os.Signal) {
 	return
 }
 
-func handleError(err error) {
-	log.Fatalf("A fatal error has occurred: %v", err)
-}
-
 func getShutdownSignalChan() chan os.Signal {
 	shutdownSignalChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownSignalChan,
@@ -71,6 +67,6 @@ func getShutdownSignalChan() chan os.Signal {
 	return shutdownSignalChan
 }
 
-func ExitFromError() {
-	os.Exit(1)
+func ExitFromError(err error) {
+	log.Fatalf("an error has occurred: %s", err.Error())
 }

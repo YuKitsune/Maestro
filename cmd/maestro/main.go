@@ -63,7 +63,7 @@ func main() {
 
 	err := rootCmd.Execute()
 	if err != nil {
-		grace.ExitFromError()
+		grace.ExitFromError(err)
 	}
 }
 
@@ -101,7 +101,7 @@ func serve(_ *cobra.Command, _ []string) error {
 
 	maestroAPI, err := api.NewMaestroAPI(cfg.API, serviceProvider, repo, rec, logger)
 	if err != nil {
-		grace.ExitFromError()
+		grace.ExitFromError(err)
 	}
 
 	// Run our server in a goroutine so that it doesn't block.
@@ -177,6 +177,7 @@ func configureLogger(ctx context.Context, cfg *log.Config) (*logrus.Entry, error
 
 	entry := logger.WithContext(ctx)
 
+	// Todo: This needs to move into some middleware
 	reqID, err := mcontext.RequestID(ctx)
 	if err == nil {
 		entry = entry.WithField(log.RequestIDField, reqID)
