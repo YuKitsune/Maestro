@@ -17,13 +17,13 @@ import (
 	"time"
 )
 
-type MaestroAPI struct {
+type MaestroServer struct {
 	cfg    *apiconfig.Config
 	logger *logrus.Logger
 	svr    *http.Server
 }
 
-func NewMaestroAPI(apiCfg *apiconfig.Config, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) (*MaestroAPI, error) {
+func NewMaestroServer(apiCfg *apiconfig.Config, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) (*MaestroServer, error) {
 
 	router := configureHandlers(apiCfg, serviceProvider, repo, rec, logger)
 
@@ -39,19 +39,19 @@ func NewMaestroAPI(apiCfg *apiconfig.Config, serviceProvider streamingservice.Se
 		Handler: router,
 	}
 
-	return &MaestroAPI{apiCfg, logger, svr}, nil
+	return &MaestroServer{apiCfg, logger, svr}, nil
 }
 
-func (api *MaestroAPI) Start() error {
-	api.logger.Infoln("starting maestro API")
+func (api *MaestroServer) Start() error {
+	api.logger.Infoln("starting maestro server")
 	api.logger.Debugf("config: %+v\n", viper.AllSettings())
 
 	api.logger.Infof("listening on %s", api.svr.Addr)
 	return api.svr.ListenAndServe()
 }
 
-func (api *MaestroAPI) Shutdown(ctx context.Context) error {
-	api.logger.Infof("shutting down")
+func (api *MaestroServer) Shutdown(ctx context.Context) error {
+	api.logger.Infof("shutting down maestro server")
 	return api.svr.Shutdown(ctx)
 }
 

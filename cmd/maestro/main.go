@@ -99,7 +99,7 @@ func serve(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	maestroAPI, err := api.NewMaestroAPI(cfg.API, serviceProvider, repo, rec, logger)
+	maestroAPI, err := api.NewMaestroServer(cfg.API, serviceProvider, repo, rec, logger)
 	if err != nil {
 		grace.ExitFromError(err)
 	}
