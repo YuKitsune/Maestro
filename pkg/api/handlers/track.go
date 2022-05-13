@@ -4,13 +4,21 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/maestro/pkg/api/db"
+	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"net/http"
 )
 
-func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.ServiceProvider, logger *logrus.Entry) http.HandlerFunc {
+func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.ServiceProvider, logger *logrus.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		reqLogger, err := log.ForRequest(logger, r)
+		if err != nil {
+			Error(w, err)
+			return
+		}
+
 		vars := mux.Vars(r)
 		isrc, ok := vars["isrc"]
 		if !ok {
@@ -48,7 +56,7 @@ func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.
 				return
 			}
 
-			logger.Infof("%d new tracks added", n)
+			reqLogger.Infof("%d new tracks added", n)
 
 			for _, newTrack := range newTracks {
 				foundTracks = append(foundTracks, newTrack)

@@ -19,11 +19,11 @@ import (
 
 type MaestroAPI struct {
 	cfg    *apiconfig.Config
-	logger *logrus.Entry
+	logger *logrus.Logger
 	svr    *http.Server
 }
 
-func NewMaestroAPI(apiCfg *apiconfig.Config, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Entry) (*MaestroAPI, error) {
+func NewMaestroAPI(apiCfg *apiconfig.Config, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) (*MaestroAPI, error) {
 
 	router := configureHandlers(apiCfg, serviceProvider, repo, rec, logger)
 
@@ -55,7 +55,7 @@ func (api *MaestroAPI) Shutdown(ctx context.Context) error {
 	return api.svr.Shutdown(ctx)
 }
 
-func configureHandlers(cfg *apiconfig.Config, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Entry) *mux.Router {
+func configureHandlers(cfg *apiconfig.Config, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) *mux.Router {
 
 	r := mux.NewRouter()
 

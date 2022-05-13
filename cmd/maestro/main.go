@@ -7,11 +7,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/yukitsune/lokirus"
 	"github.com/yukitsune/maestro"
 	"github.com/yukitsune/maestro/internal/grace"
 	"github.com/yukitsune/maestro/pkg/api"
 	"github.com/yukitsune/maestro/pkg/api/apiconfig"
-	mcontext "github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/metrics"
@@ -79,7 +79,7 @@ func serve(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	logger, err := configureLogger(context.Background(), cfg.Log)
+	logger, err := configureLogger(cfg.Log)
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func loadConfig() (*Config, error) {
 	return cfg, nil
 }
 
-func configureLogger(ctx context.Context, cfg *log.Config) (*logrus.Entry, error) {
+func configureLogger(cfg *log.Config) (*logrus.Logger, error) {
 
 	logger := logrus.New()
 
@@ -175,22 +175,31 @@ func configureLogger(ctx context.Context, cfg *log.Config) (*logrus.Entry, error
 		FullTimestamp: true,
 	})
 
-	entry := logger.WithContext(ctx)
+	if cfg.Loki != nil {
 
-	// Todo: This needs to move into some middleware
-	reqID, err := mcontext.RequestID(ctx)
-	if err == nil {
-		entry = entry.WithField(log.RequestIDField, reqID)
+		// Grafana doesn't have a "panic" level, but it does have a "critical" level
+		// https://grafana.com/docs/grafana/latest/explore/logs-integration/
+		opts := lokirus.NewLokiHookOptions().WithLevelMap(lokirus.LevelMap{logrus.PanicLevel: "critical"})
+		hook := lokirus.NewLokiHookWithOpts(
+			cfg.Loki.Host,
+			opts,
+			logrus.InfoLevel,
+			logrus.WarnLevel,
+			logrus.ErrorLevel,
+			logrus.FatalLevel,
+			logrus.PanicLevel)
+
+		logger.AddHook(hook)
 	}
 
-	return entry, nil
+	return logger, nil
 }
 
 func configureMetrics() (metrics.Recorder, error) {
 	return metrics.NewPrometheusMetricsRecorder()
 }
 
-func configureRepository(ctx context.Context, cfg *db.Config, rec metrics.Recorder, logger *logrus.Entry) (db.Repository, error) {
+func configureRepository(ctx context.Context, cfg *db.Config, rec metrics.Recorder, logger *logrus.Logger) (db.Repository, error) {
 	opts := options.Client().ApplyURI(cfg.URI)
 	client, err := mongo.NewClient(opts)
 	if err != nil {

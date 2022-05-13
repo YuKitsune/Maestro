@@ -13,10 +13,10 @@ import (
 type mongoRepository struct {
 	db     *mongo.Database
 	rec    metrics.Recorder
-	logger *logrus.Entry
+	logger *logrus.Logger
 }
 
-func NewMongoRepository(db *mongo.Database, rec metrics.Recorder, log *logrus.Entry) Repository {
+func NewMongoRepository(db *mongo.Database, rec metrics.Recorder, log *logrus.Logger) Repository {
 	return &mongoRepository{db, rec, log}
 }
 

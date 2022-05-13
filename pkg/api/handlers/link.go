@@ -7,14 +7,21 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/maestro/pkg/api/db"
+	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"net/http"
 	"net/url"
 )
 
-func GetLinkHandler(serviceProvider streamingservice.ServiceProvider, repo db.Repository, logger *logrus.Entry) http.HandlerFunc {
+func GetLinkHandler(serviceProvider streamingservice.ServiceProvider, repo db.Repository, logger *logrus.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		reqLogger, err := log.ForRequest(logger, r)
+		if err != nil {
+			Error(w, err)
+			return
+		}
 
 		vars := mux.Vars(r)
 		reqLink, ok := vars["link"]
@@ -34,7 +41,7 @@ func GetLinkHandler(serviceProvider streamingservice.ServiceProvider, repo db.Re
 			return
 		}
 
-		res, err := findForLink(r.Context(), reqLink, serviceProvider, repo, logger)
+		res, err := findForLink(r.Context(), reqLink, serviceProvider, repo, reqLogger)
 		if err != nil {
 			Error(w, err)
 			return

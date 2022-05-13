@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/maestro/pkg/api/apiconfig"
+	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"io/ioutil"
@@ -37,8 +38,15 @@ func GetListServicesHandler(sp streamingservice.ServiceProvider) http.HandlerFun
 	}
 }
 
-func GetServiceLogoHandler(apiCfg *apiconfig.Config, sp streamingservice.ServiceProvider, logger *logrus.Entry) http.HandlerFunc {
+func GetServiceLogoHandler(apiCfg *apiconfig.Config, sp streamingservice.ServiceProvider, logger *logrus.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		reqLogger, err := log.ForRequest(logger, r)
+		if err != nil {
+			Error(w, err)
+			return
+		}
+
 		vars := mux.Vars(r)
 		serviceName, ok := vars["serviceName"]
 		if !ok {
@@ -52,17 +60,17 @@ func GetServiceLogoHandler(apiCfg *apiconfig.Config, sp streamingservice.Service
 			return
 		}
 
-		logger.Debugf("logo file name: %s", cfg.LogoFileName())
+		reqLogger.Debugf("logo file name: %s", cfg.LogoFileName())
 
 		logoFilePath := filepath.Join(apiCfg.AssetsDirectory, "logos", cfg.LogoFileName())
-		logger.Debugf("logo path: %s", logoFilePath)
+		reqLogger.Debugf("logo path: %s", logoFilePath)
 
 		// Ensure the file exists
-		_, err := os.Stat(logoFilePath)
+		_, err = os.Stat(logoFilePath)
 		if err != nil {
 			exists := !errors.Is(err, os.ErrNotExist)
 			if !exists {
-				logger.Debugln("logo does not exist")
+				reqLogger.Debugln("logo does not exist")
 				NotFoundf(w, "couldn't find logo for %s", serviceName)
 				return
 			}

@@ -21,6 +21,7 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
 	github.com/stretchr/testify v1.7.0
+	github.com/yukitsune/lokirus v1.0.0 // indirect
 	github.com/zmb3/spotify v1.3.0
 	go.mongodb.org/mongo-driver v1.8.0
 	gotest.tools v2.2.0+incompatible // indirect

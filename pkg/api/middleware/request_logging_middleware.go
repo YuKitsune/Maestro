@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func RequestLogging(logger *logrus.Entry) mux.MiddlewareFunc {
+func RequestLogging(logger *logrus.Logger) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
