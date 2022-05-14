@@ -89,7 +89,7 @@ func serve(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	repo, err := configureRepository(context.Background(), cfg.Db, rec, logger)
+	repo, err := configureRepository(cfg.Db, rec, logger)
 	if err != nil {
 		return err
 	}
@@ -199,12 +199,15 @@ func configureMetrics() (metrics.Recorder, error) {
 	return metrics.NewPrometheusMetricsRecorder()
 }
 
-func configureRepository(ctx context.Context, cfg *db.Config, rec metrics.Recorder, logger *logrus.Logger) (db.Repository, error) {
+func configureRepository(cfg *db.Config, rec metrics.Recorder, logger *logrus.Logger) (db.Repository, error) {
 	opts := options.Client().ApplyURI(cfg.URI)
 	client, err := mongo.NewClient(opts)
 	if err != nil {
 		return nil, err
 	}
+
+	ctx, cancelCtx := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelCtx()
 
 	err = client.Connect(ctx)
 	if err != nil {
