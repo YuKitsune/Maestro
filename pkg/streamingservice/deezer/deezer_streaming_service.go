@@ -205,6 +205,14 @@ func (s *deezerStreamingService) SearchTrack(track *model.Track) (*model.Track, 
 	return res, res != nil, nil
 }
 
+func (s *deezerStreamingService) GetPlaylistById(id string) (*model.Playlist, bool, error) {
+	panic("not implemented")
+}
+
+func (s *deezerStreamingService) GetPlaylistTracksById(id string) ([]*model.Track, bool, error) {
+	panic("not implemented")
+}
+
 func (s *deezerStreamingService) GetFromLink(link string) (model.Type, interface{}, error) {
 
 	// Share link: https://deezer.page.link/szbWkX6rKbfJ8XCD6
@@ -294,6 +302,9 @@ func (s *deezerStreamingService) GetFromLink(link string) (model.Type, interface
 			foundTrack.Link)
 
 		return model.TrackType, track, nil
+
+	case "playlist":
+		panic("not implemented")
 
 	default:
 		return model.UnknownType, nil, fmt.Errorf("unknown type %s", typ)

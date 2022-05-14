@@ -140,6 +140,14 @@ func (s *appleMusicStreamingService) SearchTrack(song *model.Track) (*model.Trac
 	return resTrack, true, err
 }
 
+func (s *appleMusicStreamingService) GetPlaylistById(id string) (*model.Playlist, bool, error) {
+	panic("not implemented")
+}
+
+func (s *appleMusicStreamingService) GetPlaylistTracksById(id string) ([]*model.Track, bool, error) {
+	panic("not implemented")
+}
+
 func (s *appleMusicStreamingService) GetFromLink(link string) (model.Type, interface{}, error) {
 
 	// example: https://music.apple.com/au/album/surrender/1585865534?i=123123123
@@ -160,21 +168,8 @@ func (s *appleMusicStreamingService) GetFromLink(link string) (model.Type, inter
 		id = songID
 	}
 
-	var typ model.Type
 	switch typStr {
 	case "artist":
-		typ = model.ArtistType
-		break
-	case "album":
-		typ = model.AlbumType
-		break
-	case "song":
-		typ = model.TrackType
-		break
-	}
-
-	switch typ {
-	case model.ArtistType:
 		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetArtist(id, storefront)
 		if err != nil {
@@ -182,9 +177,9 @@ func (s *appleMusicStreamingService) GetFromLink(link string) (model.Type, inter
 		}
 
 		artist, err := s.newArtist(res, storefront)
-		return typ, artist, err
+		return model.ArtistType, artist, err
 
-	case model.AlbumType:
+	case "album":
 		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetAlbum(id, storefront)
 		if err != nil {
@@ -192,9 +187,9 @@ func (s *appleMusicStreamingService) GetFromLink(link string) (model.Type, inter
 		}
 
 		album, err := s.newAlbum(res, storefront)
-		return typ, album, err
+		return model.AlbumType, album, err
 
-	case model.TrackType:
+	case "song":
 		go s.metricsRecorder.CountAppleMusicRequest()
 		res, err := s.client.GetSong(id, storefront)
 		if err != nil {
@@ -202,10 +197,13 @@ func (s *appleMusicStreamingService) GetFromLink(link string) (model.Type, inter
 		}
 
 		track, err := s.newTrack(res, storefront)
-		return typ, track, err
+		return model.TrackType, track, err
+
+	case "playlist":
+		panic("not implemented")
 
 	default:
-		return model.UnknownType, nil, fmt.Errorf("unknown type %s", typ)
+		return model.UnknownType, nil, fmt.Errorf("unknown type %s", typStr)
 	}
 }
 

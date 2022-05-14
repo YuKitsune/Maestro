@@ -3,6 +3,9 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -10,8 +13,6 @@ import (
 	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
-	"net/http"
-	"net/url"
 )
 
 func GetLinkHandler(serviceProvider streamingservice.ServiceProvider, repo db.Repository, logger *logrus.Logger) http.HandlerFunc {
@@ -89,6 +90,15 @@ func findForLink(ctx context.Context, link string, serviceProvider streamingserv
 	case model.TrackType:
 		track := dbRes.(*model.Track)
 		res, err := findForExistingTrack(ctx, track, svcs, repo, logger)
+		return res, err
+
+	case model.PlaylistType:
+		res := &Result{
+			Type: model.PlaylistType,
+			Items: []model.HasStreamingService{
+				dbRes.(*model.Playlist),
+			},
+		}
 		return res, err
 
 	case model.UnknownType:
@@ -416,6 +426,27 @@ func handleNewTrack(ctx context.Context, newTrack *model.Track, svcs streamingse
 	return res, nil
 }
 
+func handleNewPlaylist(ctx context.Context, newPlaylist *model.Playlist, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+
+	// Create our own ID for the playlist
+	id := uuid.New().String()
+	newPlaylist.PlaylistId = id
+
+	res := NewResult(model.PlaylistType)
+	res.Add(newPlaylist)
+
+	logger = logger.WithField("playlist_id", id)
+
+	err := repo.AddPlaylist(ctx, newPlaylist)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Infoln("1 new playlist added")
+
+	return res, nil
+}
+
 func findNewThing(ctx context.Context, link string, svcs streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
 
 	logger.Debugln("looks like this is a new thing")
@@ -458,6 +489,10 @@ func findNewThing(ctx context.Context, link string, svcs streamingservice.Stream
 	case model.TrackType:
 		track := res.(*model.Track)
 		return handleNewTrack(ctx, track, otherServices, repo, logger)
+
+	case model.PlaylistType:
+		playlist := res.(*model.Playlist)
+		return handleNewPlaylist(ctx, playlist, repo, logger)
 
 	case model.UnknownType:
 		return nil, fmt.Errorf("could not find anything from %s", targetKey)

@@ -13,6 +13,13 @@ import (
 	"regexp"
 )
 
+// Links:
+//   Artist: https://open.spotify.com/artist/3dz0NnIZhtKKeXZxLOxCam?si=59MxgP9hT72oENCW_7Pi8g
+//    Album: https://open.spotify.com/album/4Hjqdhj5rh816i1dfcUEaM?si=Dc3aTkvPT22eZA6viIkdKA
+//    Track: https://open.spotify.com/track/36kCSJg8ZBwiSCUECFKGUy?si=df04501fab5540d2
+// Playlist: https://open.spotify.com/playlist/6CmKR9e3DTdyNdfr4NBeSG?si=c716a24afbf7402d
+const shareLinkRegex = "(https?:\\/\\/)?open\\.spotify\\.com\\/(?P<type>[A-Za-z]+)\\/(?P<id>[A-Za-z0-9]+)"
+
 type spotifyStreamingService struct {
 	client           *spotify.Client
 	shareLinkPattern *regexp.Regexp
@@ -59,7 +66,7 @@ func GetAccessToken(clientID string, secret string) (token string, error error) 
 }
 
 func NewSpotifyStreamingService(cfg *Config, mr metrics.Recorder) (streamingservice.StreamingService, error) {
-	shareLinkPatternRegex := regexp.MustCompile("(https?:\\/\\/)?open\\.spotify\\.com\\/(?P<type>[A-Za-z]+)\\/(?P<id>[A-Za-z0-9]+)")
+	shareLinkPatternRegex := regexp.MustCompile(shareLinkRegex)
 
 	go mr.CountSpotifyRequest()
 	token, err := GetAccessToken(cfg.ClientID, cfg.ClientSecret)
@@ -235,6 +242,65 @@ func (s *spotifyStreamingService) SearchTrack(track *model.Track) (*model.Track,
 	return res, res != nil, nil
 }
 
+func (s *spotifyStreamingService) GetPlaylistById(id string) (*model.Playlist, bool, error) {
+	go s.metricsRecorder.CountSpotifyRequest()
+
+	spotifyPlaylist, err := s.client.GetPlaylist(spotify.ID(id))
+	if err != nil {
+		return nil, false, err
+	}
+
+	res := model.NewPlaylist(
+		spotifyPlaylist.ID.String(),
+		spotifyPlaylist.Name,
+		imageURL(spotifyPlaylist.Images),
+		s.Key(),
+		spotifyPlaylist.ExternalURLs["spotify"])
+
+	return res, true, nil
+}
+
+func (s *spotifyStreamingService) GetPlaylistTracksById(id string) ([]*model.Track, bool, error) {
+
+	var spotifyTracks []spotify.FullTrack
+
+	// Todo: Cache these results, big playlists will make _a lot_ of requests
+	offset := 0
+	for {
+		go s.metricsRecorder.CountSpotifyRequest()
+		playlistTracks, err := s.client.GetPlaylistTracksOpt(spotify.ID(id), &spotify.Options{Offset: &offset}, "")
+		if err != nil {
+			return nil, false, err
+		}
+
+		for _, playlistTrack := range playlistTracks.Tracks {
+			spotifyTracks = append(spotifyTracks, playlistTrack.Track)
+		}
+
+		if len(spotifyTracks) == playlistTracks.Total {
+			break
+		}
+
+		offset = len(spotifyTracks)
+	}
+
+	var tracks []*model.Track
+	for _, spotifyTrack := range spotifyTracks {
+		track := model.NewTrack(
+			spotifyTrack.ExternalIDs["isrc"],
+			spotifyTrack.Name,
+			artistName(spotifyTrack.Artists),
+			spotifyTrack.Album.Name,
+			imageURL(spotifyTrack.Album.Images),
+			s.Key(),
+			model.DefaultMarket,
+			spotifyTrack.ExternalURLs["spotify"])
+		tracks = append(tracks, track)
+	}
+
+	return tracks, true, nil
+}
+
 func (s *spotifyStreamingService) GetFromLink(link string) (model.Type, interface{}, error) {
 
 	// example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=10587ef152a8493f
@@ -302,6 +368,23 @@ func (s *spotifyStreamingService) GetFromLink(link string) (model.Type, interfac
 			foundTrack.ExternalURLs["spotify"])
 
 		return model.TrackType, track, nil
+
+	case "playlist":
+		go s.metricsRecorder.CountSpotifyRequest()
+
+		foundPlaylist, err := s.client.GetPlaylist(id)
+		if err != nil {
+			return model.UnknownType, nil, err
+		}
+
+		playlist := model.NewPlaylist(
+			foundPlaylist.ID.String(),
+			foundPlaylist.Name,
+			imageURL(foundPlaylist.Images),
+			s.Key(),
+			foundPlaylist.ExternalURLs["spotify"])
+
+		return model.PlaylistType, playlist, nil
 
 	default:
 		return model.UnknownType, nil, fmt.Errorf("unknown type %s", typ)

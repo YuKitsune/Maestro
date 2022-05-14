@@ -17,5 +17,8 @@ type StreamingService interface {
 	SearchTrack(song *model.Track) (*model.Track, bool, error)
 	GetTrackByIsrc(isrc string) (*model.Track, bool, error)
 
+	GetPlaylistById(id string) (*model.Playlist, bool, error)
+	GetPlaylistTracksById(id string) ([]*model.Track, bool, error)
+
 	GetFromLink(link string) (model.Type, interface{}, error)
 }

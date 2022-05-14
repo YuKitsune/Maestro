@@ -220,6 +220,40 @@ func (m *mongoRepository) GetTrackByLink(ctx context.Context, link string) (*mod
 	return foundTrack, nil
 }
 
+func (m *mongoRepository) AddPlaylist(ctx context.Context, playlist *model.Playlist) error {
+	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
+
+	coll := m.db.Collection(model.PlaylistCollectionName)
+	_, err := coll.InsertOne(ctx, playlist)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *mongoRepository) GetPlaylistById(ctx context.Context, id string) (*model.Playlist, error) {
+	go m.rec.CountDatabaseCall()
+	m.ensureMigrationsHaveExecuted(ctx)
+
+	coll := m.db.Collection(model.PlaylistCollectionName)
+	res := coll.FindOne(ctx, bson.D{
+		{"playlistid", id},
+	})
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	var playlist *model.Playlist
+	err := res.Decode(&playlist)
+	if err != nil {
+		return nil, err
+	}
+
+	return playlist, nil
+}
+
 func (m *mongoRepository) GetByLink(ctx context.Context, link string) (model.Type, interface{}, error) {
 
 	artist, err := m.GetArtistByLink(ctx, link)

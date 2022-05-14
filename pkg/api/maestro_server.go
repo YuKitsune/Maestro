@@ -82,6 +82,8 @@ func configureHandlers(cfg *apiconfig.Config, serviceProvider streamingservice.S
 	r.HandleFunc("/artist/{id}", handlers.GetArtistByIdHandler(repo)).Methods("GET")
 	r.HandleFunc("/album/{id}", handlers.GetAlbumByIdHandler(repo)).Methods("GET")
 	r.HandleFunc("/track/{isrc}", handlers.GetTrackByIsrcHandler(repo, serviceProvider, logger)).Methods("GET")
+	r.HandleFunc("/playlist/{id}", handlers.GetPlaylistByIdHandler(repo)).Methods("GET")
+	r.HandleFunc("/playlist/{id}/tracks", handlers.GetPlaylistTracksByIdHandler(repo, serviceProvider)).Methods("GET")
 
 	return r
 }
