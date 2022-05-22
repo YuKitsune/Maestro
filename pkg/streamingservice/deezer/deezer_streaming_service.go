@@ -129,6 +129,10 @@ func (s *deezerStreamingService) GetTrackByIsrc(isrc string) (*model.Track, bool
 		return nil, false, err
 	}
 
+	if deezerTrack == nil {
+		return nil, false, nil
+	}
+
 	res := model.NewTrack(
 		deezerTrack.Isrc,
 		deezerTrack.Title,

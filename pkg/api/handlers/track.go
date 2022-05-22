@@ -44,22 +44,24 @@ func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.
 
 		services := serviceProvider.ListServices()
 		if len(foundTracks) != len(services) {
-			newTracks, err := getNewTrackByIsrc(isrc, foundTracks, services)
+			newTracks, err := getNewTrackByIsrc(isrc, foundTracks, services, reqLogger)
 			if err != nil {
 				Error(w, err)
 				return
 			}
 
-			n, err := repo.AddTracks(r.Context(), newTracks)
-			if err != nil {
-				Error(w, err)
-				return
-			}
+			if len(newTracks) > 0 {
+				n, err := repo.AddTracks(r.Context(), newTracks)
+				if err != nil {
+					Error(w, err)
+					return
+				}
 
-			reqLogger.Infof("%d new tracks added", n)
+				reqLogger.Infof("%d new tracks added", n)
 
-			for _, newTrack := range newTracks {
-				foundTracks = append(foundTracks, newTrack)
+				for _, newTrack := range newTracks {
+					foundTracks = append(foundTracks, newTrack)
+				}
 			}
 		}
 
@@ -75,7 +77,7 @@ func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.
 	}
 }
 
-func getNewTrackByIsrc(isrc string, knownTracks []*model.Track, svcs []streamingservice.StreamingService) ([]*model.Track, error) {
+func getNewTrackByIsrc(isrc string, knownTracks []*model.Track, svcs []streamingservice.StreamingService, logger *logrus.Entry) ([]*model.Track, error) {
 
 	var tracks []*model.Track
 
@@ -95,7 +97,8 @@ func getNewTrackByIsrc(isrc string, knownTracks []*model.Track, svcs []streaming
 
 		track, found, err := svc.GetTrackByIsrc(isrc)
 		if err != nil {
-			return tracks, err
+			logger.Errorf("%s: %s", svc.Key(), err.Error())
+			continue
 		}
 
 		if !found {

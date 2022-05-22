@@ -129,7 +129,8 @@ func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, servi
 		logger.Debugf("searching %s for artist\n", service.Key())
 		artist, found, err := service.SearchArtist(foundArtist)
 		if err != nil {
-			return nil, err
+			logger.Errorf("%s: %s", service.Key(), err.Error())
+			continue
 		}
 
 		if !found {
@@ -188,7 +189,8 @@ func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, services
 		logger.Debugf("searching %s for album\n", service.Key())
 		album, found, err := service.SearchAlbum(foundAlbum)
 		if err != nil {
-			return nil, err
+			logger.Errorf("%s: %s", service.Key(), err.Error())
+			continue
 		}
 
 		if !found {
@@ -247,7 +249,8 @@ func findForExistingTrack(ctx context.Context, foundTrack *model.Track, services
 		logger.Debugf("searching %s for track\n", service.Key())
 		track, found, err := service.GetTrackByIsrc(foundTrack.Isrc)
 		if err != nil {
-			return nil, err
+			logger.Errorf("%s: %s", service.Key(), err.Error())
+			continue
 		}
 
 		if !found {
@@ -298,7 +301,8 @@ func handleNewArtist(ctx context.Context, newArtist *model.Artist, services []st
 		logger.Debugf("searching %s for artist with name %s\n", service.Key(), newArtist.Name)
 		foundArtist, found, err := service.SearchArtist(newArtist)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %s", service.Key(), err.Error())
+			logger.Errorf("%s: %s", service.Key(), err.Error())
+			continue
 		}
 
 		if !found {
@@ -346,7 +350,8 @@ func handleNewAlbum(ctx context.Context, newAlbum *model.Album, services []strea
 		logger.Debugf("searching %s for album with name %s\n", service.Key(), newAlbum.Name)
 		foundAlbum, found, err := service.SearchAlbum(newAlbum)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %s", service.Key(), err.Error())
+			logger.Errorf("%s: %s", service.Key(), err.Error())
+			continue
 		}
 
 		if !found {
@@ -385,7 +390,8 @@ func handleNewTrack(ctx context.Context, newTrack *model.Track, services []strea
 		logger.Debugf("searching %s for track with name %s\n", service.Key(), newTrack.Name)
 		foundTrack, found, err := service.GetTrackByIsrc(newTrack.Isrc)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %s", service.Key(), err.Error())
+			logger.Errorf("%s: %s", service.Key(), err.Error())
+			continue
 		}
 
 		if !found {

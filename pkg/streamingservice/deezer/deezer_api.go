@@ -65,6 +65,10 @@ func (d *client) SearchArtist(artistName string) ([]Artist, error) {
 		return nil, err
 	}
 
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
+	}
+
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
 	var apiRes *searchArtistResponse
@@ -92,6 +96,10 @@ func (d *client) SearchAlbum(artistName string, albumName string) ([]Album, erro
 	defer httpRes.Body.Close()
 	if err != nil {
 		return nil, err
+	}
+
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
 	}
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
@@ -123,6 +131,10 @@ func (d *client) SearchTrack(artistName string, albumName string, trackName stri
 		return nil, err
 	}
 
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
+	}
+
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
 	var apiRes *searchTrackResponse
@@ -151,6 +163,14 @@ func (d *client) GetArtist(id int) (*Artist, error) {
 		return nil, err
 	}
 
+	if httpRes.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
+	}
+
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
 	var res *Artist
@@ -170,6 +190,14 @@ func (d *client) GetAlbum(id int) (*Album, error) {
 	defer httpRes.Body.Close()
 	if err != nil {
 		return nil, err
+	}
+
+	if httpRes.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
 	}
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
@@ -193,6 +221,14 @@ func (d *client) GetTrack(id int) (*Track, error) {
 		return nil, err
 	}
 
+	if httpRes.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
+	}
+
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
 	var res *Track
@@ -213,8 +249,12 @@ func (d *client) GetTrackByIsrc(isrc string) (*Track, error) {
 		return nil, err
 	}
 
+	if httpRes.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+
 	if httpRes.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("api responded with code %d", httpRes.StatusCode)
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
 	}
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)

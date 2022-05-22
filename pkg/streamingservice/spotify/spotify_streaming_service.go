@@ -166,6 +166,10 @@ func (s *spotifyStreamingService) GetTrackByIsrc(isrc string) (*model.Track, boo
 		return nil, false, err
 	}
 
+	if searchRes.Tracks == nil || len(searchRes.Tracks.Tracks) == 0 {
+		return nil, false, nil
+	}
+
 	// Todo: Narrow down results
 	spotifyTrack := searchRes.Tracks.Tracks[0]
 

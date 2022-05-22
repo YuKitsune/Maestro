@@ -89,6 +89,10 @@ func (s *appleMusicStreamingService) GetTrackByIsrc(isrc string) (*model.Track, 
 		return nil, false, err
 	}
 
+	if len(songsRes) == 0 {
+		return nil, false, nil
+	}
+
 	// Todo: Narrow down results
 	foundSong := songsRes[0]
 

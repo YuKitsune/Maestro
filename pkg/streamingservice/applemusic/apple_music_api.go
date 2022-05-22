@@ -125,6 +125,10 @@ func (a *client) SearchArtist(term string, storefront model.Market) ([]Artist, e
 		return nil, err
 	}
 
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
+	}
+
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
 	var res *SearchResponse
@@ -152,6 +156,10 @@ func (a *client) SearchAlbum(term string, storefront model.Market) ([]Album, err
 	defer httpRes.Body.Close()
 	if err != nil {
 		return nil, err
+	}
+
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
 	}
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
@@ -183,6 +191,10 @@ func (a *client) SearchSong(term string, storefront model.Market) ([]Song, error
 		return nil, err
 	}
 
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
+	}
+
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
 	var res *SearchResponse
@@ -209,6 +221,10 @@ func (a *client) GetArtist(id string, storefront model.Market) (*Artist, error) 
 	defer httpRes.Body.Close()
 	if err != nil {
 		return nil, err
+	}
+
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
 	}
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
@@ -245,6 +261,10 @@ func (a *client) GetAlbum(id string, storefront model.Market) (*Album, error) {
 		return nil, err
 	}
 
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
+	}
+
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
 	var res *AlbumResult
@@ -279,6 +299,10 @@ func (a *client) GetSong(id string, storefront model.Market) (*Song, error) {
 		return nil, err
 	}
 
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
+	}
+
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
 
 	var res *SongResult
@@ -311,6 +335,10 @@ func (a *client) GetSongByIsrc(isrc string, storefront model.Market) ([]Song, er
 	defer httpRes.Body.Close()
 	if err != nil {
 		return nil, err
+	}
+
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api responded with %s", httpRes.Status)
 	}
 
 	resBytes, err := ioutil.ReadAll(httpRes.Body)
