@@ -14,8 +14,7 @@
 </h3>
 
 # What can it do?
-Maestro lets user provide share links from a variety of music streaming services as input, then searches a variety
-of streaming services for the same artist, album, or track, and consolidates their share links together in a simple web page.
+Maestro lets you share music across a variety of different music streaming services with a single link. It achieves this by extracting metadata from the streaming service where the "Share" link came from, then runs a search against a number of other streaming services using that metadata. It then combines the results together, creating a bridge between all of the streaming services.
 
 This is great when sharing music with people who might not use the same music streaming service as you.
 
@@ -27,10 +26,10 @@ This is great when sharing music with people who might not use the same music st
 
 ### Planned
 
-- Tidal
-- YouTube Music
-- Amazon Music
-- Pandora
+- [ ] Tidal
+- [ ] YouTube Music
+- [ ] Amazon Music
+- [ ] Pandora
 
 # Contributing
 Contributions are what make the open source community such an amazing place to be, learn, inspire, and create.
