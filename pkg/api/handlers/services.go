@@ -54,8 +54,8 @@ func GetServiceLogoHandler(apiCfg *apiconfig.Config, sp streamingservice.Service
 			return
 		}
 
-		cfg := sp.GetConfig(model.StreamingServiceKey(serviceName))
-		if cfg == nil {
+		cfg, err := sp.GetConfig(model.StreamingServiceKey(serviceName))
+		if err != nil {
 			NotFoundf(w, "couldn't find streaming service with key %s", serviceName)
 			return
 		}
