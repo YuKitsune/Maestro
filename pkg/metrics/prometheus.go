@@ -119,6 +119,7 @@ func (p prometheusMetricsRecorder) CountServerError() {
 }
 
 func (p prometheusMetricsRecorder) ReportRequestDuration(fn func()) {
+	// Todo: Use ExemplarObserver to add traceID, endpoint, and status code
 	timer := prometheus.NewTimer(p.requestDurationHistogram)
 	fn()
 	timer.ObserveDuration()

@@ -28,3 +28,8 @@ services:
 
     # The Spotify client secret
     clientSecret:
+
+log:
+
+  # (Optional) The Loki host
+  host:
