@@ -124,6 +124,8 @@ func (s *deezerStreamingService) SearchAlbum(album *model.Album) (*model.Album, 
 
 func (s *deezerStreamingService) GetTrackByIsrc(isrc string) (*model.Track, bool, error) {
 
+	go s.metricsRecorder.CountDeezerRequest()
+
 	deezerTrack, err := s.client.GetTrackByIsrc(isrc)
 	if err != nil {
 		return nil, false, err
