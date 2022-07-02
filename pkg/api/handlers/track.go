@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/maestro/pkg/api/db"
@@ -42,9 +43,13 @@ func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.
 			foundTracks = append(foundTracks, legacyTrack)
 		}
 
-		services := serviceProvider.ListServices()
-		if len(foundTracks) != len(services) {
-			newTracks, err := getNewTrackByIsrc(isrc, foundTracks, services, reqLogger)
+		svcs, err := serviceProvider.ListServices()
+		if err != nil {
+			Error(w, fmt.Errorf("failed to initialize services: %s", err.Error()))
+		}
+
+		if len(foundTracks) != len(svcs) {
+			newTracks, err := getNewTrackByIsrc(isrc, foundTracks, svcs, reqLogger)
 			if err != nil {
 				Error(w, err)
 				return
@@ -77,16 +82,16 @@ func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.
 	}
 }
 
-func getNewTrackByIsrc(isrc string, knownTracks []*model.Track, svcs []streamingservice.StreamingService, logger *logrus.Entry) ([]*model.Track, error) {
+func getNewTrackByIsrc(isrc string, knownTracks []*model.Track, svcs streamingservice.StreamingServices, logger *logrus.Entry) ([]*model.Track, error) {
 
 	var tracks []*model.Track
 
-	for _, svc := range svcs {
+	for key, svc := range svcs {
 
 		// Skip if we know about this track
 		trackIsKnown := false
 		for _, knownTrack := range knownTracks {
-			if knownTrack.Source == svc.Key() {
+			if knownTrack.Source == key {
 				trackIsKnown = true
 			}
 		}
@@ -97,7 +102,7 @@ func getNewTrackByIsrc(isrc string, knownTracks []*model.Track, svcs []streaming
 
 		track, found, err := svc.GetTrackByIsrc(isrc)
 		if err != nil {
-			logger.Errorf("%s: %s", svc.Key(), err.Error())
+			logger.Errorf("%s: %s", key, err.Error())
 			continue
 		}
 
