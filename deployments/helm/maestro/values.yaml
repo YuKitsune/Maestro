@@ -35,4 +35,4 @@ log:
   level: info
 
   # (Optional) The Loki host
-  host:
+  lokiHost:

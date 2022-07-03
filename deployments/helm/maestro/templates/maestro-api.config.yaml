@@ -11,7 +11,8 @@ data:
       port: 8182
     logging:
       level: {{ .Values.log.level }}
-      host: {{ .Values.log.host }}
+      loki:
+        host: {{ .Values.log.lokiHost }}
     database:
       uri:
       name: maestro
