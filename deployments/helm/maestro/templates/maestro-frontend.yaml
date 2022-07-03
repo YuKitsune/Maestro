@@ -18,7 +18,7 @@ spec:
 
       containers:
         - name: maestro-frontend
-          image: ghcr.io/yukitsune/maestro-frontend:v0.2.4
+          image: ghcr.io/yukitsune/maestro-frontend:v0.2.5-beta1
           ports:
             - containerPort: 3000
           env:
