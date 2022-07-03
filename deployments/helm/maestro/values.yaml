@@ -31,5 +31,8 @@ services:
 
 log:
 
+  # (Optional) Log level
+  level: info
+
   # (Optional) The Loki host
   host:

@@ -79,10 +79,6 @@ spec:
                   name: maestro-secret
                   key: spotify-secret
 
-            # Loki
-            - name: MAESTRO_LOG_HOST
-              value: {{ .Values.log.host }}
-
 ---
 
 # Maestro API service

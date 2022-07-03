@@ -10,7 +10,8 @@ data:
       assets_dir: /assets
       port: 8182
     logging:
-      level: info
+      level: {{ .Values.log.level }}
+      host: {{ .Values.log.host }}
     database:
       uri:
       name: maestro
