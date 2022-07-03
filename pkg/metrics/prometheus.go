@@ -2,11 +2,11 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"time"
 )
 
 type prometheusMetricsRecorder struct {
-	requestCounter           prometheus.Counter
-	requestDurationHistogram prometheus.Histogram
+	requestDurationHistogram *prometheus.HistogramVec
 
 	databaseCallCounter prometheus.Counter
 
@@ -20,19 +20,11 @@ type prometheusMetricsRecorder struct {
 
 func NewPrometheusMetricsRecorder() (Recorder, error) {
 
-	reqCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "maestro_request_count",
-		Help: "The total number of HTTP requests served",
-	})
-
-	if err := prometheus.Register(reqCounter); err != nil {
-		return nil, err
-	}
-
-	reqDur := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "maestro_request_duration",
-		Help: "The total duration of a HTTP request",
-	})
+	reqDur := prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "maestro_request_duration_seconds",
+		Help:    "The total duration of a HTTP request",
+		Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
+	}, []string{"route"})
 
 	if err := prometheus.Register(reqDur); err != nil {
 		return nil, err
@@ -93,7 +85,6 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 	}
 
 	rec := &prometheusMetricsRecorder{
-		reqCounter,
 		reqDur,
 		dbCounter,
 		serverErrorCounter,
@@ -106,10 +97,6 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 	return rec, nil
 }
 
-func (p prometheusMetricsRecorder) CountRequest() {
-	p.requestCounter.Inc()
-}
-
 func (p prometheusMetricsRecorder) CountDatabaseCall() {
 	p.databaseCallCounter.Inc()
 }
@@ -118,10 +105,11 @@ func (p prometheusMetricsRecorder) CountServerError() {
 	p.serverErrorCounter.Inc()
 }
 
-func (p prometheusMetricsRecorder) ReportRequestDuration(fn func()) {
-	timer := prometheus.NewTimer(p.requestDurationHistogram)
+func (p prometheusMetricsRecorder) ReportRequestDuration(path string, fn func()) {
+	begin := time.Now()
 	fn()
-	timer.ObserveDuration()
+	dur := time.Since(begin)
+	p.requestDurationHistogram.WithLabelValues(path).Observe(dur.Seconds())
 }
 
 func (p prometheusMetricsRecorder) CountAppleMusicRequest() {

@@ -10,7 +10,13 @@ data:
       assets_dir: /assets
       port: 8182
     logging:
-      level: info
+      level: {{ .Values.log.level }}
+      loki:
+        host: {{ .Values.log.loki.host }}
+        labels:
+          {{- range $key, $value := .Values.log.loki.labels }}
+          {{ $key }}: {{ $value }}
+          {{- end }}
     database:
       uri:
       name: maestro

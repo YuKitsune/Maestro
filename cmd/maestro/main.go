@@ -84,6 +84,8 @@ func serve(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
+	logger.Debugf("Config: %+v", cfg)
+
 	rec, err := configureMetrics()
 	if err != nil {
 		return err
@@ -179,7 +181,9 @@ func configureLogger(cfg *log.Config) (*logrus.Logger, error) {
 
 		// Grafana doesn't have a "panic" level, but it does have a "critical" level
 		// https://grafana.com/docs/grafana/latest/explore/logs-integration/
-		opts := lokirus.NewLokiHookOptions().WithLevelMap(lokirus.LevelMap{logrus.PanicLevel: "critical"})
+		opts := lokirus.NewLokiHookOptions().
+			WithLevelMap(lokirus.LevelMap{logrus.PanicLevel: "critical"}).
+			WithStaticLabels(cfg.Loki.Labels)
 		hook := lokirus.NewLokiHookWithOpts(
 			cfg.Loki.Host,
 			opts,

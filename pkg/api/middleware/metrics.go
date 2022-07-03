@@ -22,11 +22,14 @@ func Metrics(rec metrics.Recorder) mux.MiddlewareFunc {
 				StatusCode:     0,
 			}
 
-			rec.ReportRequestDuration(func() {
+			// Get the route template
+			route := mux.CurrentRoute(r)
+			pathTemplate, _ := route.GetPathTemplate()
+
+			// Record request duration with the path
+			rec.ReportRequestDuration(pathTemplate, func() {
 				next.ServeHTTP(&rwd, r)
 			})
-
-			go rec.CountRequest()
 
 			if isServerErrorCode(rwd.StatusCode) {
 				go rec.CountServerError()
