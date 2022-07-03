@@ -84,7 +84,7 @@ func serve(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	logger.Debugln("Config: %+v", cfg)
+	logger.Debugf("Config: %+v", cfg)
 
 	rec, err := configureMetrics()
 	if err != nil {
