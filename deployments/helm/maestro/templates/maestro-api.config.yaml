@@ -12,7 +12,11 @@ data:
     logging:
       level: {{ .Values.log.level }}
       loki:
-        host: {{ .Values.log.lokiHost }}
+        host: {{ .Values.log.loki.host }}
+        labels:
+          {{- range $key, $value := .Values.log.loki.labels }}
+          {{ $key }}: {{ $value }}
+          {{- end }}
     database:
       uri:
       name: maestro
