@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/yukitsune/maestro/pkg/api/context"
 	"github.com/yukitsune/maestro/pkg/metrics"
 	"net/http"
 )
@@ -22,11 +23,15 @@ func Metrics(rec metrics.Recorder) mux.MiddlewareFunc {
 				StatusCode:     0,
 			}
 
-			rec.ReportRequestDuration(func() {
+			// Get the route template and request ID
+			route := mux.CurrentRoute(r)
+			pathTemplate, _ := route.GetPathTemplate()
+			requestId, _ := context.RequestID(r.Context())
+
+			// Record request duration with request ID and path
+			rec.ReportRequestDuration(requestId, pathTemplate, func() {
 				next.ServeHTTP(&rwd, r)
 			})
-
-			go rec.CountRequest()
 
 			if isServerErrorCode(rwd.StatusCode) {
 				go rec.CountServerError()
