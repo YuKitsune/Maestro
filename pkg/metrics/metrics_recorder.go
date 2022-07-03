@@ -1,7 +1,7 @@
 package metrics
 
 type Recorder interface {
-	ReportRequestDuration(traceId string, path string, fn func())
+	ReportRequestDuration(path string, fn func())
 
 	CountServerError()
 

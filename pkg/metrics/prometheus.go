@@ -24,7 +24,7 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 		Name:    "maestro_request_duration_seconds",
 		Help:    "The total duration of a HTTP request",
 		Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
-	}, []string{"trace_id", "route"})
+	}, []string{"route"})
 
 	if err := prometheus.Register(reqDur); err != nil {
 		return nil, err
@@ -105,11 +105,11 @@ func (p prometheusMetricsRecorder) CountServerError() {
 	p.serverErrorCounter.Inc()
 }
 
-func (p prometheusMetricsRecorder) ReportRequestDuration(traceId string, path string, fn func()) {
+func (p prometheusMetricsRecorder) ReportRequestDuration(path string, fn func()) {
 	begin := time.Now()
 	fn()
 	dur := time.Since(begin)
-	p.requestDurationHistogram.WithLabelValues(traceId, path).Observe(dur.Seconds())
+	p.requestDurationHistogram.WithLabelValues(path).Observe(dur.Seconds())
 }
 
 func (p prometheusMetricsRecorder) CountAppleMusicRequest() {
