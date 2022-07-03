@@ -24,7 +24,7 @@ func NewPrometheusMetricsRecorder() (Recorder, error) {
 		Name:    "maestro_request_duration_seconds",
 		Help:    "The total duration of a HTTP request",
 		Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
-	}, []string{"trace_id", "method", "route"})
+	}, []string{"trace_id", "route"})
 
 	if err := prometheus.Register(reqDur); err != nil {
 		return nil, err
