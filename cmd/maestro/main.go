@@ -183,7 +183,7 @@ func configureLogger(cfg *log.Config) (*logrus.Logger, error) {
 		// https://grafana.com/docs/grafana/latest/explore/logs-integration/
 		opts := lokirus.NewLokiHookOptions().
 			WithLevelMap(lokirus.LevelMap{logrus.PanicLevel: "critical"}).
-			WithStaticLabels(lokirus.Labels{"app": "maestro"})
+			WithStaticLabels(cfg.Loki.Labels)
 		hook := lokirus.NewLokiHookWithOpts(
 			cfg.Loki.Host,
 			opts,
