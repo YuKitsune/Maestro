@@ -21,17 +21,18 @@ spec:
           image: ghcr.io/yukitsune/maestro-frontend:v0.2.5
           ports:
             - containerPort: 3000
+
           env:
             - name: API_URL
               value: http://maestro-api-service
 
             - name: PUBLIC_API_URL
               value: {{ required "publicApiUrl is required" .Values.publicApiUrl }}
-          
-          {{ with .Values.frontendResources }}
+
+{{ with .Values.frontendResources }}
           resources:
-            {{ toYaml . | indent 14 }}
-          {{ end }}
+{{ toYaml . | indent 12 }}
+{{ end }}
 
 ---
 
