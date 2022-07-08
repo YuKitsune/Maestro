@@ -78,6 +78,11 @@ spec:
                 secretKeyRef:
                   name: maestro-secret
                   key: spotify-secret
+          
+          {{- with .Values.apiResources }}
+            resources:
+            {{ toYaml . | indent 14 }}
+          {{- end }}
 
 ---
 
