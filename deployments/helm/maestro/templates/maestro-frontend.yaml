@@ -28,10 +28,10 @@ spec:
             - name: PUBLIC_API_URL
               value: {{ required "publicApiUrl is required" .Values.publicApiUrl }}
           
-          {{- with .Values.apiResources }}
-            resources:
+          {{ with .Values.frontendResources }}
+          resources:
             {{ toYaml . | indent 14 }}
-          {{- end }}
+          {{ end }}
 
 ---
 
