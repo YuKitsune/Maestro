@@ -41,3 +41,19 @@ log:
 
     # (Optional) The Loki labels
     labels:
+
+apiResources: {}
+#  requests:
+#    cpu: "10m"
+#    memory: "15M"
+#  limits:
+#    cpu: "50m"
+#    memory: "100M"
+
+frontendResources: {}
+#  requests:
+#    cpu: "10m"
+#    memory: "55M"
+#  limits:
+#    cpu: "250m"
+#    memory: "150M"
