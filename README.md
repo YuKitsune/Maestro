@@ -5,7 +5,7 @@
 <h3 align="center">
   A small web application and API that allows lets you share the music you love across a variety streaming services.
 
-  [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/yukitsune/maestro/Build%20and%20Test)](https://github.com/yukitsune/maestro/actions?query=workflow:Build%20and%20Test)
+  [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/yukitsune/maestro/CI.yml?branch=main)](https://github.com/YuKitsune/Maestro/actions/workflows/CI.yml)
   [![Go Report Card](https://goreportcard.com/badge/github.com/yukitsune/maestro)](https://goreportcard.com/report/github.com/yukitsune/maestro)
   [![License](https://img.shields.io/github/license/YuKitsune/Maestro)](https://github.com/YuKitsune/Maestro/blob/main/LICENSE)
   [![Latest Release](https://img.shields.io/github/v/release/YuKitsune/Maestro?include_prereleases)](https://github.com/YuKitsune/Maestro/releases)
