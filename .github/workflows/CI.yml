@@ -5,15 +5,6 @@ on:
 
 jobs:
 
-  lint_helm_chart:
-    name: Lint Helm Chart
-    runs-on: ubuntu-latest
-    steps:
-      - uses: azure/setup-helm@v1
-        name: Install Helm
-      - uses: actions/checkout@v2
-      - run: helm lint ./deployments/helm/maestro
-
   build_api:
     name: API
     runs-on: ubuntu-latest

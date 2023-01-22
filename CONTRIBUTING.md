@@ -58,10 +58,6 @@ will automatically run `docker-compose` with the appropriate flags and arguments
 
 Run `make` or `make help` for a list of available commands and what they do.
 
-# Helm
-Maestro provides a helm chart for use in a Kubernetes cluster. This is used to deploy Maestro to production.
-For a more detailed guide on configuring the Maestro Helm chart, head over to the [Helm readme](deployments/helm/maestro/README.md).
-
 # Pull Requests
 If you have some changes you'd like to see merged into Maestro, consider forking and submitting a pull request!
 It's preferred to create a feature branch (E.g. `feature/my-awesome-feature`) and working from that before submitting a PR.
