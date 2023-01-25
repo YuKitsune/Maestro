@@ -1,0 +1,38 @@
+version: '3'
+
+vars:
+  GIT_COMMIT: 
+    sh: git rev-parse HEAD
+
+  VERSION:
+    sh:  git describe --tags {{.GIT_COMMIT}} 2> /dev/null || echo "{{.GIT_COMMIT}}"
+
+  PROJECT_NAME: maestro
+  DOCKER_COMPOSE_CMD: docker-compose --project-name {{.PROJECT_NAME}} --file ./deployments/docker-compose.yml --env-file ./configs/.env
+
+tasks:
+  build:
+    desc: Builds all programs and places their binaries in the bin directory
+    cmds:
+      - mkdir -p bin
+      - go build -ldflags="github.com/yukitsune/maestro.Version={{.VERSION}}" -o ./bin/  ./cmd/...
+
+  test:
+    desc: Runs all tests
+    cmds:
+      - go test -v ./...
+
+  clean:
+    desc: Removes the bin directory
+    cmds:
+      - rm -rf bin
+
+  deps:
+    desc: 'Docker-compose alias specifically for running dependencies (E.g: Database)'
+    cmds:
+      - '{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}} database'
+
+  compose:
+    desc: Docker-compose alias 
+    cmds:
+      - '{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}}'
