@@ -2,27 +2,26 @@ package handlers
 
 import (
 	"errors"
-	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/maestro/pkg/api/apiconfig"
-	"github.com/yukitsune/maestro/pkg/log"
-	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
+	"github.com/yukitsune/maestro/pkg/config"
+	"github.com/yukitsune/maestro/pkg/log"
+	"github.com/yukitsune/maestro/pkg/model"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
 )
 
-func GetListServicesHandler(sp streamingservice.ServiceProvider) http.HandlerFunc {
+func GetListServicesHandler(serviceProvider streamingservice.ServiceProvider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		svcs := sp.ListConfigs()
-
 		var services []model.StreamingService
-		for k, cfg := range svcs {
+		for _, cfg := range serviceProvider.ListConfigs() {
 			sr := model.StreamingService{
+				Key:     cfg.Type(),
 				Name:    cfg.Name(),
-				Key:     k.String(),
 				Enabled: cfg.Enabled(),
 			}
 
@@ -38,7 +37,7 @@ func GetListServicesHandler(sp streamingservice.ServiceProvider) http.HandlerFun
 	}
 }
 
-func GetServiceLogoHandler(apiCfg *apiconfig.Config, sp streamingservice.ServiceProvider, logger *logrus.Logger) http.HandlerFunc {
+func GetServiceLogoHandler(apiConfig *config.API, serviceProvider streamingservice.ServiceProvider, logger *logrus.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		reqLogger, err := log.ForRequest(logger, r)
@@ -54,7 +53,7 @@ func GetServiceLogoHandler(apiCfg *apiconfig.Config, sp streamingservice.Service
 			return
 		}
 
-		cfg, err := sp.GetConfig(model.StreamingServiceKey(serviceName))
+		cfg, err := serviceProvider.GetConfig(model.StreamingServiceType(serviceName))
 		if err != nil {
 			NotFoundf(w, "couldn't find streaming service with key %s", serviceName)
 			return
@@ -62,7 +61,7 @@ func GetServiceLogoHandler(apiCfg *apiconfig.Config, sp streamingservice.Service
 
 		reqLogger.Debugf("logo file name: %s", cfg.LogoFileName())
 
-		logoFilePath := filepath.Join(apiCfg.AssetsDirectory, "logos", cfg.LogoFileName())
+		logoFilePath := filepath.Join(apiConfig.AssetsDirectory, "logos", cfg.LogoFileName())
 		reqLogger.Debugf("logo path: %s", logoFilePath)
 
 		// Ensure the file exists

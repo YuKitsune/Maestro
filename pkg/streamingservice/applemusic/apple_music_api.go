@@ -3,11 +3,12 @@ package applemusic
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingservice"
+	"github.com/yukitsune/maestro/pkg/clients"
 	"io/ioutil"
 	"net/http"
 	url2 "net/url"
+
+	"github.com/yukitsune/maestro/pkg/model"
 )
 
 type ArtistsResult struct {
@@ -111,7 +112,7 @@ type client struct {
 }
 
 func NewAppleMusicClient(token string) *client {
-	return &client{client: streamingservice.NewClientWithBearerAuth(token)}
+	return &client{client: clients.NewClientWithBearerAuth(token)}
 }
 
 func (a *client) SearchArtist(term string, storefront model.Market) ([]Artist, error) {

@@ -1,4 +1,4 @@
-package streamingservice
+package clients
 
 import (
 	"fmt"

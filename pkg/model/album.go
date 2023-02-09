@@ -3,9 +3,10 @@ package model
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"strings"
 )
 
 const AlbumCollectionName = "albums"
@@ -16,12 +17,12 @@ type Album struct {
 	ArtistNames []string
 	ArtworkLink string
 
-	Source StreamingServiceKey
+	Source StreamingServiceType
 	Market Market
 	Link   string
 }
 
-func NewAlbum(name string, artistNames []string, artworkLink string, source StreamingServiceKey, market Market, link string) *Album {
+func NewAlbum(name string, artistNames []string, artworkLink string, source StreamingServiceType, market Market, link string) *Album {
 	return &Album{
 		Name:        name,
 		ArtistNames: artistNames,
@@ -36,7 +37,7 @@ func (a *Album) GetArtworkLink() string {
 	return a.ArtworkLink
 }
 
-func (a *Album) GetSource() StreamingServiceKey {
+func (a *Album) GetSource() StreamingServiceType {
 	return a.Source
 }
 

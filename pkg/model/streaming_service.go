@@ -1,13 +1,19 @@
 package model
 
-type StreamingServiceKey string
+type StreamingServiceType string
 
-func (s StreamingServiceKey) String() string {
+const (
+	AppleMusicStreamingService StreamingServiceType = "apple_music"
+	SpotifyStreamingService    StreamingServiceType = "spotify"
+	DeezerStreamingService     StreamingServiceType = "deezer"
+)
+
+func (s StreamingServiceType) String() string {
 	return string(s)
 }
 
 type StreamingService struct {
+	Key     StreamingServiceType
 	Name    string
-	Key     string
 	Enabled bool
 }

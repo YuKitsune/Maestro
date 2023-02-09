@@ -4,16 +4,19 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/yukitsune/maestro/pkg/metrics"
-	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingservice"
-	"github.com/zmb3/spotify"
+	clients2 "github.com/yukitsune/maestro/pkg/clients"
 	"io/ioutil"
 	"net/url"
 	"regexp"
+
+	"github.com/yukitsune/maestro/pkg/config"
+	"github.com/yukitsune/maestro/pkg/metrics"
+	"github.com/yukitsune/maestro/pkg/model"
+	"github.com/zmb3/spotify"
 )
 
 type spotifyStreamingService struct {
+	config           *config.Spotify
 	client           *spotify.Client
 	shareLinkPattern *regexp.Regexp
 	metricsRecorder  metrics.Recorder
@@ -23,7 +26,7 @@ func GetAccessToken(clientID string, secret string) (token string, error error) 
 	tokenURL := "https://accounts.spotify.com/api/token"
 
 	reqToken := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientID, secret)))
-	client := streamingservice.NewClientWithBasicAuth(reqToken)
+	client := clients2.NewClientWithBasicAuth(reqToken)
 
 	res, err := client.PostForm(tokenURL, url.Values{
 		"grant_type": {"client_credentials"},
@@ -58,7 +61,7 @@ func GetAccessToken(clientID string, secret string) (token string, error error) 
 	return token, nil
 }
 
-func NewSpotifyStreamingService(cfg *Config, mr metrics.Recorder) (streamingservice.StreamingService, error) {
+func NewSpotifyStreamingService(cfg *config.Spotify, mr metrics.Recorder) (*spotifyStreamingService, error) {
 	shareLinkPatternRegex := regexp.MustCompile("(https?:\\/\\/)?open\\.spotify\\.com\\/(?P<type>[A-Za-z]+)\\/(?P<id>[A-Za-z0-9]+)")
 
 	go mr.CountSpotifyRequest()
@@ -67,17 +70,22 @@ func NewSpotifyStreamingService(cfg *Config, mr metrics.Recorder) (streamingserv
 		return nil, err
 	}
 
-	c := streamingservice.NewClientWithBearerAuth(token)
+	c := clients2.NewClientWithBearerAuth(token)
 	sc := spotify.NewClient(c)
 	return &spotifyStreamingService{
+		cfg,
 		&sc,
 		shareLinkPatternRegex,
 		mr,
 	}, nil
 }
 
-func (s *spotifyStreamingService) Key() model.StreamingServiceKey {
-	return Key
+func (s *spotifyStreamingService) Key() model.StreamingServiceType {
+	return model.SpotifyStreamingService
+}
+
+func (s *spotifyStreamingService) Config() config.Service {
+	return s.config
 }
 
 func (s *spotifyStreamingService) LinkBelongsToService(link string) bool {

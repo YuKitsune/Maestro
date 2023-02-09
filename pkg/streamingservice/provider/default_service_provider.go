@@ -2,6 +2,8 @@ package provider
 
 import (
 	"fmt"
+
+	"github.com/yukitsune/maestro/pkg/config"
 	"github.com/yukitsune/maestro/pkg/metrics"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
@@ -11,22 +13,20 @@ import (
 )
 
 type defaultServiceProvider struct {
-	cfg      streamingservice.Config
-	svcFuncs map[model.StreamingServiceKey]func(streamingservice.ServiceConfig) (streamingservice.StreamingService, error)
+	cfgMap   map[model.StreamingServiceType]config.Service
+	svcFuncs map[model.StreamingServiceType]func(config.Service) (streamingservice.StreamingService, error)
 }
 
-func NewDefaultProvider(cfg streamingservice.Config, rec metrics.Recorder) (streamingservice.ServiceProvider, error) {
+func NewDefaultProvider(cfg *config.Services, rec metrics.Recorder) (streamingservice.ServiceProvider, error) {
 
-	svcFuncs := make(map[model.StreamingServiceKey]func(streamingservice.ServiceConfig) (streamingservice.StreamingService, error))
-	for key, config := range cfg {
-		if !config.Enabled() {
-			continue
-		}
+	cfgMap := cfg.AsMap()
+	svcFuncs := make(map[model.StreamingServiceType]func(config.Service) (streamingservice.StreamingService, error))
 
+	for key, _ := range cfgMap {
 		switch key {
-		case applemusic.Key:
-			fn := func(cfg streamingservice.ServiceConfig) (streamingservice.StreamingService, error) {
-				appleCfg := cfg.(*applemusic.Config)
+		case model.AppleMusicStreamingService:
+			fn := func(cfg config.Service) (streamingservice.StreamingService, error) {
+				appleCfg := cfg.(*config.AppleMusic)
 				svc := applemusic.NewAppleMusicStreamingService(appleCfg, rec)
 				return svc, nil
 			}
@@ -34,18 +34,19 @@ func NewDefaultProvider(cfg streamingservice.Config, rec metrics.Recorder) (stre
 			svcFuncs[key] = fn
 			break
 
-		case deezer.Key:
-			fn := func(_ streamingservice.ServiceConfig) (streamingservice.StreamingService, error) {
-				svc := deezer.NewDeezerStreamingService(rec)
+		case model.DeezerStreamingService:
+			fn := func(cfg config.Service) (streamingservice.StreamingService, error) {
+				deezerCfg := cfg.(*config.Deezer)
+				svc := deezer.NewDeezerStreamingService(deezerCfg, rec)
 				return svc, nil
 			}
 
 			svcFuncs[key] = fn
 			break
 
-		case spotify.Key:
-			fn := func(cfg streamingservice.ServiceConfig) (streamingservice.StreamingService, error) {
-				spotifyCfg := cfg.(*spotify.Config)
+		case model.SpotifyStreamingService:
+			fn := func(cfg config.Service) (streamingservice.StreamingService, error) {
+				spotifyCfg := cfg.(*config.Spotify)
 				s, err := spotify.NewSpotifyStreamingService(spotifyCfg, rec)
 				if err != nil {
 					return nil, fmt.Errorf("failed to initialize spotify streaming service: %s", err.Error())
@@ -60,24 +61,20 @@ func NewDefaultProvider(cfg streamingservice.Config, rec metrics.Recorder) (stre
 	}
 
 	return &defaultServiceProvider{
-		cfg:      cfg,
-		svcFuncs: svcFuncs,
+		cfgMap,
+		svcFuncs,
 	}, nil
 }
 
-func (p *defaultServiceProvider) GetService(key model.StreamingServiceKey) (streamingservice.StreamingService, error) {
-	cfg, err := p.GetConfig(key)
+func (p *defaultServiceProvider) GetService(serviceType model.StreamingServiceType) (streamingservice.StreamingService, error) {
+	cfg, err := p.GetConfig(serviceType)
 	if err != nil {
 		return nil, err
 	}
 
-	if !cfg.Enabled() {
-		return nil, fmt.Errorf("service %s is disabled", key)
-	}
-
-	svcFunc, ok := p.svcFuncs[key]
+	svcFunc, ok := p.svcFuncs[serviceType]
 	if !ok {
-		return nil, fmt.Errorf("couldn't find service with key %s", key)
+		return nil, fmt.Errorf("couldn't find service type %s", serviceType)
 	}
 
 	return svcFunc(cfg)
@@ -106,8 +103,8 @@ func (p *defaultServiceProvider) ListServices() (streamingservice.StreamingServi
 	return svcs, nil
 }
 
-func (p *defaultServiceProvider) GetConfig(key model.StreamingServiceKey) (streamingservice.ServiceConfig, error) {
-	cfg, ok := p.cfg[key]
+func (p *defaultServiceProvider) GetConfig(key model.StreamingServiceType) (config.Service, error) {
+	cfg, ok := p.cfgMap[key]
 	if !ok {
 		return nil, fmt.Errorf("couldn't find service config with key %s", key)
 	}
@@ -115,6 +112,6 @@ func (p *defaultServiceProvider) GetConfig(key model.StreamingServiceKey) (strea
 	return cfg, nil
 }
 
-func (p *defaultServiceProvider) ListConfigs() streamingservice.Config {
-	return p.cfg
+func (p *defaultServiceProvider) ListConfigs() map[model.StreamingServiceType]config.Service {
+	return p.cfgMap
 }

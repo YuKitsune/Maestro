@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -13,12 +14,12 @@ type Artist struct {
 	Name        string
 	ArtworkLink string
 
-	Source StreamingServiceKey
+	Source StreamingServiceType
 	Market Market
 	Link   string
 }
 
-func NewArtist(name string, artworkLink string, source StreamingServiceKey, market Market, link string) *Artist {
+func NewArtist(name string, artworkLink string, source StreamingServiceType, market Market, link string) *Artist {
 	return &Artist{
 		Name:        name,
 		ArtworkLink: artworkLink,
@@ -32,7 +33,7 @@ func (a *Artist) GetArtworkLink() string {
 	return a.ArtworkLink
 }
 
-func (a *Artist) GetSource() StreamingServiceKey {
+func (a *Artist) GetSource() StreamingServiceType {
 	return a.Source
 }
 

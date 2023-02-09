@@ -31,7 +31,7 @@ func (r *Result) AddAll(vs []model.HasStreamingService) {
 	}
 }
 
-func (r *Result) HasResultFor(key model.StreamingServiceKey) bool {
+func (r *Result) HasResultFor(key model.StreamingServiceType) bool {
 	for _, v := range r.Items {
 		if v.GetSource() == key {
 			return true

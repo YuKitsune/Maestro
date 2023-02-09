@@ -3,6 +3,9 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -10,8 +13,6 @@ import (
 	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
-	"net/http"
-	"net/url"
 )
 
 func GetLinkHandler(serviceProvider streamingservice.ServiceProvider, repo db.Repository, logger *logrus.Logger) http.HandlerFunc {
@@ -421,7 +422,7 @@ func findNewThing(ctx context.Context, link string, svcs streamingservice.Stream
 	logger.Debugln("looks like this is a new thing")
 
 	// No links found, query the streaming service and find the same entry on other services
-	var targetKey model.StreamingServiceKey
+	var targetKey model.StreamingServiceType
 	var targetService streamingservice.StreamingService
 	otherServices := make(streamingservice.StreamingServices)
 

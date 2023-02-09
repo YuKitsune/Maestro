@@ -1,10 +1,13 @@
 package streamingservice
 
-import "github.com/yukitsune/maestro/pkg/model"
+import (
+	"github.com/yukitsune/maestro/pkg/config"
+	"github.com/yukitsune/maestro/pkg/model"
+)
 
 type ServiceProvider interface {
-	GetService(key model.StreamingServiceKey) (StreamingService, error)
+	GetService(model.StreamingServiceType) (StreamingService, error)
 	ListServices() (StreamingServices, error)
-	GetConfig(key model.StreamingServiceKey) (ServiceConfig, error)
-	ListConfigs() Config
+	GetConfig(model.StreamingServiceType) (config.Service, error)
+	ListConfigs() map[model.StreamingServiceType]config.Service
 }

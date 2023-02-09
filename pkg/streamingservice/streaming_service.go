@@ -1,12 +1,14 @@
 package streamingservice
 
 import (
+	"github.com/yukitsune/maestro/pkg/config"
 	"github.com/yukitsune/maestro/pkg/model"
 )
 
-type StreamingServices map[model.StreamingServiceKey]StreamingService
+type StreamingServices map[model.StreamingServiceType]StreamingService
 
 type StreamingService interface {
+	Config() config.Service
 	LinkBelongsToService(link string) bool
 	CleanLink(link string) string
 

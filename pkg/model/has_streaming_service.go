@@ -1,5 +1,5 @@
 package model
 
 type HasStreamingService interface {
-	GetSource() StreamingServiceKey
+	GetSource() StreamingServiceType
 }

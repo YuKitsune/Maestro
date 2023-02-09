@@ -2,15 +2,18 @@ package deezer
 
 import (
 	"fmt"
-	"github.com/yukitsune/maestro/pkg/metrics"
-	"github.com/yukitsune/maestro/pkg/model"
-	"github.com/yukitsune/maestro/pkg/streamingservice"
 	"net/http"
 	"regexp"
 	"strconv"
+
+	"github.com/yukitsune/maestro/pkg/config"
+	"github.com/yukitsune/maestro/pkg/metrics"
+	"github.com/yukitsune/maestro/pkg/model"
+	"github.com/yukitsune/maestro/pkg/streamingservice"
 )
 
 type deezerStreamingService struct {
+	config            *config.Deezer
 	client            *client
 	shareLinkPattern  *regexp.Regexp
 	actualLinkPattern *regexp.Regexp
@@ -40,10 +43,11 @@ func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
 	return actualLink, err
 }
 
-func NewDeezerStreamingService(mr metrics.Recorder) streamingservice.StreamingService {
+func NewDeezerStreamingService(config *config.Deezer, mr metrics.Recorder) streamingservice.StreamingService {
 	shareLinkPattern := regexp.MustCompile("(https?:\\/\\/)?deezer\\.page\\.link\\/(?P<id>[A-Za-z0-9]+)")
 	actualLinkPattern := regexp.MustCompile("(https?:\\/\\/)?(www\\.)?deezer\\.com\\/(?P<lang>[A-Za-z]+\\/)?(?P<type>[A-Za-z]+)\\/(?P<id>[0-9]+)")
 	return &deezerStreamingService{
+		config,
 		NewDeezerClient(),
 		shareLinkPattern,
 		actualLinkPattern,
@@ -55,8 +59,12 @@ func (s *deezerStreamingService) LinkBelongsToService(link string) bool {
 	return s.shareLinkPattern.MatchString(link) || s.actualLinkPattern.MatchString(link)
 }
 
-func (s *deezerStreamingService) Key() model.StreamingServiceKey {
-	return Key
+func (s *deezerStreamingService) Key() model.StreamingServiceType {
+	return model.DeezerStreamingService
+}
+
+func (s *deezerStreamingService) Config() config.Service {
+	return s.config
 }
 
 func (s *deezerStreamingService) SearchArtist(artist *model.Artist) (*model.Artist, bool, error) {
