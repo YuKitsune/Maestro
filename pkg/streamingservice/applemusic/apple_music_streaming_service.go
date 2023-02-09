@@ -12,16 +12,16 @@ import (
 )
 
 type appleMusicStreamingService struct {
-	config           *config.AppleMusic
+	config           config.AppleMusic
 	client           *client
 	shareLinkPattern *regexp.Regexp
 	metricsRecorder  metrics.Recorder
 }
 
-func NewAppleMusicStreamingService(cfg *config.AppleMusic, mr metrics.Recorder) streamingservice.StreamingService {
+func NewAppleMusicStreamingService(cfg config.AppleMusic, mr metrics.Recorder) streamingservice.StreamingService {
 	shareLinkPatternRegex := regexp.MustCompile("(https?:\\/\\/)?music\\.apple\\.com\\/(?P<storefront>[A-Za-z0-9]+)\\/(?P<type>[A-Za-z]+)\\/(?:.+\\/)(?P<id>[0-9]+)(?:\\?i=(?P<song_id>[0-9]+))?")
 
-	amc := NewAppleMusicClient(cfg.Token)
+	amc := NewAppleMusicClient(cfg.Token())
 
 	return &appleMusicStreamingService{
 		cfg,

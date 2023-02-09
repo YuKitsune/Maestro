@@ -13,7 +13,7 @@ import (
 )
 
 type deezerStreamingService struct {
-	config            *config.Deezer
+	config            config.Deezer
 	client            *client
 	shareLinkPattern  *regexp.Regexp
 	actualLinkPattern *regexp.Regexp
@@ -43,7 +43,7 @@ func getActualLink(link string, linkRegexp *regexp.Regexp) (string, error) {
 	return actualLink, err
 }
 
-func NewDeezerStreamingService(config *config.Deezer, mr metrics.Recorder) streamingservice.StreamingService {
+func NewDeezerStreamingService(config config.Deezer, mr metrics.Recorder) streamingservice.StreamingService {
 	shareLinkPattern := regexp.MustCompile("(https?:\\/\\/)?deezer\\.page\\.link\\/(?P<id>[A-Za-z0-9]+)")
 	actualLinkPattern := regexp.MustCompile("(https?:\\/\\/)?(www\\.)?deezer\\.com\\/(?P<lang>[A-Za-z]+\\/)?(?P<type>[A-Za-z]+)\\/(?P<id>[0-9]+)")
 	return &deezerStreamingService{

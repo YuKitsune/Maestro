@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
+	"github.com/yukitsune/maestro/pkg/streamingservice/provider"
 	"strings"
 	"time"
 
@@ -16,8 +18,6 @@ import (
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/config"
 	"github.com/yukitsune/maestro/pkg/metrics"
-	"github.com/yukitsune/maestro/pkg/streamingservice"
-	"github.com/yukitsune/maestro/pkg/streamingservice/provider"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -56,34 +56,32 @@ func main() {
 
 func serve(_ *cobra.Command, _ []string) error {
 
-	cfg, err := loadConfig()
-	if err != nil {
-		return err
-	}
+	logger := logrus.New()
+	v := viper.New()
 
-	logger, err := configureLogger(cfg.Log)
-	if err != nil {
-		return err
-	}
+	cfg := loadConfig(v, logger)
 
-	logger.Debugf("Config: %+v", cfg)
+	configureLogger(cfg.Logging(), logger)
+
+	// When using the debug log level, print the config out
+	logger.Debugf("Config: %+v", cfg.Debug())
 
 	rec, err := configureMetrics()
 	if err != nil {
 		return err
 	}
 
-	repo, err := configureRepository(cfg.Database, rec, logger)
+	repo, err := configureRepository(cfg.Database(), rec, logger)
 	if err != nil {
 		return err
 	}
 
-	serviceProvider, err := configureServices(cfg.Services, rec)
+	serviceProvider, err := provider.NewDefaultProvider(cfg.Services(), rec)
 	if err != nil {
 		return err
 	}
 
-	maestroAPI, err := api.NewMaestroServer(cfg.API, serviceProvider, repo, rec, logger)
+	maestroAPI, err := api.NewMaestroServer(cfg.API(), serviceProvider, repo, rec, logger)
 	if err != nil {
 		grace.ExitFromError(err)
 	}
@@ -105,53 +103,36 @@ func serve(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func loadConfig() (*config.Config, error) {
+func loadConfig(v *viper.Viper, logger logrus.FieldLogger) config.Config {
 
 	// Environment variables
-	viper.SetEnvPrefix("MAESTRO")
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
+	v.SetEnvPrefix("MAESTRO")
+	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
+	v.AutomaticEnv()
 
 	// Config file
-	viper.SetConfigName("maestro")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/etc/maestro")
-	viper.AddConfigPath("../configs")
-	viper.AddConfigPath("./configs")
-	viper.AddConfigPath(".")
+	v.SetConfigName("maestro")
+	v.SetConfigType("yaml")
+	v.AddConfigPath("/etc/maestro")
+	v.AddConfigPath("../configs")
+	v.AddConfigPath("./configs")
+	v.AddConfigPath(".")
+
+	// Watch for changes
+	v.WatchConfig()
+	v.OnConfigChange(func(e fsnotify.Event) {
+		logger.Infof("Config file changed: ", e.Name)
+	})
 
 	// Load in the configuration
-	err := viper.ReadInConfig()
-	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found; ignore error
-			fmt.Println("Config file not found")
-		} else {
-			return nil, err
-		}
-	}
+	_ = v.ReadInConfig()
 
-	viper.AutomaticEnv()
-
-	// Unmarshal
-	var cfg *config.Config
-	err = viper.Unmarshal(&cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return cfg, nil
+	return config.NewViperConfig(v)
 }
 
-func configureLogger(cfg *config.Log) (*logrus.Logger, error) {
+func configureLogger(cfg config.Logging, logger *logrus.Logger) {
 
-	logger := logrus.New()
-
-	lvl, err := logrus.ParseLevel(cfg.Level)
-	if err != nil {
-		return nil, err
-	}
-
-	logger.SetLevel(lvl)
+	logger.SetLevel(cfg.Level())
 
 	logger.SetFormatter(&logrus.TextFormatter{
 		ForceColors:   true,
@@ -159,15 +140,15 @@ func configureLogger(cfg *config.Log) (*logrus.Logger, error) {
 		FullTimestamp: true,
 	})
 
-	if cfg.Loki != nil {
+	if cfg.Loki().Enabled() {
 
 		// Grafana doesn't have a "panic" level, but it does have a "critical" level
 		// https://grafana.com/docs/grafana/latest/explore/logs-integration/
 		opts := lokirus.NewLokiHookOptions().
 			WithLevelMap(lokirus.LevelMap{logrus.PanicLevel: "critical"}).
-			WithStaticLabels(cfg.Loki.Labels)
+			WithStaticLabels(cfg.Loki().Labels())
 		hook := lokirus.NewLokiHookWithOpts(
-			cfg.Loki.Host,
+			cfg.Loki().Host(),
 			opts,
 			logrus.InfoLevel,
 			logrus.WarnLevel,
@@ -177,16 +158,14 @@ func configureLogger(cfg *config.Log) (*logrus.Logger, error) {
 
 		logger.AddHook(hook)
 	}
-
-	return logger, nil
 }
 
 func configureMetrics() (metrics.Recorder, error) {
 	return metrics.NewPrometheusMetricsRecorder()
 }
 
-func configureRepository(cfg *config.Database, rec metrics.Recorder, logger *logrus.Logger) (db.Repository, error) {
-	opts := options.Client().ApplyURI(cfg.URI)
+func configureRepository(cfg config.Database, rec metrics.Recorder, logger *logrus.Logger) (db.Repository, error) {
+	opts := options.Client().ApplyURI(cfg.Uri())
 	client, err := mongo.NewClient(opts)
 	if err != nil {
 		return nil, err
@@ -205,11 +184,7 @@ func configureRepository(cfg *config.Database, rec metrics.Recorder, logger *log
 		return nil, err
 	}
 
-	mdb := client.Database(cfg.Database)
+	mdb := client.Database(cfg.Name())
 	repo := db.NewMongoRepository(mdb, rec, logger)
 	return repo, nil
-}
-
-func configureServices(cfg *config.Services, rec metrics.Recorder) (streamingservice.ServiceProvider, error) {
-	return provider.NewDefaultProvider(cfg, rec)
 }

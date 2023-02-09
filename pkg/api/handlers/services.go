@@ -37,7 +37,7 @@ func GetListServicesHandler(serviceProvider streamingservice.ServiceProvider) ht
 	}
 }
 
-func GetServiceLogoHandler(apiConfig *config.API, serviceProvider streamingservice.ServiceProvider, logger *logrus.Logger) http.HandlerFunc {
+func GetServiceLogoHandler(apiConfig config.API, serviceProvider streamingservice.ServiceProvider, logger *logrus.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		reqLogger, err := log.ForRequest(logger, r)
@@ -61,7 +61,7 @@ func GetServiceLogoHandler(apiConfig *config.API, serviceProvider streamingservi
 
 		reqLogger.Debugf("logo file name: %s", cfg.LogoFileName())
 
-		logoFilePath := filepath.Join(apiConfig.AssetsDirectory, "logos", cfg.LogoFileName())
+		logoFilePath := filepath.Join(apiConfig.AssetsDirectory(), "logos", cfg.LogoFileName())
 		reqLogger.Debugf("logo path: %s", logoFilePath)
 
 		// Ensure the file exists

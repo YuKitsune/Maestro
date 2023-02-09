@@ -9,7 +9,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/api/handlers"
 	"github.com/yukitsune/maestro/pkg/api/middleware"
@@ -19,16 +18,16 @@ import (
 )
 
 type MaestroServer struct {
-	cfg    *config.API
+	cfg    config.API
 	logger *logrus.Logger
 	svr    *http.Server
 }
 
-func NewMaestroServer(apiCfg *config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) (*MaestroServer, error) {
+func NewMaestroServer(apiCfg config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) (*MaestroServer, error) {
 
 	router := configureHandlers(apiCfg, serviceProvider, repo, rec, logger)
 
-	addr := fmt.Sprintf(":%d", apiCfg.Port)
+	addr := fmt.Sprintf(":%d", apiCfg.Port())
 	svr := &http.Server{
 		Addr: addr,
 
@@ -45,7 +44,6 @@ func NewMaestroServer(apiCfg *config.API, serviceProvider streamingservice.Servi
 
 func (api *MaestroServer) Start() error {
 	api.logger.Infoln("starting maestro server")
-	api.logger.Debugf("config: %+v\n", viper.AllSettings())
 
 	api.logger.Infof("listening on %s", api.svr.Addr)
 	return api.svr.ListenAndServe()
@@ -56,7 +54,7 @@ func (api *MaestroServer) Shutdown(ctx context.Context) error {
 	return api.svr.Shutdown(ctx)
 }
 
-func configureHandlers(apiConfig *config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) *mux.Router {
+func configureHandlers(apiConfig config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) *mux.Router {
 
 	r := mux.NewRouter()
 

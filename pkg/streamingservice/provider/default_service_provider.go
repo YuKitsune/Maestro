@@ -17,7 +17,7 @@ type defaultServiceProvider struct {
 	svcFuncs map[model.StreamingServiceType]func(config.Service) (streamingservice.StreamingService, error)
 }
 
-func NewDefaultProvider(cfg *config.Services, rec metrics.Recorder) (streamingservice.ServiceProvider, error) {
+func NewDefaultProvider(cfg config.Services, rec metrics.Recorder) (streamingservice.ServiceProvider, error) {
 
 	cfgMap := cfg.AsMap()
 	svcFuncs := make(map[model.StreamingServiceType]func(config.Service) (streamingservice.StreamingService, error))
@@ -26,7 +26,7 @@ func NewDefaultProvider(cfg *config.Services, rec metrics.Recorder) (streamingse
 		switch key {
 		case model.AppleMusicStreamingService:
 			fn := func(cfg config.Service) (streamingservice.StreamingService, error) {
-				appleCfg := cfg.(*config.AppleMusic)
+				appleCfg := cfg.(config.AppleMusic)
 				svc := applemusic.NewAppleMusicStreamingService(appleCfg, rec)
 				return svc, nil
 			}
@@ -36,7 +36,7 @@ func NewDefaultProvider(cfg *config.Services, rec metrics.Recorder) (streamingse
 
 		case model.DeezerStreamingService:
 			fn := func(cfg config.Service) (streamingservice.StreamingService, error) {
-				deezerCfg := cfg.(*config.Deezer)
+				deezerCfg := cfg.(config.Deezer)
 				svc := deezer.NewDeezerStreamingService(deezerCfg, rec)
 				return svc, nil
 			}
@@ -46,7 +46,7 @@ func NewDefaultProvider(cfg *config.Services, rec metrics.Recorder) (streamingse
 
 		case model.SpotifyStreamingService:
 			fn := func(cfg config.Service) (streamingservice.StreamingService, error) {
-				spotifyCfg := cfg.(*config.Spotify)
+				spotifyCfg := cfg.(config.Spotify)
 				s, err := spotify.NewSpotifyStreamingService(spotifyCfg, rec)
 				if err != nil {
 					return nil, fmt.Errorf("failed to initialize spotify streaming service: %s", err.Error())

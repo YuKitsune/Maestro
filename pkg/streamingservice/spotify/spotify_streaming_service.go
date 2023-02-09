@@ -16,7 +16,7 @@ import (
 )
 
 type spotifyStreamingService struct {
-	config           *config.Spotify
+	config           config.Spotify
 	client           *spotify.Client
 	shareLinkPattern *regexp.Regexp
 	metricsRecorder  metrics.Recorder
@@ -61,11 +61,11 @@ func GetAccessToken(clientID string, secret string) (token string, error error) 
 	return token, nil
 }
 
-func NewSpotifyStreamingService(cfg *config.Spotify, mr metrics.Recorder) (*spotifyStreamingService, error) {
+func NewSpotifyStreamingService(cfg config.Spotify, mr metrics.Recorder) (*spotifyStreamingService, error) {
 	shareLinkPatternRegex := regexp.MustCompile("(https?:\\/\\/)?open\\.spotify\\.com\\/(?P<type>[A-Za-z]+)\\/(?P<id>[A-Za-z0-9]+)")
 
 	go mr.CountSpotifyRequest()
-	token, err := GetAccessToken(cfg.ClientID, cfg.ClientSecret)
+	token, err := GetAccessToken(cfg.ClientId(), cfg.ClientSecret())
 	if err != nil {
 		return nil, err
 	}
