@@ -3,15 +3,11 @@ api:
   port: 8182
 logging:
   level: debug
-database:
-  uri: mongodb://<username>:<password>@localhost:27017/?authSource=admin&replicaSet=rs0
-  name: maestro
 services:
   apple_music:
     name: "Apple Music"
     logo_file_name: "apple_music.png"
     enabled: true
-    token:
   deezer:
     name: "Deezer"
     logo_file_name: "deezer.png"
@@ -20,5 +16,3 @@ services:
     name: "Spotify"
     logo_file_name: "spotify.png"
     enabled: true
-    client_id:
-    client_secret:
