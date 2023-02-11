@@ -8,7 +8,7 @@ vars:
     sh:  git describe --tags {{.GIT_COMMIT}} 2> /dev/null || echo "{{.GIT_COMMIT}}"
 
   PROJECT_NAME: maestro
-  DOCKER_COMPOSE_CMD: docker-compose --project-name {{.PROJECT_NAME}} --file ./deployments/docker-compose.yml --env-file ./configs/.env
+  DOCKER_COMPOSE_CMD: docker-compose --project-name {{.PROJECT_NAME}} --file ./docker-compose.yml --env-file ./configs/.env
 
 tasks:
   build:

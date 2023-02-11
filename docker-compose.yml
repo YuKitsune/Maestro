@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   database:
-    image: 'bitnami/mongodb:5.0.8'
+    image: ghcr.io/zcube/bitnami-compat/mongodb:6.0.4
     environment:
 
       # Root user
@@ -15,51 +15,49 @@ services:
 
       # ReplicaSet stuff
       # Use this when accessing from docker compose or k8s
-      # MONGODB_ADVERTISED_HOSTNAME: database
+      MONGODB_ADVERTISED_HOSTNAME: database
 
       # Use this when accessing from outside of docker compose or k8s
-      MONGODB_ADVERTISED_HOSTNAME: localhost
+      # MONGODB_ADVERTISED_HOSTNAME: localhost
 
       MONGODB_REPLICA_SET_NAME: rs0
       MONGODB_REPLICA_SET_MODE: primary
       MONGODB_REPLICA_SET_KEY: rs0key
+
     ports:
       - "27017:27017"
+
     volumes:
       # - mongo-data:/data/db # (Optional) Use this if you want the data to persist between runs
       - /data/db
 
   maestro:
     build:
-      context: ../
-      dockerfile: build/package/maestro/Dockerfile
+      dockerfile: Dockerfile
+
     environment:
+      # Frontend
+      PUBLIC_API_URL: http://localhost:8182
+
+      # API
       MAESTRO_API_PORT: 8182
       MAESTRO_LOGGING_LEVEL: debug
 
       # Database
-      MAESTRO_DATABASE_URI: ${MAESTRO_DATABASE_URI}
-      MAESTRO_DATABASE_NAME: ${MAESTRO_DATABASE_NAME}
+      MAESTRO_DATABASE_URI: mongodb://${MONGO_MAESTRO_USERNAME}:${MONGO_MAESTRO_PASSWORD}@database:27017/${MONGO_MAESTRO_DATABASE}?authSource=${MONGO_MAESTRO_DATABASE}&replicaSet=rs0
+      MAESTRO_DATABASE_NAME: ${MONGO_MAESTRO_DATABASE}
 
       # Services
       MAESTRO_SERVICES_APPLE_MUSIC_TOKEN: ${MAESTRO_SERVICES_APPLE_MUSIC_TOKEN}
       MAESTRO_SERVICES_SPOTIFY_CLIENT_ID: ${MAESTRO_SERVICES_SPOTIFY_CLIENT_ID}
       MAESTRO_SERVICES_SPOTIFY_CLIENT_SECRET: ${MAESTRO_SERVICES_SPOTIFY_CLIENT_SECRET}
+
     ports:
-      - "8182:8182"
+      - "8182:8182" # Backend
+      - "3000:3000" # Frontend
+
     volumes:
-      - ../configs/maestro.yaml:/maestro.yaml
+      - ./configs/maestro.yaml:/etc/maestro/maestro.yaml
+
     depends_on:
       - database
-
-  frontend:
-    build:
-      context: ../web/frontend-remix/
-      dockerfile: Dockerfile
-    environment:
-      API_URL: http://maestro:8182
-      PUBLIC_API_URL: http://localhost:8182
-    ports:
-      - "3000:3000"
-    depends_on:
-      - maestro
