@@ -17,8 +17,8 @@ type deezerViperConfig struct {
 }
 
 func NewDeezerViperConfig(v *viper.Viper) Deezer {
-	v.SetDefault("enabled", true)
-	v.SetDefault("logo_file_name", "deezer.png")
+	v.SetDefault("services.deezer.enabled", true)
+	v.SetDefault("services.deezer.logo_file_name", "deezer.png")
 
 	return &deezerViperConfig{v}
 }
@@ -32,9 +32,9 @@ func (c *deezerViperConfig) Name() string {
 }
 
 func (c *deezerViperConfig) Enabled() bool {
-	return c.v.GetBool("enabled")
+	return c.v.GetBool("services.deezer.enabled")
 }
 
 func (c *deezerViperConfig) LogoFileName() string {
-	return c.v.GetString("logo_file_name")
+	return c.v.GetString("services.deezer.logo_file_name")
 }

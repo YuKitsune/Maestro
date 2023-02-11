@@ -16,17 +16,17 @@ func NewDatabaseViperConfig(v *viper.Viper) Database {
 }
 
 func (c *databaseViperConfig) Uri() string {
-	if !c.v.IsSet("uri") {
+	if !c.v.IsSet("database.uri") {
 		panic("database uri not set")
 	}
 
-	return c.v.GetString("uri")
+	return c.v.GetString("database.uri")
 }
 
 func (c *databaseViperConfig) Name() string {
-	if !c.v.IsSet("name") {
+	if !c.v.IsSet("database.name") {
 		panic("database name not set")
 	}
 
-	return c.v.GetString("name")
+	return c.v.GetString("database.name")
 }

@@ -12,16 +12,16 @@ type apiViperConfig struct {
 }
 
 func NewApiViperConfig(v *viper.Viper) API {
-	v.SetDefault("port", 8182)
-	v.SetDefault("assets_dir", "/assets")
+	v.SetDefault("api.port", 8182)
+	v.SetDefault("api.assets_dir", "/assets")
 
 	return &apiViperConfig{v}
 }
 
 func (c *apiViperConfig) Port() int {
-	return c.v.GetInt("port")
+	return c.v.GetInt("api.port")
 }
 
 func (c *apiViperConfig) AssetsDirectory() string {
-	return c.v.GetString("assets_dir")
+	return c.v.GetString("api.assets_dir")
 }

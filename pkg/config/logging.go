@@ -1,9 +1,10 @@
 package config
 
 import (
+	"log"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"log"
 )
 
 type Logging interface {
@@ -23,16 +24,17 @@ type loggingViperConfig struct {
 }
 
 func NewLoggingViperConfig(v *viper.Viper) Logging {
-	v.SetDefault("level", "info")
+	v.SetDefault("logging.level", "info")
 	return &loggingViperConfig{
 		v,
-		NewLokiViperConfig(v.Sub("loki")),
+		// Todo: Update this to use sub once viper bug is fixed
+		NewLokiViperConfig(v),
 	}
 }
 
 func (c *loggingViperConfig) Level() logrus.Level {
 
-	level := c.v.GetString("level")
+	level := c.v.GetString("logging.level")
 	logrusLevel, err := logrus.ParseLevel(level)
 	if err != nil {
 		log.Fatalf("unable to parse log level: %s", err)
@@ -58,7 +60,7 @@ func (c *lokiViperConfig) Enabled() bool {
 		return false
 	}
 
-	return c.v.IsSet("host")
+	return c.v.IsSet("logging.loki.host")
 }
 
 func (c *lokiViperConfig) Host() string {
@@ -66,11 +68,11 @@ func (c *lokiViperConfig) Host() string {
 		panic("loki not enabled")
 	}
 
-	if !c.v.IsSet("host") {
+	if !c.v.IsSet("logging.loki.host") {
 		panic("loki host not set")
 	}
 
-	return c.v.GetString("host")
+	return c.v.GetString("logging.loki.host")
 }
 
 func (c *lokiViperConfig) Labels() map[string]string {
@@ -78,5 +80,5 @@ func (c *lokiViperConfig) Labels() map[string]string {
 		panic("loki not enabled")
 	}
 
-	return c.v.GetStringMapString("labels")
+	return c.v.GetStringMapString("logging.loki.labels")
 }

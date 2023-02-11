@@ -19,8 +19,8 @@ type spotifyViperConfig struct {
 }
 
 func NewSpotifyViperConfig(v *viper.Viper) Spotify {
-	v.SetDefault("enabled", true)
-	v.SetDefault("logo_file_name", "deezer.png")
+	v.SetDefault("services.spotify.enabled", true)
+	v.SetDefault("services.spotify.logo_file_name", "deezer.png")
 
 	return &spotifyViperConfig{v}
 }
@@ -34,25 +34,25 @@ func (c *spotifyViperConfig) Name() string {
 }
 
 func (c *spotifyViperConfig) Enabled() bool {
-	return c.v.GetBool("enabled")
+	return c.v.GetBool("services.spotify.enabled")
 }
 
 func (c *spotifyViperConfig) LogoFileName() string {
-	return c.v.GetString("logo_file_name")
+	return c.v.GetString("services.spotify.logo_file_name")
 }
 
 func (c *spotifyViperConfig) ClientId() string {
-	if !c.v.IsSet("client_id") {
+	if !c.v.IsSet("services.spotify.client_id") {
 		panic("spotify client_id not set")
 	}
 
-	return c.v.GetString("client_id")
+	return c.v.GetString("services.spotify.client_id")
 }
 
 func (c *spotifyViperConfig) ClientSecret() string {
-	if !c.v.IsSet("client_secret") {
+	if !c.v.IsSet("services.spotify.client_secret") {
 		panic("spotify client_secret not set")
 	}
 
-	return c.v.GetString("client_secret")
+	return c.v.GetString("services.spotify.client_secret")
 }

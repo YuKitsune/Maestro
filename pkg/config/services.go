@@ -27,9 +27,10 @@ type servicesViperConfig struct {
 
 func NewServicesViperConfig(v *viper.Viper) Services {
 	return &servicesViperConfig{
-		appleMusic: NewAppleMusicViperConfig(v.Sub("apple_music")),
-		spotify:    NewSpotifyViperConfig(v.Sub("spotify")),
-		deezer:     NewDeezerViperConfig(v.Sub("deezer")),
+		// Todo: Update this to use sub once viper bug is fixed
+		appleMusic: NewAppleMusicViperConfig(v),
+		spotify:    NewSpotifyViperConfig(v),
+		deezer:     NewDeezerViperConfig(v),
 	}
 }
 

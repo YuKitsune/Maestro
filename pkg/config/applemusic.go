@@ -18,8 +18,8 @@ type appleMusicViperConfig struct {
 }
 
 func NewAppleMusicViperConfig(v *viper.Viper) AppleMusic {
-	v.SetDefault("enabled", true)
-	v.SetDefault("logo_file_name", "deezer.png")
+	v.SetDefault("services.apple_music.enabled", true)
+	v.SetDefault("services.apple_music.logo_file_name", "deezer.png")
 
 	return &appleMusicViperConfig{v}
 }
@@ -33,17 +33,17 @@ func (c *appleMusicViperConfig) Name() string {
 }
 
 func (c *appleMusicViperConfig) Enabled() bool {
-	return c.v.GetBool("enabled")
+	return c.v.GetBool("services.apple_music.enabled")
 }
 
 func (c *appleMusicViperConfig) LogoFileName() string {
-	return c.v.GetString("logo_file_name")
+	return c.v.GetString("services.apple_music.logo_file_name")
 }
 
 func (c *appleMusicViperConfig) Token() string {
-	if !c.v.IsSet("token") {
+	if !c.v.IsSet("services.apple_music.token") {
 		panic("apple music token not set")
 	}
 
-	return c.v.GetString("token")
+	return c.v.GetString("services.apple_music.token")
 }

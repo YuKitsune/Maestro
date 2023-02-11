@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fsnotify/fsnotify"
-	"github.com/yukitsune/maestro/pkg/streamingservice/provider"
 	"strings"
 	"time"
+
+	"github.com/fsnotify/fsnotify"
+	"github.com/yukitsune/maestro/pkg/streamingservice/provider"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -105,11 +106,6 @@ func serve(_ *cobra.Command, _ []string) error {
 
 func loadConfig(v *viper.Viper, logger logrus.FieldLogger) config.Config {
 
-	// Environment variables
-	v.SetEnvPrefix("MAESTRO")
-	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
-	v.AutomaticEnv()
-
 	// Config file
 	v.SetConfigName("maestro")
 	v.SetConfigType("yaml")
@@ -124,8 +120,12 @@ func loadConfig(v *viper.Viper, logger logrus.FieldLogger) config.Config {
 		logger.Infof("Config file changed: ", e.Name)
 	})
 
-	// Load in the configuration
 	_ = v.ReadInConfig()
+
+	// Environment variables
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
+	v.SetEnvPrefix("MAESTRO")
+	v.AutomaticEnv()
 
 	return config.NewViperConfig(v)
 }

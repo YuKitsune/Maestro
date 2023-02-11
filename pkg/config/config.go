@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/spf13/viper"
 )
 
@@ -23,11 +24,12 @@ type viperConfig struct {
 
 func NewViperConfig(v *viper.Viper) Config {
 	return &viperConfig{
-		v:        v,
-		api:      NewApiViperConfig(v.Sub("api")),
-		database: NewDatabaseViperConfig(v.Sub("database")),
-		logging:  NewLoggingViperConfig(v.Sub("logging")),
-		services: NewServicesViperConfig(v.Sub("services"))}
+		v: v,
+		// Todo: Update this to use sub once viper bug is fixed
+		api:      NewApiViperConfig(v),
+		database: NewDatabaseViperConfig(v),
+		logging:  NewLoggingViperConfig(v),
+		services: NewServicesViperConfig(v)}
 }
 
 func (c *viperConfig) API() API {
