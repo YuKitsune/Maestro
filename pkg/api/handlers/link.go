@@ -3,13 +3,13 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/yukitsune/maestro/pkg/db"
 	"net/http"
 	"net/url"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"

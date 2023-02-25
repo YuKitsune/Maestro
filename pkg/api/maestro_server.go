@@ -3,13 +3,13 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/yukitsune/maestro/pkg/db"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/api/handlers"
 	"github.com/yukitsune/maestro/pkg/api/middleware"
 	"github.com/yukitsune/maestro/pkg/config"

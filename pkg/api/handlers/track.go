@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/maestro/pkg/api/db"
+	"github.com/yukitsune/maestro/pkg/db"
 	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"

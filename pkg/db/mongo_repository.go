@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/maestro/pkg/api/db/migrations"
+	"github.com/yukitsune/maestro/pkg/db/migrations"
 	"github.com/yukitsune/maestro/pkg/metrics"
 	"github.com/yukitsune/maestro/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -42,7 +42,7 @@ func (m *mongoRepository) GetArtistsById(ctx context.Context, id string) ([]*mod
 		{"artistid", id},
 	})
 
-	artists, err := model.UnmarshalArtistFromCursor(ctx, cur)
+	artists, err := unmarshalFromCursor[model.Artist](ctx, cur)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (m *mongoRepository) GetArtistByLink(ctx context.Context, link string) (*mo
 			return nil, err
 		}
 
-		foundArtist, err = model.UnmarshalArtist(raw)
+		foundArtist, err = unmarshal[model.Artist](raw)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +103,7 @@ func (m *mongoRepository) GetAlbumsById(ctx context.Context, id string) ([]*mode
 		{"albumid", id},
 	})
 
-	albums, err := model.UnmarshalAlbumFromCursor(ctx, cur)
+	albums, err := unmarshalFromCursor[model.Album](ctx, cur)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (m *mongoRepository) GetAlbumByLink(ctx context.Context, link string) (*mod
 			return nil, err
 		}
 
-		foundAlbum, err = model.UnmarshalAlbum(raw)
+		foundAlbum, err = unmarshal[model.Album](raw)
 		if err != nil {
 			return nil, err
 		}
@@ -164,7 +164,7 @@ func (m *mongoRepository) GetTracksByLegacyId(ctx context.Context, id string) ([
 		{"groupid", id},
 	})
 
-	tracks, err := model.UnmarshalTracksFromCursor(ctx, cur)
+	tracks, err := unmarshalFromCursor[model.Track](ctx, cur)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (m *mongoRepository) GetTracksByIsrc(ctx context.Context, isrc string) ([]*
 		{"isrc", isrc},
 	})
 
-	tracks, err := model.UnmarshalTracksFromCursor(ctx, cur)
+	tracks, err := unmarshalFromCursor[model.Track](ctx, cur)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func (m *mongoRepository) GetTrackByLink(ctx context.Context, link string) (*mod
 			return nil, err
 		}
 
-		foundTrack, err = model.UnmarshalTrack(raw)
+		foundTrack, err = unmarshal[model.Track](raw)
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +220,7 @@ func (m *mongoRepository) GetTrackByLink(ctx context.Context, link string) (*mod
 	return foundTrack, nil
 }
 
-func (m *mongoRepository) GetByLink(ctx context.Context, link string) (model.Type, interface{}, error) {
+func (m *mongoRepository) GetByLink(ctx context.Context, link string) (model.Type, any, error) {
 
 	artist, err := m.GetArtistByLink(ctx, link)
 	if err != nil {
@@ -284,8 +284,33 @@ func (m *mongoRepository) ensureMigrationsHaveExecuted(ctx context.Context) {
 	migrator := &migrations.Migrator{}
 
 	// If a migration fails, we're in deep trouble...
-	err := migrator.Execute(ctx, provider, m.db)
+	err := migrator.Execute(ctx, provider, m.db, m.logger)
 	if err != nil {
 		m.logger.Fatalf("failed to execute migrations: %s", err)
 	}
+}
+
+func unmarshalFromCursor[T any](ctx context.Context, cur *mongo.Cursor) ([]*T, error) {
+	var models []*T
+
+	defer cur.Close(ctx)
+	for cur.Next(ctx) {
+		m, err := unmarshal[T](cur.Current)
+		if err != nil {
+			return nil, err
+		}
+
+		models = append(models, m)
+	}
+
+	return models, nil
+}
+
+func unmarshal[T any](raw bson.Raw) (*T, error) {
+	var m *T
+	if err := bson.Unmarshal(raw, &m); err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }

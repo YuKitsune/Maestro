@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"github.com/yukitsune/maestro/pkg/db"
 	"github.com/gorilla/mux"
-	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/model"
 	"net/http"
 )

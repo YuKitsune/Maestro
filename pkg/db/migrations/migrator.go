@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -12,7 +13,9 @@ const versionKey = "version"
 type Migrator struct {
 }
 
-func (m *Migrator) Execute(ctx context.Context, provider MigrationProvider, db *mongo.Database) error {
+func (m *Migrator) Execute(ctx context.Context, provider MigrationProvider, db *mongo.Database, logger *logrus.Logger) error {
+
+	logger.Infoln("Executing migrations")
 
 	// Run all migrations in a session (transaction)
 	session, err := db.Client().StartSession()
@@ -42,6 +45,8 @@ func (m *Migrator) Execute(ctx context.Context, provider MigrationProvider, db *
 			}
 
 			err = m.recordExecution(sessCtx, db, migration)
+			logger.Infof("Executed %T", migration)
+
 			if err != nil {
 				return nil, err
 			}
@@ -49,6 +54,8 @@ func (m *Migrator) Execute(ctx context.Context, provider MigrationProvider, db *
 
 		return nil, nil
 	})
+
+	logger.Infoln("Pending migrations executed")
 
 	return err
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"github.com/yukitsune/maestro/pkg/api/db/migrations"
+	migrations2 "github.com/yukitsune/maestro/pkg/db/migrations"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"testing"
@@ -47,10 +47,10 @@ func (m *mockMigration3) Version() int {
 }
 
 type mockMigrationProvider struct {
-	migrations []migrations.Migration
+	migrations []migrations2.Migration
 }
 
-func (mp *mockMigrationProvider) Migrations() []migrations.Migration {
+func (mp *mockMigrationProvider) Migrations() []migrations2.Migration {
 	return mp.migrations
 }
 
@@ -61,12 +61,12 @@ func Test_MigrationsAreRecorded(t *testing.T) {
 		m1 := &mockMigration1{}
 		m2 := &mockMigration2{}
 		mp := &mockMigrationProvider{
-			[]migrations.Migration{
+			[]migrations2.Migration{
 				m1,
 				m2,
 			},
 		}
-		m := &migrations.Migrator{}
+		m := &migrations2.Migrator{}
 
 		// Act
 		err := m.Execute(context.Background(), mp, db)
@@ -83,11 +83,11 @@ func Test_ExecutedMigrationsAreSkipped(t *testing.T) {
 		// Arrange
 		// Execute the first migration
 		mp1 := &mockMigrationProvider{
-			[]migrations.Migration{
+			[]migrations2.Migration{
 				&mockMigration1{},
 			},
 		}
-		mr1 := &migrations.Migrator{}
+		mr1 := &migrations2.Migrator{}
 
 		err := mr1.Execute(context.Background(), mp1, db)
 		assert.NoError(t, err)
@@ -95,12 +95,12 @@ func Test_ExecutedMigrationsAreSkipped(t *testing.T) {
 		m1 := &mockMigration1{}
 		m2 := &mockMigration2{}
 		mp2 := &mockMigrationProvider{
-			[]migrations.Migration{
+			[]migrations2.Migration{
 				m1,
 				m2,
 			},
 		}
-		mr2 := &migrations.Migrator{}
+		mr2 := &migrations2.Migrator{}
 
 		// Act
 		// Try to execute the first migration again, along with the second one
@@ -121,13 +121,13 @@ func Test_BadMigrationsAbortAllChanges(t *testing.T) {
 
 		// Arrange
 		mp := &mockMigrationProvider{
-			[]migrations.Migration{
+			[]migrations2.Migration{
 				&mockMigration1{},
 				&mockMigration1{},
 				&mockMigration3{}, // Bad migration
 			},
 		}
-		mr := &migrations.Migrator{}
+		mr := &migrations2.Migrator{}
 
 		// Act
 		err := mr.Execute(context.Background(), mp, db)
@@ -138,7 +138,7 @@ func Test_BadMigrationsAbortAllChanges(t *testing.T) {
 	})
 }
 
-func assertMigrationsExecuted(t *testing.T, db *mongo.Database, migrations ...migrations.Migration) {
+func assertMigrationsExecuted(t *testing.T, db *mongo.Database, migrations ...migrations2.Migration) {
 	migColl := db.Collection("migrations")
 	for _, m := range migrations {
 		count, err := migColl.CountDocuments(context.Background(), bson.D{{"version", m.Version()}})

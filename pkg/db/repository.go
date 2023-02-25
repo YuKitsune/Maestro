@@ -19,5 +19,5 @@ type Repository interface {
 	GetTracksByIsrc(ctx context.Context, isrc string) ([]*model.Track, error)
 	GetTrackByLink(ctx context.Context, link string) (*model.Track, error)
 
-	GetByLink(ctx context.Context, link string) (model.Type, interface{}, error)
+	GetByLink(ctx context.Context, link string) (model.Type, any, error)
 }
