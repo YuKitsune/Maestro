@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/yukitsune/maestro/pkg/db"
 	"strings"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/yukitsune/maestro"
 	"github.com/yukitsune/maestro/internal/grace"
 	"github.com/yukitsune/maestro/pkg/api"
-	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/config"
 	"github.com/yukitsune/maestro/pkg/metrics"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -60,19 +60,19 @@ func serve(_ *cobra.Command, _ []string) error {
 	logger := logrus.New()
 	v := viper.New()
 
-	cfg := loadConfig(v, logger)
+	cfg := setupConfig(v, logger)
 
 	configureLogger(cfg.Logging(), logger)
 
 	// When using the debug log level, print the config out
 	logger.Debugf("Config: %+v", cfg.Debug())
 
-	rec, err := configureMetrics()
+	rec, err := metrics.NewPrometheusMetricsRecorder()
 	if err != nil {
 		return err
 	}
 
-	repo, err := configureRepository(cfg.Database(), rec, logger)
+	repo, err := setupRepository(cfg.Database(), rec, logger)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func serve(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func loadConfig(v *viper.Viper, logger logrus.FieldLogger) config.Config {
+func setupConfig(v *viper.Viper, logger logrus.FieldLogger) config.Config {
 
 	// Config file
 	v.SetConfigName("maestro")
@@ -160,11 +160,7 @@ func configureLogger(cfg config.Logging, logger *logrus.Logger) {
 	}
 }
 
-func configureMetrics() (metrics.Recorder, error) {
-	return metrics.NewPrometheusMetricsRecorder()
-}
-
-func configureRepository(cfg config.Database, rec metrics.Recorder, logger *logrus.Logger) (db.Repository, error) {
+func setupRepository(cfg config.Database, rec metrics.Recorder, logger *logrus.Logger) (db.Repository, error) {
 	opts := options.Client().ApplyURI(cfg.Uri())
 	client, err := mongo.NewClient(opts)
 	if err != nil {

@@ -1,22 +1,23 @@
 package middleware
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/maestro/pkg/api/context"
-	"github.com/yukitsune/maestro/pkg/api/handlers"
+	"github.com/yukitsune/maestro/pkg/api/responses"
 	"github.com/yukitsune/maestro/pkg/log"
-	"net/http"
-	"time"
 )
 
 func RequestLogging(logger *logrus.Logger) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			reqID, err := context.RequestID(r.Context())
+			requestId, err := context.RequestID(r.Context())
 			if err != nil {
-				handlers.Error(w, err)
+				responses.Error(w, err)
 				return
 			}
 
@@ -30,7 +31,7 @@ func RequestLogging(logger *logrus.Logger) mux.MiddlewareFunc {
 			next.ServeHTTP(&rwd, r)
 			duration := time.Since(start)
 
-			reqLogger := logger.WithField(log.RequestIDField, reqID).
+			reqLogger := logger.WithField(log.RequestIDField, requestId).
 				WithField("method", r.Method).
 				WithField("path", r.URL.Path).
 				WithField("status", rwd.StatusCode).

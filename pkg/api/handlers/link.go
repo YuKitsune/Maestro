@@ -3,13 +3,14 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/yukitsune/maestro/pkg/api/responses"
+	"github.com/yukitsune/maestro/pkg/db"
 	"net/http"
 	"net/url"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
 	"github.com/yukitsune/maestro/pkg/streamingservice"
@@ -20,52 +21,51 @@ func GetLinkHandler(serviceProvider streamingservice.ServiceProvider, repo db.Re
 
 		reqLogger, err := log.ForRequest(logger, r)
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
 		vars := mux.Vars(r)
 		reqLink, ok := vars["link"]
 		if !ok {
-			BadRequest(w, "missing parameter \"link\"")
+			responses.BadRequest(w, "missing parameter \"link\"")
 			return
 		}
 
 		u, err := url.Parse(reqLink)
 		if err != nil || u == nil {
-			BadRequestf(w, "couldn't parse the given link: %s", reqLink)
+			responses.BadRequestf(w, "couldn't parse the given link: %s", reqLink)
 			return
 		}
 
 		if !u.IsAbs() {
-			BadRequest(w, "given link must be absolute")
+			responses.BadRequest(w, "given link must be absolute")
 			return
 		}
 
-		res, err := findForLink(r.Context(), reqLink, serviceProvider, repo, reqLogger)
+		res, found, err := findForLink(r.Context(), reqLink, serviceProvider, repo, reqLogger)
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
-		if res == nil || !res.HasResults() {
-			NotFound(w, "could not find anything")
-			return
+		if !found {
+			responses.NotFound(w, "could not find anything")
 		}
 
-		Response(w, res, http.StatusOK)
+		responses.Response(w, res, http.StatusOK)
 	}
 }
 
-func findForLink(ctx context.Context, link string, serviceProvider streamingservice.ServiceProvider, repo db.Repository, logger *logrus.Entry) (*Result, error) {
-	svcs, err := serviceProvider.ListServices()
+func findForLink(ctx context.Context, link string, serviceProvider streamingservice.ServiceProvider, repo db.Repository, logger *logrus.Entry) (any, bool, error) {
+	services, err := serviceProvider.ListServices()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// Trim service-specific stuff from the link
-	for _, svc := range svcs {
-		link = svc.CleanLink(link)
+	for _, service := range services {
+		link = service.CleanLink(link)
 	}
 
 	logger = logger.WithField("link", link)
@@ -73,40 +73,40 @@ func findForLink(ctx context.Context, link string, serviceProvider streamingserv
 	// Search the database for an existing thing with the given link
 	typ, dbRes, err := repo.GetByLink(ctx, link)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	switch typ {
 	case model.ArtistType:
 		artist := dbRes.(*model.Artist)
-		res, err := findForExistingArtist(ctx, artist, svcs, repo, logger)
-		return res, err
+		res, err := findForExistingArtist(ctx, artist, services, repo, logger)
+		return res, res.HasResults(), err
 
 	case model.AlbumType:
 		album := dbRes.(*model.Album)
-		res, err := findForExistingAlbum(ctx, album, svcs, repo, logger)
-		return res, err
+		res, err := findForExistingAlbum(ctx, album, services, repo, logger)
+		return res, res.HasResults(), err
 
 	case model.TrackType:
 		track := dbRes.(*model.Track)
-		res, err := findForExistingTrack(ctx, track, svcs, repo, logger)
-		return res, err
+		res, err := findForExistingTrack(ctx, track, services, repo, logger)
+		return res, res.HasResults(), err
 
 	case model.UnknownType:
-		res, err := findNewThing(ctx, link, svcs, repo, logger)
-		return res, err
+		res, found, err := findNewThing(ctx, link, services, repo, logger)
+		return res, found, err
 
 	default:
-		return nil, fmt.Errorf("unknown type %s", typ)
+		return nil, false, fmt.Errorf("unknown type %s", typ)
 	}
 }
 
-func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, svcs streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result[*model.Artist], error) {
 
 	logger = logger.WithField("artist_id", foundArtist.ArtistId)
 	logger.Debugln("found an artist")
 
-	res := NewResult(model.ArtistType)
+	res := NewResult[*model.Artist](model.ArtistType)
 
 	// Find any related artists based on our artist ID
 	existingArtists, err := repo.GetArtistsById(ctx, foundArtist.ArtistId)
@@ -114,24 +114,24 @@ func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, svcs 
 		return nil, err
 	}
 
-	res.AddAll(model.ArtistsToHasStreamingServiceSlice(existingArtists))
+	res.AddAll(existingArtists)
 
 	// If we have results for all known services, then we're good to go
-	if len(res.Items) == len(svcs) {
+	if len(res.Items) == len(services) {
 		return res, nil
 	}
 
-	logger.Debugf("looks like we have some new services since we found this artist (found %d, looking for %d)\n", len(existingArtists), len(svcs))
+	logger.Debugf("looks like we have some new services since we found this artist (found %d, looking for %d)\n", len(existingArtists), len(services))
 
 	// Query the remaining streaming service
 	var newArtists []*model.Artist
-	for key, svc := range svcs {
+	for key, service := range services {
 		if res.HasResultFor(key) {
 			continue
 		}
 
 		logger.Debugf("searching %s for artist\n", key)
-		artist, found, err := svc.SearchArtist(foundArtist)
+		artist, found, err := service.SearchArtist(foundArtist)
 		if err != nil {
 			logger.Errorf("%s: %s", key, err.Error())
 			continue
@@ -157,16 +157,16 @@ func findForExistingArtist(ctx context.Context, foundArtist *model.Artist, svcs 
 		logger.Infof("%d new artists added\n", n)
 	}
 
-	res.AddAll(model.ArtistsToHasStreamingServiceSlice(newArtists))
+	res.AddAll(newArtists)
 	return res, nil
 }
 
-func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, svcs streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result[*model.Album], error) {
 
 	logger = logger.WithField("album_id", foundAlbum.AlbumId)
 	logger.Debugln("found an album")
 
-	res := NewResult(model.AlbumType)
+	res := NewResult[*model.Album](model.AlbumType)
 
 	// Find any related albums based on our album ID
 	existingAlbums, err := repo.GetAlbumsById(ctx, foundAlbum.AlbumId)
@@ -174,24 +174,24 @@ func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, svcs str
 		return nil, err
 	}
 
-	res.AddAll(model.AlbumToHasStreamingServiceSlice(existingAlbums))
+	res.AddAll(existingAlbums)
 
 	// If we have results for all known services, then we're good to go
-	if len(res.Items) == len(svcs) {
+	if len(res.Items) == len(services) {
 		return res, nil
 	}
 
-	logger.Debugf("looks like we have some new services since we found this album (found %d, looking for %d)\n", len(existingAlbums), len(svcs))
+	logger.Debugf("looks like we have some new services since we found this album (found %d, looking for %d)\n", len(existingAlbums), len(services))
 
 	// Query the remaining streaming service
 	var newAlbums []*model.Album
-	for key, svc := range svcs {
+	for key, service := range services {
 		if res.HasResultFor(key) {
 			continue
 		}
 
 		logger.Debugf("searching %s for album\n", key)
-		album, found, err := svc.SearchAlbum(foundAlbum)
+		album, found, err := service.SearchAlbum(foundAlbum)
 		if err != nil {
 			logger.Errorf("%s: %s", key, err.Error())
 			continue
@@ -217,16 +217,16 @@ func findForExistingAlbum(ctx context.Context, foundAlbum *model.Album, svcs str
 		logger.Infof("%d new albums added\n", n)
 	}
 
-	res.AddAll(model.AlbumToHasStreamingServiceSlice(newAlbums))
+	res.AddAll(newAlbums)
 	return res, nil
 }
 
-func findForExistingTrack(ctx context.Context, foundTrack *model.Track, svcs streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+func findForExistingTrack(ctx context.Context, foundTrack *model.Track, services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result[*model.Track], error) {
 
 	logger = logger.WithField("isrc", foundTrack.Isrc)
 	logger.Debugln("found a track")
 
-	res := NewResult(model.TrackType)
+	res := NewResult[*model.Track](model.TrackType)
 
 	// Find any related track based on the ISRC
 	existingTracks, err := repo.GetTracksByIsrc(ctx, foundTrack.Isrc)
@@ -234,24 +234,24 @@ func findForExistingTrack(ctx context.Context, foundTrack *model.Track, svcs str
 		return nil, err
 	}
 
-	res.AddAll(model.TrackToHasStreamingServiceSlice(existingTracks))
+	res.AddAll(existingTracks)
 
 	// If we have results for all known services, then we're good to go
-	if len(res.Items) == len(svcs) {
+	if len(res.Items) == len(services) {
 		return res, nil
 	}
 
-	logger.Debugf("looks like we have some new services since we found this track (found %d, looking for %d)\n", len(existingTracks), len(svcs))
+	logger.Debugf("looks like we have some new services since we found this track (found %d, looking for %d)\n", len(existingTracks), len(services))
 
 	// Query the remaining streaming service
 	var newTracks []*model.Track
-	for key, svc := range svcs {
+	for key, service := range services {
 		if res.HasResultFor(key) {
 			continue
 		}
 
 		logger.Debugf("searching %s for track\n", key)
-		track, found, err := svc.GetTrackByIsrc(foundTrack.Isrc)
+		track, found, err := service.GetTrackByIsrc(foundTrack.Isrc)
 		if err != nil {
 			logger.Errorf("%s: %s", key, err.Error())
 			continue
@@ -276,13 +276,13 @@ func findForExistingTrack(ctx context.Context, foundTrack *model.Track, svcs str
 		logger.Infof("%d new tracks added\n", n)
 	}
 
-	res.AddAll(model.TrackToHasStreamingServiceSlice(newTracks))
+	res.AddAll(newTracks)
 	return res, nil
 }
 
-func handleNewArtist(ctx context.Context, newArtist *model.Artist, svcs streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+func handleNewArtist(ctx context.Context, newArtist *model.Artist, services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result[*model.Artist], error) {
 
-	res := NewResult(model.ArtistType)
+	res := NewResult[*model.Artist](model.ArtistType)
 	res.Add(newArtist)
 
 	// Create our own ID for the artist
@@ -297,13 +297,13 @@ func handleNewArtist(ctx context.Context, newArtist *model.Artist, svcs streamin
 	}
 
 	// Query the other streaming services using what we found from the target streaming service
-	for key, svc := range svcs {
+	for key, service := range services {
 		if res.HasResultFor(key) {
 			continue
 		}
 
 		logger.Debugf("searching %s for artist with name %s\n", key, newArtist.Name)
-		foundArtist, found, err := svc.SearchArtist(newArtist)
+		foundArtist, found, err := service.SearchArtist(newArtist)
 		if err != nil {
 			logger.Errorf("%s: %s", key, err.Error())
 			continue
@@ -329,9 +329,9 @@ func handleNewArtist(ctx context.Context, newArtist *model.Artist, svcs streamin
 	return res, nil
 }
 
-func handleNewAlbum(ctx context.Context, newAlbum *model.Album, svcs streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+func handleNewAlbum(ctx context.Context, newAlbum *model.Album, services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result[*model.Album], error) {
 
-	res := NewResult(model.AlbumType)
+	res := NewResult[*model.Album](model.AlbumType)
 	res.Add(newAlbum)
 
 	// Create our own ID for the album
@@ -346,13 +346,13 @@ func handleNewAlbum(ctx context.Context, newAlbum *model.Album, svcs streamingse
 	}
 
 	// Query the other streaming services using what we found from the target streaming service
-	for key, svc := range svcs {
+	for key, service := range services {
 		if res.HasResultFor(key) {
 			continue
 		}
 
 		logger.Debugf("searching %s for album with name %s\n", key, newAlbum.Name)
-		foundAlbum, found, err := svc.SearchAlbum(newAlbum)
+		foundAlbum, found, err := service.SearchAlbum(newAlbum)
 		if err != nil {
 			logger.Errorf("%s: %s", key, err.Error())
 			continue
@@ -378,9 +378,9 @@ func handleNewAlbum(ctx context.Context, newAlbum *model.Album, svcs streamingse
 	return res, nil
 }
 
-func handleNewTrack(ctx context.Context, newTrack *model.Track, svcs streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+func handleNewTrack(ctx context.Context, newTrack *model.Track, services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result[*model.Track], error) {
 
-	res := NewResult(model.TrackType)
+	res := NewResult[*model.Track](model.TrackType)
 	res.Add(newTrack)
 
 	logger = logger.WithField("isrc", newTrack.Isrc)
@@ -390,11 +390,11 @@ func handleNewTrack(ctx context.Context, newTrack *model.Track, svcs streamingse
 	}
 
 	// Query the other streaming services using what we found from the target streaming service
-	for key, svc := range svcs {
+	for key, service := range services {
 		logger.Debugf("searching %s for track with name %s\n", key, newTrack.Name)
-		foundTrack, found, err := svc.GetTrackByIsrc(newTrack.Isrc)
+		foundTrack, found, err := service.GetTrackByIsrc(newTrack.Isrc)
 		if err != nil {
-			logger.Errorf("%s: %s", svc, err.Error())
+			logger.Errorf("%s: %s", service, err.Error())
 			continue
 		}
 
@@ -417,7 +417,7 @@ func handleNewTrack(ctx context.Context, newTrack *model.Track, svcs streamingse
 	return res, nil
 }
 
-func findNewThing(ctx context.Context, link string, svcs streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (*Result, error) {
+func findNewThing(ctx context.Context, link string, services streamingservice.StreamingServices, repo db.Repository, logger *logrus.Entry) (any, bool, error) {
 
 	logger.Debugln("looks like this is a new thing")
 
@@ -427,43 +427,46 @@ func findNewThing(ctx context.Context, link string, svcs streamingservice.Stream
 	otherServices := make(streamingservice.StreamingServices)
 
 	// Figure out which streaming service the link belongs to
-	for key, svc := range svcs {
-		if svc.LinkBelongsToService(link) {
+	for key, service := range services {
+		if service.LinkBelongsToService(link) {
 			targetKey = key
-			targetService = svc
+			targetService = service
 		} else {
-			otherServices[key] = svc
+			otherServices[key] = service
 		}
 	}
 
 	if targetService == nil {
-		return nil, fmt.Errorf("couldn't find a streaming service for the given link: %s", link)
+		return nil, false, fmt.Errorf("couldn't find a streaming service for the given link: %s", link)
 	}
 
 	// Query the target streaming service
 	logger.Debugf("searching %s\n", targetKey)
 	typ, res, err := targetService.GetFromLink(link)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %s", targetKey, err.Error())
+		return nil, false, fmt.Errorf("%s: %s", targetKey, err.Error())
 	}
 
 	switch typ {
 	case model.ArtistType:
 		artist := res.(*model.Artist)
-		return handleNewArtist(ctx, artist, otherServices, repo, logger)
+		res, err := handleNewArtist(ctx, artist, otherServices, repo, logger)
+		return res, res.HasResults(), err
 
 	case model.AlbumType:
 		album := res.(*model.Album)
-		return handleNewAlbum(ctx, album, otherServices, repo, logger)
+		res, err := handleNewAlbum(ctx, album, otherServices, repo, logger)
+		return res, res.HasResults(), err
 
 	case model.TrackType:
 		track := res.(*model.Track)
-		return handleNewTrack(ctx, track, otherServices, repo, logger)
+		res, err := handleNewTrack(ctx, track, otherServices, repo, logger)
+		return res, res.HasResults(), err
 
 	case model.UnknownType:
-		return nil, fmt.Errorf("could not find anything from %s", targetKey)
+		return nil, false, fmt.Errorf("could not find anything from %s", targetKey)
 
 	default:
-		return nil, fmt.Errorf("unknown type %s", typ)
+		return nil, false, fmt.Errorf("unknown type %s", typ)
 	}
 }

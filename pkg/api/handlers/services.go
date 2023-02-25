@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"github.com/yukitsune/maestro/pkg/api/responses"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -29,11 +30,11 @@ func GetListServicesHandler(serviceProvider streamingservice.ServiceProvider) ht
 		}
 
 		if len(services) == 0 {
-			NotFound(w, "could not find any services")
+			responses.NotFound(w, "could not find any services")
 			return
 		}
 
-		Response(w, services, http.StatusOK)
+		responses.Response(w, services, http.StatusOK)
 	}
 }
 
@@ -42,20 +43,20 @@ func GetServiceLogoHandler(apiConfig config.API, serviceProvider streamingservic
 
 		reqLogger, err := log.ForRequest(logger, r)
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
 		vars := mux.Vars(r)
 		serviceName, ok := vars["serviceName"]
 		if !ok {
-			BadRequest(w, "missing parameter \"serviceName\"")
+			responses.BadRequest(w, "missing parameter \"serviceName\"")
 			return
 		}
 
 		cfg, err := serviceProvider.GetConfig(model.StreamingServiceType(serviceName))
 		if err != nil {
-			NotFoundf(w, "couldn't find streaming service with key %s", serviceName)
+			responses.NotFoundf(w, "couldn't find streaming service with key %s", serviceName)
 			return
 		}
 
@@ -70,20 +71,20 @@ func GetServiceLogoHandler(apiConfig config.API, serviceProvider streamingservic
 			exists := !errors.Is(err, os.ErrNotExist)
 			if !exists {
 				reqLogger.Debugln("logo does not exist")
-				NotFoundf(w, "couldn't find logo for %s", serviceName)
+				responses.NotFoundf(w, "couldn't find logo for %s", serviceName)
 				return
 			}
 
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
 		logo, err := ioutil.ReadFile(logoFilePath)
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
-		Image(w, logo)
+		responses.Image(w, logo)
 	}
 }

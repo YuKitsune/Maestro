@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+const RequestIDField = "request_id"
+
 func ForRequest(logger *logrus.Logger, req *http.Request) (*logrus.Entry, error) {
 
 	ctx := req.Context()

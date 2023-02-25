@@ -1,6 +1,6 @@
 
 # Build backend
-FROM golang:1.16-alpine as build-backend
+FROM golang:1.20-alpine as build-backend
 
 ADD . /src/maestro
 WORKDIR /src/maestro

@@ -3,13 +3,13 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/yukitsune/maestro/pkg/db"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/maestro/pkg/api/db"
 	"github.com/yukitsune/maestro/pkg/api/handlers"
 	"github.com/yukitsune/maestro/pkg/api/middleware"
 	"github.com/yukitsune/maestro/pkg/config"
@@ -25,7 +25,7 @@ type MaestroServer struct {
 
 func NewMaestroServer(apiCfg config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) (*MaestroServer, error) {
 
-	router := configureHandlers(apiCfg, serviceProvider, repo, rec, logger)
+	router := setupRouter(apiCfg, serviceProvider, repo, rec, logger)
 
 	addr := fmt.Sprintf(":%d", apiCfg.Port())
 	svr := &http.Server{
@@ -54,7 +54,7 @@ func (api *MaestroServer) Shutdown(ctx context.Context) error {
 	return api.svr.Shutdown(ctx)
 }
 
-func configureHandlers(apiConfig config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) *mux.Router {
+func setupRouter(apiConfig config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) *mux.Router {
 
 	r := mux.NewRouter()
 

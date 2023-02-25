@@ -3,7 +3,7 @@ package migrations_test
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
-	"github.com/yukitsune/maestro/pkg/api/db/migrations"
+	"github.com/yukitsune/maestro/pkg/db/migrations"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"testing"

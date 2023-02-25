@@ -1,10 +1,12 @@
 package handlers
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/yukitsune/maestro/pkg/api/db"
-	"github.com/yukitsune/maestro/pkg/model"
+	"github.com/yukitsune/maestro/pkg/db"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/yukitsune/maestro/pkg/api/responses"
+	"github.com/yukitsune/maestro/pkg/model"
 )
 
 func GetAlbumByIdHandler(repo db.Repository) http.HandlerFunc {
@@ -12,25 +14,24 @@ func GetAlbumByIdHandler(repo db.Repository) http.HandlerFunc {
 		vars := mux.Vars(r)
 		id, ok := vars["id"]
 		if !ok {
-			BadRequest(w, "missing parameter \"id\"")
+			responses.BadRequest(w, "missing parameter \"id\"")
 			return
 		}
 
 		foundAlbums, err := repo.GetAlbumsById(r.Context(), id)
-
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
 		if foundAlbums == nil || len(foundAlbums) == 0 {
-			NotFoundf(w, "could not find any albums with ID %s", id)
+			responses.NotFoundf(w, "could not find any albums with ID %s", id)
 			return
 		}
 
-		res := NewResult(model.AlbumType)
-		res.AddAll(model.AlbumToHasStreamingServiceSlice(foundAlbums))
+		res := NewResult[*model.Album](model.AlbumType)
+		res.AddAll(foundAlbums)
 
-		Response(w, res, http.StatusOK)
+		responses.Response(w, res, http.StatusOK)
 	}
 }

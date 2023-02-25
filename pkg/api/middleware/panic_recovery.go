@@ -2,12 +2,13 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
-	"github.com/yukitsune/maestro/pkg/api/handlers"
-	"github.com/yukitsune/maestro/pkg/log"
 	"net/http"
 	"runtime"
+
+	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
+	"github.com/yukitsune/maestro/pkg/api/responses"
+	"github.com/yukitsune/maestro/pkg/log"
 )
 
 func PanicRecovery(logger *logrus.Logger) mux.MiddlewareFunc {
@@ -21,14 +22,14 @@ func PanicRecovery(logger *logrus.Logger) mux.MiddlewareFunc {
 
 					reqLogger, logErr := log.ForRequest(logger, r)
 					if logErr != nil {
-						handlers.Error(w, logErr)
+						responses.Error(w, logErr)
 					}
 
 					reqLogger.WithField("stacktrace", fmt.Sprintf("%s", buf)).
 						Errorf("recovering from panic: %s\n", err)
 
 					// Write error message only
-					handlers.Error(w, fmt.Errorf("%s", err))
+					responses.Error(w, fmt.Errorf("%s", err))
 				}
 			}()
 
