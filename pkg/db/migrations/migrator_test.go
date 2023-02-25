@@ -3,6 +3,7 @@ package migrations_test
 import (
 	"context"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	migrations2 "github.com/yukitsune/maestro/pkg/db/migrations"
 	"go.mongodb.org/mongo-driver/bson"
@@ -68,8 +69,10 @@ func Test_MigrationsAreRecorded(t *testing.T) {
 		}
 		m := &migrations2.Migrator{}
 
+		logger := logrus.New()
+
 		// Act
-		err := m.Execute(context.Background(), mp, db)
+		err := m.Execute(context.Background(), mp, db, logger)
 		assert.NoError(t, err)
 
 		// Assert
@@ -89,7 +92,9 @@ func Test_ExecutedMigrationsAreSkipped(t *testing.T) {
 		}
 		mr1 := &migrations2.Migrator{}
 
-		err := mr1.Execute(context.Background(), mp1, db)
+		logger := logrus.New()
+
+		err := mr1.Execute(context.Background(), mp1, db, logger)
 		assert.NoError(t, err)
 
 		m1 := &mockMigration1{}
@@ -104,7 +109,7 @@ func Test_ExecutedMigrationsAreSkipped(t *testing.T) {
 
 		// Act
 		// Try to execute the first migration again, along with the second one
-		err = mr2.Execute(context.Background(), mp2, db)
+		err = mr2.Execute(context.Background(), mp2, db, logger)
 		assert.NoError(t, err)
 
 		// Assert
@@ -129,8 +134,10 @@ func Test_BadMigrationsAbortAllChanges(t *testing.T) {
 		}
 		mr := &migrations2.Migrator{}
 
+		logger := logrus.New()
+
 		// Act
-		err := mr.Execute(context.Background(), mp, db)
+		err := mr.Execute(context.Background(), mp, db, logger)
 		assert.NotNil(t, err)
 
 		// Assert

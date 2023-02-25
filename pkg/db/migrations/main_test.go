@@ -33,8 +33,8 @@ func TestMain(m *testing.M) {
 
 	// pull mongodb docker image
 	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "bitnami/mongodb",
-		Tag:        "5.0.8",
+		Repository: "ghcr.io/zcube/bitnami-compat/mongodb",
+		Tag:        "6.0.4",
 		Env: []string{
 			// Username and password
 			fmt.Sprintf("MONGODB_ROOT_USER=%s", username),
