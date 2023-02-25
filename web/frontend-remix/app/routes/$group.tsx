@@ -86,6 +86,6 @@ function getTitle(type: string, thing: Thing) : any {
 export default function Group() {
     return <>
         <div className={"text-align-center"}>Looks like you've found an old link! Redirecting...</div>
-        <Spinner />
+        <Spinner className={"w-12 h-12"}/>
     </>
 }

@@ -118,7 +118,7 @@ function Document({
 function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col flex-grow items-center justify-between h-screen overflow-y-scroll p-8 gap-8 bg-gray-200 dark:bg-gray-800 dark:text-white">
-      <div className={"flex-grow rounded-lg bg-gray-100 dark:bg-gray-900 shadow-2xl p-4 w-full max-w-md"}>
+      <div className={"rounded-lg bg-gray-100 dark:bg-gray-900 shadow-2xl p-4 w-full max-w-md"}>
         {children}
       </div>
       <footer className={"flex flex-col items-center"}>

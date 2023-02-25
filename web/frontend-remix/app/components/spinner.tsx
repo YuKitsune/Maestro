@@ -1,8 +1,8 @@
 import React from "react";
 
-const Spinner = () => {
+const Spinner = (props: {className: string}) => {
     return (
-        <div className="w-12 h-12 border-4 border-blue-500 rounded-full spinner" />
+        <div className={`border-4 rounded-full spinner ${props.className}`} />
     )
 }
 

@@ -18,6 +18,9 @@ services:
       MONGODB_REPLICA_SET_MODE: primary
       MONGODB_REPLICA_SET_KEY: rs0key
 
+      # Use this when connecting from outside of docker-compose
+      # MONGODB_ADVERTISED_HOSTNAME: localhost
+
     ports:
       - "27017:27017"
 
