@@ -1,9 +1,10 @@
 package handlers
 
 import (
+	"github.com/yukitsune/maestro/pkg/api/responses"
 	"net/http"
 )
 
 func HandleNotFound(w http.ResponseWriter, r *http.Request) {
-	NotFound(w, "route not found")
+	responses.NotFound(w, "route not found")
 }

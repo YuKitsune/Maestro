@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"github.com/yukitsune/maestro/pkg/api/responses"
 	"github.com/yukitsune/maestro/pkg/db"
 	"github.com/yukitsune/maestro/pkg/log"
 	"github.com/yukitsune/maestro/pkg/model"
@@ -16,26 +17,27 @@ func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.
 
 		reqLogger, err := log.ForRequest(logger, r)
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
 		vars := mux.Vars(r)
 		isrc, ok := vars["isrc"]
 		if !ok {
-			BadRequest(w, "missing parameter \"isrc\"")
+			responses.BadRequest(w, "missing parameter \"isrc\"")
 			return
 		}
 
 		foundTracks, err := repo.GetTracksByIsrc(r.Context(), isrc)
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
+		// ISRCs weren't always used here, need this for backwards compatibility
 		legacyTracks, err := repo.GetTracksByLegacyId(r.Context(), isrc)
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
@@ -45,20 +47,20 @@ func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.
 
 		svcs, err := serviceProvider.ListServices()
 		if err != nil {
-			Error(w, fmt.Errorf("failed to initialize services: %s", err.Error()))
+			responses.Error(w, fmt.Errorf("failed to initialize services: %s", err.Error()))
 		}
 
 		if len(foundTracks) != len(svcs) {
 			newTracks, err := getNewTrackByIsrc(isrc, foundTracks, svcs, reqLogger)
 			if err != nil {
-				Error(w, err)
+				responses.Error(w, err)
 				return
 			}
 
 			if len(newTracks) > 0 {
 				n, err := repo.AddTracks(r.Context(), newTracks)
 				if err != nil {
-					Error(w, err)
+					responses.Error(w, err)
 					return
 				}
 
@@ -71,14 +73,14 @@ func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.
 		}
 
 		if len(foundTracks) == 0 {
-			NotFoundf(w, "could not find any tracks with ISRC code %s", isrc)
+			responses.NotFoundf(w, "could not find any tracks with ISRC code %s", isrc)
 			return
 		}
 
 		res := NewResult(model.TrackType)
 		res.AddAll(model.TrackToHasStreamingServiceSlice(foundTracks))
 
-		Response(w, res, http.StatusOK)
+		responses.Response(w, res, http.StatusOK)
 	}
 }
 

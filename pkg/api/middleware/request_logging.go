@@ -1,13 +1,14 @@
 package middleware
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/yukitsune/maestro/pkg/api/context"
-	"github.com/yukitsune/maestro/pkg/api/handlers"
+	"github.com/yukitsune/maestro/pkg/api/responses"
 	"github.com/yukitsune/maestro/pkg/log"
-	"net/http"
-	"time"
 )
 
 func RequestLogging(logger *logrus.Logger) mux.MiddlewareFunc {
@@ -16,7 +17,7 @@ func RequestLogging(logger *logrus.Logger) mux.MiddlewareFunc {
 
 			reqID, err := context.RequestID(r.Context())
 			if err != nil {
-				handlers.Error(w, err)
+				responses.Error(w, err)
 				return
 			}
 

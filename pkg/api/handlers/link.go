@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/yukitsune/maestro/pkg/api/responses"
 	"github.com/yukitsune/maestro/pkg/db"
 	"net/http"
 	"net/url"
@@ -20,40 +21,40 @@ func GetLinkHandler(serviceProvider streamingservice.ServiceProvider, repo db.Re
 
 		reqLogger, err := log.ForRequest(logger, r)
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
 		vars := mux.Vars(r)
 		reqLink, ok := vars["link"]
 		if !ok {
-			BadRequest(w, "missing parameter \"link\"")
+			responses.BadRequest(w, "missing parameter \"link\"")
 			return
 		}
 
 		u, err := url.Parse(reqLink)
 		if err != nil || u == nil {
-			BadRequestf(w, "couldn't parse the given link: %s", reqLink)
+			responses.BadRequestf(w, "couldn't parse the given link: %s", reqLink)
 			return
 		}
 
 		if !u.IsAbs() {
-			BadRequest(w, "given link must be absolute")
+			responses.BadRequest(w, "given link must be absolute")
 			return
 		}
 
 		res, err := findForLink(r.Context(), reqLink, serviceProvider, repo, reqLogger)
 		if err != nil {
-			Error(w, err)
+			responses.Error(w, err)
 			return
 		}
 
 		if res == nil || !res.HasResults() {
-			NotFound(w, "could not find anything")
+			responses.NotFound(w, "could not find anything")
 			return
 		}
 
-		Response(w, res, http.StatusOK)
+		responses.Response(w, res, http.StatusOK)
 	}
 }
 
