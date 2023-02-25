@@ -77,8 +77,8 @@ func GetTrackByIsrcHandler(repo db.Repository, serviceProvider streamingservice.
 			return
 		}
 
-		res := NewResult(model.TrackType)
-		res.AddAll(model.TrackToHasStreamingServiceSlice(foundTracks))
+		res := NewResult[*model.Track](model.TrackType)
+		res.AddAll(foundTracks)
 
 		responses.Response(w, res, http.StatusOK)
 	}

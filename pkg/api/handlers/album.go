@@ -29,8 +29,8 @@ func GetAlbumByIdHandler(repo db.Repository) http.HandlerFunc {
 			return
 		}
 
-		res := NewResult(model.AlbumType)
-		res.AddAll(model.AlbumToHasStreamingServiceSlice(foundAlbums))
+		res := NewResult[*model.Album](model.AlbumType)
+		res.AddAll(foundAlbums)
 
 		responses.Response(w, res, http.StatusOK)
 	}

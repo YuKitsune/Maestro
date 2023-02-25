@@ -4,34 +4,37 @@ import (
 	"github.com/yukitsune/maestro/pkg/model"
 )
 
-type Result struct {
+type Result[T model.Thing] struct {
 	Type  model.Type
-	Items []model.HasStreamingService
+	Items []T
 }
 
-func NewResult(typ model.Type) *Result {
-	return &Result{typ, []model.HasStreamingService{}}
+func NewResult[T model.Thing](typ model.Type) *Result[T] {
+	return &Result[T]{
+		Type:  typ,
+		Items: []T{},
+	}
 }
 
-func (r *Result) Add(v model.HasStreamingService) {
-	if r.HasResultFor(v.GetSource()) {
+func (r *Result[T]) Add(t T) {
+	if r.HasResultFor(t.GetSource()) {
 		for i, item := range r.Items {
-			if item.GetSource() == v.GetSource() {
-				r.Items[i] = v
+			if item.GetSource() == t.GetSource() {
+				r.Items[i] = t
 			}
 		}
 	} else {
-		r.Items = append(r.Items, v)
+		r.Items = append(r.Items, t)
 	}
 }
 
-func (r *Result) AddAll(vs []model.HasStreamingService) {
-	for _, v := range vs {
-		r.Add(v)
+func (r *Result[T]) AddAll(ts []T) {
+	for _, t := range ts {
+		r.Add(t)
 	}
 }
 
-func (r *Result) HasResultFor(key model.StreamingServiceType) bool {
+func (r *Result[T]) HasResultFor(key model.StreamingServiceType) bool {
 	for _, v := range r.Items {
 		if v.GetSource() == key {
 			return true
@@ -41,6 +44,6 @@ func (r *Result) HasResultFor(key model.StreamingServiceType) bool {
 	return false
 }
 
-func (r *Result) HasResults() bool {
+func (r *Result[T]) HasResults() bool {
 	return len(r.Items) > 0
 }

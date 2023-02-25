@@ -29,8 +29,8 @@ func GetArtistByIdHandler(repo db.Repository) http.HandlerFunc {
 			return
 		}
 
-		res := NewResult(model.ArtistType)
-		res.AddAll(model.ArtistsToHasStreamingServiceSlice(foundArtists))
+		res := NewResult[*model.Artist](model.ArtistType)
+		res.AddAll(foundArtists)
 
 		responses.Response(w, res, http.StatusOK)
 	}
