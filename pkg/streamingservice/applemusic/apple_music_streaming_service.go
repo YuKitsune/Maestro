@@ -47,7 +47,7 @@ func (s *appleMusicStreamingService) SearchArtist(artist *model.Artist) (*model.
 
 	go s.metricsRecorder.CountAppleMusicRequest()
 
-	searchRes, err := s.client.SearchArtist(artist.Name, artist.GetMarket())
+	searchRes, err := s.client.SearchArtist(artist.Name, artist.Market)
 	if err != nil {
 		return nil, false, err
 	}
@@ -68,7 +68,7 @@ func (s *appleMusicStreamingService) SearchAlbum(album *model.Album) (*model.Alb
 	go s.metricsRecorder.CountAppleMusicRequest()
 
 	term := fmt.Sprintf("%s %s", strings.Join(album.ArtistNames, " "), album.Name)
-	searchRes, err := s.client.SearchAlbum(term, album.GetMarket())
+	searchRes, err := s.client.SearchAlbum(term, album.Market)
 	if err != nil {
 		return nil, false, err
 	}
@@ -125,7 +125,7 @@ func (s *appleMusicStreamingService) SearchTrack(song *model.Track) (*model.Trac
 		}
 	} else {
 		term := fmt.Sprintf("%s %s", strings.Join(song.ArtistNames, " "), song.Name)
-		searchRes, err = s.client.SearchSong(term, song.GetMarket())
+		searchRes, err = s.client.SearchSong(term, song.Market)
 		if err != nil {
 			return nil, false, err
 		}

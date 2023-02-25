@@ -1,5 +1,5 @@
 package model
 
-type HasStreamingService interface {
+type Thing interface {
 	GetSource() StreamingServiceType
 }

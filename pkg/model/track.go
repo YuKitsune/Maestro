@@ -1,14 +1,5 @@
 package model
 
-import (
-	"context"
-	"fmt"
-	"strings"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-)
-
 const TrackCollectionName = "tracks"
 
 type Track struct {
@@ -36,56 +27,6 @@ func NewTrack(isrc string, name string, artistNames []string, albumName string, 
 	}
 }
 
-func (t *Track) GetArtworkLink() string {
-	return t.ArtworkLink
-}
-
 func (t *Track) GetSource() StreamingServiceType {
 	return t.Source
-}
-
-func (t *Track) GetMarket() Market {
-	return t.Market
-}
-
-func (t *Track) GetLink() string {
-	return t.Link
-}
-
-func (t *Track) GetLabel() string {
-	return fmt.Sprintf("%s - %s", strings.Join(t.ArtistNames, ", "), t.Name)
-}
-
-func UnmarshalTrack(raw bson.Raw) (*Track, error) {
-	var track *Track
-	if err := bson.Unmarshal(raw, &track); err != nil {
-		return nil, err
-	}
-
-	return track, nil
-}
-
-func UnmarshalTracksFromCursor(ctx context.Context, cur *mongo.Cursor) ([]*Track, error) {
-	var tracks []*Track
-
-	defer cur.Close(ctx)
-	for cur.Next(ctx) {
-		track, err := UnmarshalTrack(cur.Current)
-		if err != nil {
-			return nil, err
-		}
-
-		tracks = append(tracks, track)
-	}
-
-	return tracks, nil
-}
-
-func TrackToHasStreamingServiceSlice(tracks []*Track) []HasStreamingService {
-	var s []HasStreamingService
-	for _, track := range tracks {
-		s = append(s, track)
-	}
-
-	return s
 }
