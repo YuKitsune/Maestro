@@ -25,7 +25,7 @@ type MaestroServer struct {
 
 func NewMaestroServer(apiCfg config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) (*MaestroServer, error) {
 
-	router := configureHandlers(apiCfg, serviceProvider, repo, rec, logger)
+	router := setupRouter(apiCfg, serviceProvider, repo, rec, logger)
 
 	addr := fmt.Sprintf(":%d", apiCfg.Port())
 	svr := &http.Server{
@@ -54,7 +54,7 @@ func (api *MaestroServer) Shutdown(ctx context.Context) error {
 	return api.svr.Shutdown(ctx)
 }
 
-func configureHandlers(apiConfig config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) *mux.Router {
+func setupRouter(apiConfig config.API, serviceProvider streamingservice.ServiceProvider, repo db.Repository, rec metrics.Recorder, logger *logrus.Logger) *mux.Router {
 
 	r := mux.NewRouter()
 

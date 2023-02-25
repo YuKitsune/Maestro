@@ -60,14 +60,14 @@ func serve(_ *cobra.Command, _ []string) error {
 	logger := logrus.New()
 	v := viper.New()
 
-	cfg := loadConfig(v, logger)
+	cfg := setupConfig(v, logger)
 
 	configureLogger(cfg.Logging(), logger)
 
 	// When using the debug log level, print the config out
 	logger.Debugf("Config: %+v", cfg.Debug())
 
-	rec, err := configureMetrics()
+	rec, err := metrics.NewPrometheusMetricsRecorder()
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func serve(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func loadConfig(v *viper.Viper, logger logrus.FieldLogger) config.Config {
+func setupConfig(v *viper.Viper, logger logrus.FieldLogger) config.Config {
 
 	// Config file
 	v.SetConfigName("maestro")
@@ -158,10 +158,6 @@ func configureLogger(cfg config.Logging, logger *logrus.Logger) {
 
 		logger.AddHook(hook)
 	}
-}
-
-func configureMetrics() (metrics.Recorder, error) {
-	return metrics.NewPrometheusMetricsRecorder()
 }
 
 func setupRepository(cfg config.Database, rec metrics.Recorder, logger *logrus.Logger) (db.Repository, error) {
