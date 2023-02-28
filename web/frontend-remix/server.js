@@ -22,7 +22,7 @@ async function main() {
     // Everything else goes to remix
     server.all("*", createRequestHandler({ build: require("./build") }));
 
-    let host = "localhost";
+    let host = process.env.HOST || "localhost";
     server.listen(Number(port), host, () => {
         console.log(`Ready on http://${host}:${port}`);
     });

@@ -35,7 +35,9 @@ services:
     environment:
 
       # Frontend
-      PUBLIC_API_URL: http://localhost:8182
+      API_URL: http://localhost:8182
+      HOST: 0.0.0.0
+      PORT: 4000
 
       # API
       MAESTRO_API_PORT: 8182
