@@ -47,6 +47,7 @@ ENV MAESTRO_API_ASSETS_DIR=/opt/maestro/assets
 # Frontend env vars
 ENV NODE_ENV=production
 ENV API_URL="http://localhost:8182"
+ENV HOST="0.0.0.0"
 
 WORKDIR /opt/maestro
 

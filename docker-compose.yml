@@ -34,13 +34,7 @@ services:
 
     environment:
 
-      # Frontend
-      API_URL: http://localhost:8182
-      HOST: 0.0.0.0
-      PORT: 4000
-
-      # API
-      MAESTRO_API_PORT: 8182
+      # Logging
       MAESTRO_LOGGING_LEVEL: debug
 
       # Database
