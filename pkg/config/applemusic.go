@@ -19,7 +19,7 @@ type appleMusicViperConfig struct {
 
 func NewAppleMusicViperConfig(v *viper.Viper) AppleMusic {
 	v.SetDefault("services.apple_music.enabled", true)
-	v.SetDefault("services.apple_music.logo_file_name", "deezer.png")
+	v.SetDefault("services.apple_music.logo_file_name", "apple_music.png")
 
 	return &appleMusicViperConfig{v}
 }

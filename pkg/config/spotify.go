@@ -20,7 +20,7 @@ type spotifyViperConfig struct {
 
 func NewSpotifyViperConfig(v *viper.Viper) Spotify {
 	v.SetDefault("services.spotify.enabled", true)
-	v.SetDefault("services.spotify.logo_file_name", "deezer.png")
+	v.SetDefault("services.spotify.logo_file_name", "spotify.png")
 
 	return &spotifyViperConfig{v}
 }
