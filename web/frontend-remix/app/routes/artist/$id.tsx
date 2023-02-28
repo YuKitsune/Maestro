@@ -6,13 +6,16 @@ import HomeButton from "~/components/homeButton";
 import React from "react";
 import ArtistPreview from "~/components/artistPreview";
 import Card from "~/components/card";
+import {DefaultPort} from "~/defaults";
 
 export let loader: LoaderFunction = async ({ params }) => {
     if (params.id === undefined) {
         throw new Error("Missing ID");
     }
 
-    const client = new MaestroApiClient(process.env.API_URL as string, process.env.PUBLIC_API_URL as string);
+    const client = new MaestroApiClient(
+        process.env.API_URL as string,
+        `http://localhost:${process.env.PORT || DefaultPort}/api`);
 
     const artists = await client.getArtists(params.id);
     const services = await client.getServices();
