@@ -6,16 +6,13 @@ import React from "react";
 import Card from "~/components/card";
 import {Track} from "~/model/track";
 import TrackPreview from "~/components/trackPreview";
-import {DefaultPort} from "~/defaults";
 
 export let loader: LoaderFunction = async ({ params }) => {
     if (params.id === undefined) {
         throw new Error("Missing ID");
     }
 
-    const client = new MaestroApiClient(
-        process.env.API_URL as string,
-        `http://localhost:${process.env.PORT || DefaultPort}/api`);
+    const client = new MaestroApiClient(process.env.API_URL as string);
 
     const tracks = await client.getTracks(params.id);
     const services = await client.getServices();

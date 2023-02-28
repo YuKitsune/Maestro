@@ -11,11 +11,9 @@ export interface Response<T> {
 
 class MaestroApiClient {
     readonly baseUrl: string;
-    readonly publicBaseUrl: string;
 
-    constructor(baseUrl: string, publicBaseUrl: string) {
-        this.baseUrl = baseUrl;
-        this.publicBaseUrl = publicBaseUrl;
+    constructor(baseUrl: string) {
+        this.baseUrl = baseUrl
     }
 
     async searchFromLink(link: string): Promise<Response<any>> {
@@ -127,7 +125,7 @@ class MaestroApiClient {
         // Get artwork URLs
         for (const svc of services) {
             // Todo: Need a public URL here, the docker compose one isn't accessible publicly
-            svc.LogoURL = `${this.publicBaseUrl}/services/${svc.Key}/logo`;
+            svc.LogoURL = `${process.env.PUBLIC_API_URL}/services/${svc.Key}/logo`;
         }
 
         return services;

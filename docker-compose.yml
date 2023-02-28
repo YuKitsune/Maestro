@@ -34,6 +34,10 @@ services:
 
     environment:
 
+      # Frontend
+      PUBLIC_API_URL: http://localhost:4000/api
+
+      # API
       # Logging
       MAESTRO_LOGGING_LEVEL: debug
 

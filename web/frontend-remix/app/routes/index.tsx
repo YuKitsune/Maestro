@@ -18,9 +18,7 @@ export let meta: MetaFunction = () => {
 };
 
 export const action: ActionFunction = async ({request}) => {
-    const client = new MaestroApiClient(
-        process.env.API_URL as string,
-        `http://localhost:${process.env.PORT || "4000"}/api`);
+    const client = new MaestroApiClient(process.env.API_URL as string);
 
     const formData = await request.formData();
     const link = formData.get("link") as string;

@@ -5,16 +5,13 @@ import {Artist} from "~/model/artist";
 import {Album} from "~/model/album";
 import {Track} from "~/model/track";
 import Spinner from "~/components/spinner";
-import {DefaultPort} from "~/defaults";
 
 export let loader: LoaderFunction = async ({ params }) => {
     if (params.group === undefined) {
         throw new Error("Missing group ID")
     }
 
-    const client = new MaestroApiClient(
-        process.env.API_URL as string,
-        `http://localhost:${process.env.PORT || DefaultPort}/api`);
+    const client = new MaestroApiClient(process.env.API_URL as string);
 
     const id = params.group;
 

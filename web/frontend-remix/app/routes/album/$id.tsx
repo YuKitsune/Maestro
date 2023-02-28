@@ -6,19 +6,17 @@ import React from "react";
 import Card from "~/components/card";
 import {Album} from "~/model/album";
 import AlbumPreview from "~/components/albumPreview";
-import {DefaultPort} from "~/defaults";
 
 export let loader: LoaderFunction = async ({ params }) => {
     if (params.id === undefined) {
         throw new Error("Missing ID");
     }
 
-    const client = new MaestroApiClient(
-        process.env.API_URL as string,
-        `http://localhost:${process.env.PORT || DefaultPort}/api`);
+    const client = new MaestroApiClient(process.env.API_URL as string);
 
     const albums = await client.getAlbums(params.id);
     const services = await client.getServices();
+
 
     return {
         albums,
