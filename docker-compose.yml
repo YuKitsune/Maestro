@@ -52,7 +52,7 @@ services:
 
     ports:
       - "8182:8182" # Backend
-      - "3000:3000" # Frontend
+      - "4000:4000" # Frontend
 
     volumes:
       - ./configs/maestro.yaml:/etc/maestro/maestro.yaml
